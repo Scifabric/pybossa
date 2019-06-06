@@ -186,58 +186,58 @@ class TestPageAPI(TestAPI):
         assert res.status_code == 400, data
         assert data['exception_msg'] == 'Reserved keys in payload', data
 
-    # @with_context
-    # def test_update_page(self):
-    #     """Test API Pagepost update post (PUT)."""
-    #     admin, user, owner = UserFactory.create_batch(3)
-    #     project = ProjectFactory.create(owner=owner)
-    #     page = PageFactory.create(project_id=project.id)
+    @with_context
+    def test_update_page(self):
+        """Test API Pagepost update post (PUT)."""
+        admin, user, owner = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        page = PageFactory.create(project_id=project.id)
 
-    #     # As anon
-    #     page.media_url = 'new'
-    #     url = '/api/page/%s' % page.id
-    #     res = self.app.put(url, data=json.dumps(page.dictize()))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 401, res.status_code
+        # As anon
+        page.slug = 'new'
+        url = '/api/page/%s' % page.id
+        res = self.app.put(url, data=json.dumps(page.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 401, res.status_code
 
-    #     # As user
-    #     url = '/api/page/%s?api_key=%s' % (page.id, user.api_key)
-    #     res = self.app.put(url, data=json.dumps(page.dictize()))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 403, res.status_code
+        # As user
+        url = '/api/page/%s?api_key=%s' % (page.id, user.api_key)
+        res = self.app.put(url, data=json.dumps(page.dictize()))
+        data = json.loads(res.data)
+        assert res.status_code == 403, res.status_code
 
-    #     # As owner
-    #     url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
-    #     payload = page.dictize()
-    #     del payload['created']
-    #     del payload['id']
-    #     res = self.app.put(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 200, res.status_code
-    #     assert data['media_url'] == 'new', data
+        # As owner
+        url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
+        payload = page.dictize()
+        del payload['created']
+        del payload['id']
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        assert data['slug'] == 'new', data
 
-    #     # as owner with reserved key
-    #     page.media_url = 'new'
-    #     page.created = 'today'
-    #     url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
-    #     payload = page.dictize()
-    #     del payload['id']
-    #     res = self.app.put(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 400, res.status_code
-    #     assert data['exception_msg'] == 'Reserved keys in payload',  data
+        # as owner with reserved key
+        page.slug = 'new'
+        page.created = 'today'
+        url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
+        payload = page.dictize()
+        del payload['id']
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 400, res.status_code
+        assert data['exception_msg'] == 'Reserved keys in payload',  data
 
-    #     # as owner with wrong key
-    #     page.media_url = 'new admin'
-    #     url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
-    #     payload = page.dictize()
-    #     del payload['created']
-    #     del payload['id']
-    #     payload['foo'] = 'bar'
-    #     res = self.app.put(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 415, res.status_code
-    #     assert 'foo' in data['exception_msg'], data
+        # as owner with wrong key
+        page.slug = 'new-slug'
+        url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
+        payload = page.dictize()
+        del payload['created']
+        del payload['id']
+        payload['foo'] = 'bar'
+        res = self.app.put(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, res.status_code
+        assert 'foo' in data['exception_msg'], data
 
     # @with_context
     # @patch('pybossa.api.api_base.uploader.delete_file')
