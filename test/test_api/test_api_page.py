@@ -119,71 +119,72 @@ class TestPageAPI(TestAPI):
         for i in range(len(pages)):
             assert pages_by_id[i].id == data[i]['id']
 
-    # @with_context
-    # def test_page_post(self):
-    #     """Test API Pagepost creation."""
-    #     admin, owner, user = UserFactory.create_batch(3)
-    #     project = ProjectFactory.create(owner=owner)
-    #     project2 = ProjectFactory.create(owner=user)
+    @with_context
+    def test_page_post(self):
+        """Test API Pagepost creation."""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        project2 = ProjectFactory.create(owner=user)
 
-    #     info = {'species': 'elefante'}
-    #     payload = dict(info=info,
-    #                    media_url='url',
-    #                    project_id=project.id)
+        info = {'structure': ['Banner', 'Body', 'Footer']}
+        payload = dict(info=info,
+                       media_url='url',
+                       slug='slug',
+                       project_id=project.id)
 
-    #     # As anon
-    #     url = '/api/page'
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 401, data
-    #     assert data['status_code'] == 401, data
+        # As anon
+        url = '/api/page'
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 401, data
+        assert data['status_code'] == 401, data
 
-    #     # As a user
-    #     url = '/api/page?api_key=%s' % user.api_key
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 403, data
-    #     assert data['status_code'] == 403, data
+        # As a user
+        url = '/api/page?api_key=%s' % user.api_key
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
+        assert data['status_code'] == 403, data
 
-    #     # As owner
-    #     url = '/api/page?api_key=%s' % owner.api_key
-    #     payload['project_id'] = project.id
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 200, data
-    #     assert data['info'] == info, data
-    #     assert data['media_url'] == 'url', data
+        # As owner
+        url = '/api/page?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 200, data
+        assert data['info'] == info, data
+        assert data['media_url'] == 'url', data
 
-    #     # As owner wrong 404 project_id
-    #     url = '/api/page?api_key=%s' % owner.api_key
-    #     payload['project_id'] = -1
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 415, data
+        # As owner wrong 404 project_id
+        url = '/api/page?api_key=%s' % owner.api_key
+        payload['project_id'] = -1
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
 
-    #     # As owner using wrong project_id
-    #     url = '/api/page?api_key=%s' % owner.api_key
-    #     payload['project_id'] = project2.id
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 403, data
+        # As owner using wrong project_id
+        url = '/api/page?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 403, data
 
-    #     # As owner using wrong attribute
-    #     url = '/api/page?api_key=%s' % owner.api_key
-    #     payload['project_id'] = project2.id
-    #     payload['foo'] = 'bar'
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 415, data
+        # As owner using wrong attribute
+        url = '/api/page?api_key=%s' % owner.api_key
+        payload['project_id'] = project2.id
+        payload['foo'] = 'bar'
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 415, data
 
-    #     # As owner using reserved key 
-    #     url = '/api/page?api_key=%s' % owner.api_key
-    #     payload['project_id'] = project.id
-    #     payload['id'] = 3
-    #     res = self.app.post(url, data=json.dumps(payload))
-    #     data = json.loads(res.data)
-    #     assert res.status_code == 400, data
-    #     assert data['exception_msg'] == 'Reserved keys in payload', data
+        # As owner using reserved key 
+        url = '/api/page?api_key=%s' % owner.api_key
+        payload['project_id'] = project.id
+        payload['id'] = 3
+        res = self.app.post(url, data=json.dumps(payload))
+        data = json.loads(res.data)
+        assert res.status_code == 400, data
+        assert data['exception_msg'] == 'Reserved keys in payload', data
 
     # @with_context
     # def test_update_page(self):
