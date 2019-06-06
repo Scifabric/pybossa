@@ -76,7 +76,8 @@ from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
 
 from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
-                          result_repo, webhook_repo, auditlog_repo)
+                          result_repo, webhook_repo, auditlog_repo,
+                          performance_stats_repo)
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
@@ -3046,7 +3047,7 @@ def answerfieldsconfig(short_name):
     return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/performancestats')
+@blueprint.route('/<short_name>/performancestats', methods=['GET', 'DELETE'])
 @login_required
 def show_performance_stats(short_name):
     """Returns Project Stats"""
@@ -3054,6 +3055,15 @@ def show_performance_stats(short_name):
     ensure_authorized_to('read', project)
     title = project_title(project, "Performance Statistics")
     pro = pro_features(owner)
+
+    if request.method == 'DELETE':
+        ensure_authorized_to('update', project)
+        performance_stats_repo.bulk_delete(
+            project_id=project.id,
+            field=request.args['field'],
+            user_id=request.args.get('user_id')
+        )
+        return Response('', 204)
 
     answer_fields = project.info.get('answer_fields', {})
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -3063,11 +3073,15 @@ def show_performance_stats(short_name):
     _, _, user_ids = stats.stats_users(project.id)
     users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
 
+    can_update = current_user.admin or \
+        (current_user.subadmin and current_user.id in project.owners_ids)
+
     response = dict(template='/projects/performancestats.html',
                     title=title,
                     project=project_sanitized,
                     answer_fields=answer_fields,
                     owner=owner_sanitized,
+                    can_update=can_update,
                     contributors=users,
                     pro_features=pro)
 
