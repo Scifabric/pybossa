@@ -101,6 +101,13 @@ class ProjectForm(Form):
     kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
                        places=2, validators=[validators.Required(), NumberRange(0.1, 120.0)])
 
+    if data_access.data_access_levels:
+        data_access = Select2Field(
+            lazy_gettext('Access Level(s)'),
+            [validators.Required()],
+            choices=data_access.data_access_levels['valid_access_levels'],
+            default=[])
+
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
         self.set_product_subproduct_choices()

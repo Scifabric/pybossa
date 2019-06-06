@@ -356,6 +356,7 @@ def new():
     form = ProjectForm(request.body)
     def respond(errors):
         response = dict(template='projects/new.html',
+                        project=None,
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
                         message=current_app.config.get('PROJECT_CREATE_MESSAGE'),
@@ -399,6 +400,8 @@ def new():
                       info=info,
                       category_id=category_by_default.id,
                       owners_ids=[current_user.id])
+
+    ensure_data_access_assignment_from_form(project.info, form)
 
     project.set_password(form.password.data)
     project_repo.save(project)
