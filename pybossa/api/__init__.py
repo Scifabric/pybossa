@@ -25,6 +25,8 @@ This package adds GET, POST, PUT and DELETE methods for:
     * task_runs,
     * users,
     * global_stats,
+    * helpingmaterial,
+    * page
 
 """
 
@@ -55,6 +57,7 @@ from token import TokenAPI
 from result import ResultAPI
 from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
+from page import PageAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -102,6 +105,8 @@ register_api(AnnouncementAPI, 'api_announcement', '/announcement', pk='oid', pk_
 register_api(BlogpostAPI, 'api_blogpost', '/blogpost', pk='oid', pk_type='int')
 register_api(HelpingMaterialAPI, 'api_helpingmaterial',
              '/helpingmaterial', pk='oid', pk_type='int')
+register_api(PageAPI, 'api_page',
+             '/page', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(FavoritesAPI, 'api_favorites', '/favorites',
