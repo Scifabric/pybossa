@@ -239,39 +239,39 @@ class TestPageAPI(TestAPI):
         assert res.status_code == 415, res.status_code
         assert 'foo' in data['exception_msg'], data
 
-    # @with_context
-    # @patch('pybossa.api.api_base.uploader.delete_file')
-    # def test_delete_page(self, mock_delete):
-    #     """Test API Pagepost delete post (DEL)."""
-    #     mock_delete.return_value = True
-    #     admin, owner, user = UserFactory.create_batch(3)
-    #     project = ProjectFactory.create(owner=owner)
-    #     file_info = {'file_name': 'name.jpg', 'container': 'user_3'}
-    #     page = PageFactory.create(project_id=project.id,
-    #                                                     info=file_info)
-    #     page2 = PageFactory.create(project_id=project.id)
+    @with_context
+    @patch('pybossa.api.api_base.uploader.delete_file')
+    def test_delete_page(self, mock_delete):
+        """Test API Pagepost delete post (DEL)."""
+        mock_delete.return_value = True
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        file_info = {'file_name': 'name.jpg', 'container': 'user_3'}
+        page = PageFactory.create(project_id=project.id,
+                                                        info=file_info)
+        page2 = PageFactory.create(project_id=project.id)
 
-    #     # As anon
-    #     url = '/api/page/%s' % page.id
-    #     res = self.app.delete(url)
-    #     assert res.status_code == 401, res.status_code
+        # As anon
+        url = '/api/page/%s' % page.id
+        res = self.app.delete(url)
+        assert res.status_code == 401, res.status_code
 
-    #     # As user
-    #     url = '/api/page/%s?api_key=%s' % (page.id, user.api_key)
-    #     res = self.app.delete(url)
-    #     assert res.status_code == 403, res.status_code
+        # As user
+        url = '/api/page/%s?api_key=%s' % (page.id, user.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 403, res.status_code
 
-    #     # As owner
-    #     url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
-    #     res = self.app.delete(url)
-    #     assert res.status_code == 204, res.status_code
-    #     mock_delete.assert_called_with(file_info['file_name'],
-    #                                    file_info['container'])
+        # As owner
+        url = '/api/page/%s?api_key=%s' % (page.id, owner.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
+        mock_delete.assert_called_with(file_info['file_name'],
+                                       file_info['container'])
 
-    #     # As admin
-    #     url = '/api/page/%s?api_key=%s' % (page2.id, admin.api_key)
-    #     res = self.app.delete(url)
-    #     assert res.status_code == 204, res.status_code
+        # As admin
+        url = '/api/page/%s?api_key=%s' % (page2.id, admin.api_key)
+        res = self.app.delete(url)
+        assert res.status_code == 204, res.status_code
 
     # @with_context
     # def test_page_post_file(self):
