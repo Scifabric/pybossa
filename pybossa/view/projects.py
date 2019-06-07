@@ -3005,6 +3005,33 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
+
+def _answer_field_has_changed(new_field, old_field):
+    if new_field['type'] != old_field['type']:
+        return True
+    if new_field['config'] != old_field['config']:
+        return True
+    return False
+
+
+def _changed_answer_fields_iter(new_config, old_config):
+    deleted = set(old_config.keys()) - set(new_config.keys())
+    for field in deleted:
+        yield field
+
+    for field, new_val in new_config.items():
+        if field not in old_config:
+            continue
+        old_val = old_config[field]
+        if _answer_field_has_changed(new_val, old_val):
+            yield field
+
+
+def delete_stats_for_changed_fields(project_id, new_config, old_config):
+    for field in _changed_answer_fields_iter(new_config, old_config):
+        performance_stats_repo.bulk_delete(project_id, field)
+
+
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -3024,6 +3051,12 @@ def answerfieldsconfig(short_name):
             else :
                 key = consensus_config_key
             data = body.get(key) or {}
+            if answer_fields_key in body:
+                delete_stats_for_changed_fields(
+                    project.id,
+                    data,
+                    project.info.get(answer_fields_key) or {}
+                )
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
