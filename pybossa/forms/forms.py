@@ -98,7 +98,7 @@ class ProjectForm(Form):
                              [validators.Required()], choices=[("", "")], default="")
 
     kpi_meta = { "min": 0.1, "max": 120, "places": 2, "invalid": 'Number must be between 0.1 and 120.0.' }
-    kpi = TextField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
         [validators.Required()])
 
     def __init__(self, *args, **kwargs):
