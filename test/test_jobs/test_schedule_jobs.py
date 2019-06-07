@@ -43,12 +43,13 @@ class TestSetupScheduledJobs(object):
     def setUp(self):
         db = getattr(settings_test, 'REDIS_DB', 0)
         pwd = getattr(settings_test, 'REDIS_PWD', None)
+        master = getattr(settings_test, 'REDIS_MASTER_NAME', 'mymaster')
         if all(hasattr(settings_test, attr) for attr in ['REDIS_MASTER_DNS', 'REDIS_PORT']):
             self.connection = StrictRedis(host=settings_test.REDIS_MASTER_DNS,
                 port=settings_test.REDIS_PORT, db=db, password=pwd)
         else:
             sentinel = Sentinel(settings_test.REDIS_SENTINEL)
-            self.connection = sentinel.master_for('mymaster', db=db, password=pwd)
+            self.connection = sentinel.master_for(master, db=db, password=pwd)
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 
