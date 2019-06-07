@@ -3116,6 +3116,7 @@ def show_performance_stats(short_name):
                     owner=owner_sanitized,
                     can_update=can_update,
                     contributors=users,
+                    csrf=generate_csrf(),
                     pro_features=pro)
 
     return handle_content_type(response)
