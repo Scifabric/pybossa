@@ -98,8 +98,10 @@ class ProjectForm(Form):
                           [validators.Required()], choices=[("", "")], default="")
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")], default="")
-    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
-                       places=2, validators=[validators.Required(), NumberRange(0.1, 120.0)])
+
+    kpi_meta = { "min": 0.1, "max": 120, "places": 2, "invalid": 'Number must be between 0.1 and 120.0.' }
+    kpi = TextField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
+        [validators.Required()])
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
@@ -115,6 +117,29 @@ class ProjectForm(Form):
             choices += [(sp, sp) for sp in subproducts]
         self.subproduct.choices = choices
 
+    def validate(self):
+        kpi = 0
+
+        # Call default form validation.
+        if not Form.validate(self):
+            return False
+
+        # Custom form validation.
+        try:
+            # Ensure kpi is a valid float.
+            kpi = float(self.kpi.data)
+        except ValueError:
+            self.kpi.errors.append(self.kpi_meta['invalid'])
+            return False
+
+        # Verify kpi range.
+        if kpi < self.kpi_meta['min'] or kpi > self.kpi_meta['max']:
+            self.kpi.errors.append(self.kpi_meta['invalid'])
+            return False
+        else:
+            # Round kpi to n decimal places.
+            self.kpi.data = round(kpi, self.kpi_meta['places'])
+            return True
 
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())
