@@ -69,6 +69,7 @@ from pybossa.jobs import (webhook, send_mail,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT,
                           mail_project_report)
+from pybossa.forms.dynamic_forms import dynamic_project_form
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
 from pybossa.importers import BulkImportException
@@ -347,15 +348,18 @@ def project_cat_index(category, page):
     return project_index(page, cached_projects.get_all, category, False, True,
                          order_by, desc)
 
-
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
 def new():
     ensure_authorized_to('create', Project)
-    form = ProjectForm(request.body)
+
+    form = dynamic_project_form(ProjectForm, request.body, data_access_levels,
+                                products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+
     def respond(errors):
         response = dict(template='projects/new.html',
+                        project=None,
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
                         message=current_app.config.get('PROJECT_CREATE_MESSAGE'),
@@ -401,6 +405,8 @@ def new():
                       owners_ids=[current_user.id])
 
     project.set_password(form.password.data)
+    ensure_data_access_assignment_from_form(project.info, form)
+
     project_repo.save(project)
 
     msg_1 = gettext('Project created!')
@@ -650,7 +656,9 @@ def update(short_name):
         project.subproduct = project.info.get('subproduct')
         project.kpi = project.info.get('kpi')
 
-        form = ProjectUpdateForm(obj=project)
+        form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
+                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
         categories = project_repo.get_all_categories()
@@ -666,7 +674,9 @@ def update(short_name):
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
-        form = ProjectUpdateForm(request.body)
+        form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels,
+                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+
         categories = cached_cat.get_all()
         categories = sorted(categories,
                             key=lambda category: category.name)

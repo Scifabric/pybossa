@@ -22,6 +22,7 @@ from mock import patch
 from factories import CategoryFactory
 from pybossa.messages import *
 from pybossa.core import project_repo
+from pybossa.api.user import data_access
 
 
 class TestJsonProject(web.Helper):
@@ -48,7 +49,7 @@ class TestJsonProject(web.Helper):
             url = '/project/new'
             res = self.app_get_json(url, follow_redirects=True)
             data = json.loads(res.data)
-            keys = sorted(['errors', 'form', 'template', 'title', 'message', 'prodsubprods'])
+            keys = sorted(['errors', 'form', 'template', 'title', 'message', 'prodsubprods', 'project'])
             assert keys == sorted(data.keys()), data
             assert data.get('form').get('csrf') is not None, data
 
@@ -238,3 +239,48 @@ class TestJsonProject(web.Helper):
             proj_repo = project_repo.get(1)
             err_msg = {'kpi': ['Number must be between 0.1 and 120.0.']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
+
+    @with_context
+    def test_new_project_data_access(self):
+        """Test PROJECT data access."""
+
+        self.register()
+        self.signin()
+        data_access_levels = dict(valid_access_levels=[("King", "King"), ("Queen", "Queen")])
+
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            },
+            'data_access_levels': data_access_levels
+        }
+
+        with patch.dict(self.flask_app.config, configs):
+            with patch.dict(data_access.data_access_levels, data_access_levels):
+
+                url = '/project/new'
+                project = dict(name='kpimin', short_name='kpimin', long_description='kpimin',
+                            password='NightW1', product='north', subproduct='winterfell',
+                            kpi=0.1, data_access=['King', 'Queen'])
+                csrf = self.get_csrf(url)
+                res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+                data = json.loads(res.data)
+                assert data.get('status') == SUCCESS, data
+                proj_repo = project_repo.get(1)
+                assert proj_repo.info['data_access'] == project['data_access']
+
+                # update project
+                url = '/project/%s/update' % project['short_name']
+                project = dict(name='greatwar', description=proj_repo.description, id=proj_repo.id,
+                            category_id=proj_repo.category_id, product='west', subproduct='westeros', kpi=2, data_access=['King'])
+                res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+                data = json.loads(res.data)
+                assert data.get('status') == SUCCESS, data
+                proj_repo = project_repo.get(1)
+                assert proj_repo.info['product'] == project['product'], 'product has not been set as expected'
+                assert proj_repo.info['subproduct'] == project['subproduct'], 'subproduct has not been set as expected'
+                assert proj_repo.info['kpi'] == project['kpi'], 'kpi has not been set as expected'
+                assert proj_repo.info['data_access'] == project['data_access']
+
