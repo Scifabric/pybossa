@@ -80,13 +80,14 @@ def dynamic_project_form(class_type, form_data, data_access_levels, obj=None):
             [validators.Required()],
             choices=data_access_levels['valid_access_levels'],
             default=[])
+        setattr(ProjectFormExtraInputs, 'data_access', data_access)
+
 
     product = SelectField(lazy_gettext('Product'),
                           [validators.Required()], choices=[("", "")], default="")
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")] , default="")
 
-    setattr(ProjectFormExtraInputs, 'data_access', data_access)
     setattr(ProjectFormExtraInputs, 'product', product)
     setattr(ProjectFormExtraInputs, 'subproduct', subproduct)
 
