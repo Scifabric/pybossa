@@ -117,11 +117,9 @@ def signin():
         email_addr = form.email.data.lower()
         user = user_repo.search_by_email(email_addr=email_addr)
         if user and user.check_password(password):
-            if not current_app.config.get('ENABLE_TWO_FACTOR_AUTH'):
-                msg_1 = gettext('Welcome back') + ' ' + user.fullname
-                flash(msg_1, 'success')
-                return _sign_in_user(user)
-            else:
+            # Check if the user can bypass two-factor authentication.
+            if otp.is_enabled(user.email_addr, current_app.config):
+                # Enforce two-factor authentication.
                 if not user.enabled:
                     return disable_redirect()
                 _email_two_factor_auth(user)
@@ -131,6 +129,11 @@ def signin():
                 return redirect_content_type(url_for('account.otpvalidation',
                                              token=url_token,
                                              next=next_url))
+            else:
+                # Bypass two-factor authentication.
+                msg_1 = gettext('Welcome back') + ' ' + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':

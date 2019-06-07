@@ -73,3 +73,10 @@ def retrieve_email_for_token(token):
 def expire_token(token):
     key = _create_url_token_key(token)
     conn.delete(key)
+
+def is_enabled(user_email, config):
+    # Allow bypassing two-factor-auth if the feature is disabled or if the user's email is included in the bypass list.
+    bypass_list = getattr(config, 'BYPASS_TWO_FACTOR_AUTH', [])
+    enable_two_factor_auth = getattr(config, 'ENABLE_TWO_FACTOR_AUTH', False)
+
+    return enable_two_factor_auth and not user_email in bypass_list

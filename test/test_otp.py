@@ -1,6 +1,10 @@
+import json
 from default import with_context
 from pybossa import otp
 
+class JSONObject:
+    def __init__( self, dict ):
+        vars(self).update(dict)
 
 @with_context
 def test_create_otp():
@@ -33,3 +37,46 @@ def test_expire_token():
     token = otp.generate_url_token(user_email)
     otp.expire_token(token)
     assert otp.retrieve_email_for_token(token) is None
+
+
+@with_context
+def test_otp_enabled():
+    user_email = 'test@test.com'
+    config = json.loads('{ "ENABLE_TWO_FACTOR_AUTH": true }', object_hook=JSONObject)
+
+    assert otp.is_enabled(user_email, config) is True
+
+@with_context
+def test_otp_disabled():
+    user_email = 'test@test.com'
+    config = json.loads('{ "ENABLE_TWO_FACTOR_AUTH": false }', object_hook=JSONObject)
+
+    assert otp.is_enabled(user_email, config) is False
+
+@with_context
+def test_otp_enabled_user_bypass():
+    user_email = 'test@test.com'
+    config = json.loads('{ "ENABLE_TWO_FACTOR_AUTH": true, "BYPASS_TWO_FACTOR_AUTH": ["test@test.com"] }', object_hook=JSONObject)
+
+    assert otp.is_enabled(user_email, config) is False
+
+@with_context
+def test_otp_disabled_user_bypass():
+    user_email = 'test@test.com'
+    config = json.loads('{ "ENABLE_TWO_FACTOR_AUTH": false, "BYPASS_TWO_FACTOR_AUTH": ["test@test.com"] }', object_hook=JSONObject)
+
+    assert otp.is_enabled(user_email, config) is False
+
+@with_context
+def test_otp_enabled_user_no_bypass():
+    user_email = 'test@test.com'
+    config = json.loads('{ "ENABLE_TWO_FACTOR_AUTH": true, "BYPASS_TWO_FACTOR_AUTH": ["test2@test.com"] }', object_hook=JSONObject)
+
+    assert otp.is_enabled(user_email, config) is True
+
+@with_context
+def test_otp_disabled_user_no_bypass():
+    user_email = 'test@test.com'
+    config = json.loads('{ "ENABLE_TWO_FACTOR_AUTH": false, "BYPASS_TWO_FACTOR_AUTH": ["test2@test.com"] }', object_hook=JSONObject)
+
+    assert otp.is_enabled(user_email, config) is False
