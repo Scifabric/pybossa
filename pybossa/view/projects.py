@@ -69,6 +69,7 @@ from pybossa.jobs import (webhook, send_mail,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT,
                           mail_project_report)
+from pybossa.forms.dynamic_forms import dynamic_project_form
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
 from pybossa.importers import BulkImportException

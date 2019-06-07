@@ -69,32 +69,6 @@ def is_json(json_type):
 
 BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
-def dynamic_project_form(class_type, form_data, data_access_levels, obj=None):
-
-    class ProjectFormExtraInputs(class_type):
-        pass
-
-    if data_access_levels:
-        data_access = Select2Field(
-            lazy_gettext('Access Level(s)'),
-            [validators.Required()],
-            choices=data_access_levels['valid_access_levels'],
-            default=[])
-        setattr(ProjectFormExtraInputs, 'data_access', data_access)
-
-
-    product = SelectField(lazy_gettext('Product'),
-                          [validators.Required()], choices=[("", "")], default="")
-    subproduct = SelectField(lazy_gettext('Subproduct'),
-                             [validators.Required()], choices=[("", "")] , default="")
-
-    setattr(ProjectFormExtraInputs, 'product', product)
-    setattr(ProjectFormExtraInputs, 'subproduct', subproduct)
-
-    return ProjectFormExtraInputs(form_data, obj=obj)
-
-
-
 class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
