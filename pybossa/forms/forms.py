@@ -69,7 +69,30 @@ def is_json(json_type):
 
 BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
-# Forms for projects view
+def dynamic_project_form(class_type, form_data, data_access_levels, obj=None):
+
+    class ProjectFormExtraInputs(class_type):
+        pass
+
+    if data_access_levels:
+        data_access = Select2Field(
+            lazy_gettext('Access Level(s)'),
+            [validators.Required()],
+            choices=data_access_levels['valid_access_levels'],
+            default=[])
+
+    product = SelectField(lazy_gettext('Product'),
+                          [validators.Required()], choices=[("", "")], default="")
+    subproduct = SelectField(lazy_gettext('Subproduct'),
+                             [validators.Required()], choices=[("", "")] , default="")
+
+    setattr(ProjectFormExtraInputs, 'data_access', data_access)
+    setattr(ProjectFormExtraInputs, 'product', product)
+    setattr(ProjectFormExtraInputs, 'subproduct', subproduct)
+
+    return ProjectFormExtraInputs(form_data, obj=obj)
+
+
 
 class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
@@ -101,26 +124,8 @@ class ProjectForm(Form):
     kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
                        places=2, validators=[validators.Required(), NumberRange(0.1, 120.0)])
 
-    if data_access.data_access_levels:
-        data_access = Select2Field(
-            lazy_gettext('Access Level(s)'),
-            [validators.Required()],
-            choices=data_access.data_access_levels['valid_access_levels'],
-            default=[])
-
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-        self.set_product_subproduct_choices()
-
-    def set_product_subproduct_choices(self):
-        choices = [("", "")]
-        products = list(current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).keys())
-        self.product.choices = choices + [(p, p) for p in products]
-        product = self.product.data
-        if product:
-            subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS').get(product, [])
-            choices += [(sp, sp) for sp in subproducts]
-        self.subproduct.choices = choices
 
 
 class ProjectUpdateForm(ProjectForm):
@@ -143,12 +148,6 @@ class ProjectUpdateForm(ProjectForm):
                         pb_validator.CheckPasswordStrength(
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)])
-    if data_access.data_access_levels:
-        data_access = Select2Field(
-            lazy_gettext('Access Level(s)'),
-            [validators.Required()],
-            choices=data_access.data_access_levels['valid_access_levels'],
-            default=[])
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
     sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))

@@ -18,6 +18,7 @@
 
 
 from forms import (
+    dynamic_project_form,
     ProjectForm,
     ProjectUpdateForm,
     ProjectSyncForm,
