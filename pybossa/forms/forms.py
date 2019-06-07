@@ -104,16 +104,6 @@ class ProjectForm(Form):
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
 
-    def set_product_subproduct_choices(self):
-        choices = [("", "")]
-        products = list(current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).keys())
-        self.product.choices = choices + [(p, p) for p in products]
-        product = self.product.data
-        if product:
-            subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS').get(product, [])
-            choices += [(sp, sp) for sp in subproducts]
-        self.subproduct.choices = choices
-
     def validate(self):
         kpi = 0
 
