@@ -102,7 +102,6 @@ class ProjectForm(Form):
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
 
-
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())
     description = TextAreaField(lazy_gettext('Description'),

@@ -310,16 +310,6 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
         template_args.update({"count": count})
     return handle_content_type(template_args)
 
-def set_product_subproduct_choices(form):
-        products = list(current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).keys())
-        choices = [("", "")]
-        form.product.choices = choices + [(p, p) for p in products]
-        product = form.product.data
-        if product:
-            subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS').get(product, [])
-            choices += [(sp, sp) for sp in subproducts]
-        form.subproduct.choices = choices
-
 
 @blueprint.route('/category/draft/', defaults={'page': 1})
 @blueprint.route('/category/draft/page/<int:page>/')
@@ -364,8 +354,8 @@ def project_cat_index(category, page):
 def new():
     ensure_authorized_to('create', Project)
 
-    form = dynamic_project_form(ProjectForm, request.body, data_access_levels)
-    set_product_subproduct_choices(form)
+    form = dynamic_project_form(ProjectForm, request.body, data_access_levels,
+                                products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
 
     def respond(errors):
         response = dict(template='projects/new.html',
@@ -666,8 +656,8 @@ def update(short_name):
         project.subproduct = project.info.get('subproduct')
         project.kpi = project.info.get('kpi')
 
-        form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project)
-        set_product_subproduct_choices(form)
+        form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
+                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
 
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
@@ -684,8 +674,8 @@ def update(short_name):
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
-        form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels)
-        set_product_subproduct_choices(form)
+        form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels,
+                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
 
         categories = cached_cat.get_all()
         categories = sorted(categories,

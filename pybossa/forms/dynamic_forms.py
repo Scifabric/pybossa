@@ -21,9 +21,12 @@ def build_field(field_type, description, validators, kwargs=None):
     field_class = getattr(wtforms, field_type)
     return field_class(lazy_gettext(description), **kwargs)
 
-def dynamic_project_form(class_type, form_data, data_access_levels, obj=None):
+def dynamic_project_form(class_type, form_data, data_access_levels, products=None, obj=None):
 
     class ProjectFormExtraInputs(class_type):
+        def __init__(self, *args, **kwargs):
+            class_type.__init__(self, *args, **kwargs)
+            set_product_subproduct_choices(self, products)
         pass
 
     if data_access_levels:
@@ -32,15 +35,19 @@ def dynamic_project_form(class_type, form_data, data_access_levels, obj=None):
             [validators.Required()],
             choices=data_access_levels['valid_access_levels'],
             default=[])
-        setattr(ProjectFormExtraInputs, 'data_access', data_access)
-
-
-    product = SelectField(lazy_gettext('Product'),
-                          [validators.Required()], choices=[("", "")], default="")
-    subproduct = SelectField(lazy_gettext('Subproduct'),
-                             [validators.Required()], choices=[("", "")] , default="")
-
-    setattr(ProjectFormExtraInputs, 'product', product)
-    setattr(ProjectFormExtraInputs, 'subproduct', subproduct)
+        ProjectFormExtraInputs.data_access = data_access
 
     return ProjectFormExtraInputs(form_data, obj=obj)
+
+def set_product_subproduct_choices(form, config_products):
+    if config_products is None:
+        return
+
+    products = list(config_products.keys())
+    choices = [("", "")]
+    form.product.choices = choices + [(p, p) for p in products]
+    product = form.product.data
+    if product:
+        subproducts = config_products.get(product, [])
+        choices += [(sp, sp) for sp in subproducts]
+    form.subproduct.choices = choices
