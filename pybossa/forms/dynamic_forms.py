@@ -40,9 +40,7 @@ def dynamic_project_form(class_type, form_data, data_access_levels, products=Non
     return ProjectFormExtraInputs(form_data, obj=obj)
 
 def set_product_subproduct_choices(form, config_products):
-    if config_products is None:
-        return
-
+    config_products = config_products or {}
     products = list(config_products.keys())
     choices = [("", "")]
     form.product.choices = choices + [(p, p) for p in products]
