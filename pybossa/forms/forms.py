@@ -110,9 +110,9 @@ class ProjectForm(Form):
             return False
         else:
             # Custom form validation.
-            self.validate_kpi()
+            return self.validate_kpi()
 
-    def validate_kpi(self):
+    def validate_kpi(self, attributes = None):
         kpi = 0
 
         try:
