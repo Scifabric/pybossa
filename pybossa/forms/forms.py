@@ -105,8 +105,6 @@ class ProjectForm(Form):
         Form.__init__(self, *args, **kwargs)
 
     def validate(self):
-        kpi = 0
-
         # Call default form validation.
         if not Form.validate(self):
             return False
@@ -115,6 +113,8 @@ class ProjectForm(Form):
             self.validate_kpi()
 
     def validate_kpi(self):
+        kpi = 0
+
         try:
             # Ensure kpi is a valid float.
             kpi = float(self.kpi.data)
