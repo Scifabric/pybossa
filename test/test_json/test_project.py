@@ -23,6 +23,7 @@ from factories import CategoryFactory
 from pybossa.messages import *
 from pybossa.core import project_repo
 from pybossa.api.user import data_access
+from pybossa.forms.forms import ProjectForm
 
 
 class TestJsonProject(web.Helper):
@@ -239,6 +240,99 @@ class TestJsonProject(web.Helper):
             proj_repo = project_repo.get(1)
             err_msg = {'kpi': ['Number must be between 0.1 and 120.0.']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
+
+    @with_context
+    def test_project_kpi_range_min_threshold(self):
+        """Test PROJECT valid kpi range at min threshold."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # Valid kpi at minimum threshold of 0.1.
+            url = '/project/new'
+            project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.1)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(1)
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi is valid'
+
+    @with_context
+    def test_project_kpi_range_max_threshold(self):
+        """Test PROJECT valid kpi range at max threshold."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            """Test PROJECT valid kpi range at max threshold."""
+            url = '/project/new'
+            project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
+                           password='NightW1', product='north', subproduct='winterfell', kpi=120)
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') == SUCCESS, data
+            proj_repo = project_repo.get(1)
+            assert proj_repo.info['kpi'] == project['kpi'], 'kpi is valid'
+
+    @with_context
+    def test_project_kpi_missing_value(self):
+        """Test PROJECT missing kpi value."""
+        self.register()
+        self.signin()
+        configs = {
+            'WTF_CSRF_ENABLED': True,
+            'PRODUCTS_SUBPRODUCTS': {
+                'north': ['winterfell'],
+                'west': ['westeros']
+            }
+        }
+        with patch.dict(self.flask_app.config, configs):
+            # Missing kpi value.
+            url = '/project/new'
+            project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
+                           password='NightW1', product='north', subproduct='winterfell')
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
+            data = json.loads(res.data)
+            assert data.get('status') != SUCCESS, data
+            proj_repo = project_repo.get(1)
+            err_msg = {'kpi': ['This field is required.']}
+            assert data.get('errors') and data['form']['errors'] == err_msg, data
+
+    @with_context
+    def test_kpi_validate_non_numeric(self):
+        """Test kpi invalid non-numeric value."""
+        form = ProjectForm()
+        form.kpi.data = 'invalid-kpi-value'
+        form.kpi.errors = []
+
+        assert not form.validate_kpi()
+        assert form.kpi.errors[0] == 'Number must be between 0.1 and 120.0.'
+
+    @with_context
+    def test_kpi_validate_numeric(self):
+        """Test kpi valid numeric value."""
+        form = ProjectForm()
+        form.kpi.data = 10
+        form.kpi.errors = []
+
+        assert form.validate_kpi()
+        assert len(form.kpi.errors) == 0
 
     @with_context
     def test_new_project_data_access(self):
