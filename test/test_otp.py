@@ -35,12 +35,12 @@ def test_expire_token():
     assert otp.retrieve_email_for_token(token) is None
 
 
-@with_context_settings(ENABLE_TWO_FACTOR_AUTH=True, BYPASS_TWO_FACTOR_AUTH=[])
+@with_context_settings(ENABLE_TWO_FACTOR_AUTH=True)
 def test_otp_enabled():
     user_email = 'test@test.com'
     assert otp.is_enabled(user_email, current_app.config) is True
 
-@with_context_settings(ENABLE_TWO_FACTOR_AUTH=False, BYPASS_TWO_FACTOR_AUTH=[])
+@with_context_settings(ENABLE_TWO_FACTOR_AUTH=False)
 def test_otp_disabled():
     user_email = 'test@test.com'
     assert otp.is_enabled(user_email, current_app.config) is False

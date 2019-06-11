@@ -79,4 +79,4 @@ def is_enabled(user_email, config):
     bypass_list = config.get('BYPASS_TWO_FACTOR_AUTH', [])
     enable_two_factor_auth = config.get('ENABLE_TWO_FACTOR_AUTH', False)
 
-    return enable_two_factor_auth and not user_email in bypass_list
+    return enable_two_factor_auth and (bypass_list is None or not user_email in bypass_list)
