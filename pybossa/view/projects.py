@@ -2836,7 +2836,9 @@ def ext_config(short_name):
     """Manage configuration of external services."""
     from pybossa.forms.dynamic_forms import form_builder
 
-    project = project_repo.get_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+    sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
+
     ext_conf = project.info.get('ext_config', {})
 
     ensure_authorized_to('read', project)
@@ -2859,6 +2861,8 @@ def ext_config(short_name):
                 ext_conf[form_name] = form.data
                 project.info['ext_config'] = ext_conf
                 project_repo.save(project)
+                sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
+
                 current_app.logger.info('Project id {} external configurations set. {} {}'.format(
                     project.id, form_name, form.data))
                 flash(gettext('Configuration for {} was updated').format(display), 'success')
@@ -2868,7 +2872,7 @@ def ext_config(short_name):
 
     response = dict(
         template='/projects/external_config.html',
-        project=project.to_public_json(),
+        project=sanitize_project,
         title=gettext("Configure external services"),
         forms=template_forms,
         pro_features=pro_features()
