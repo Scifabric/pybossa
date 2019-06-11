@@ -25,9 +25,9 @@ class Wizard(object):
 
     def get_nested_keys(self, nested_keys):
         keys = nested_keys.split('.')
-        value=self.project
+        value = self.project
         for key in keys:
-            value=value.get(key)
+            value = value.get(key)
             if value is None or value == '':
                 break
         return value
@@ -35,18 +35,24 @@ class Wizard(object):
     def ext_config(self):
         if self.not_project_exist():
             return False
+        attrs_values = {}
+        attrs = self.wizard_steps['ext_config']['config_for_checks']['attrs']
+        for key in attrs.keys():
+            value = self.get_nested_keys(attrs.get(key))
+            value = value is not None and value != ''
+            attrs_values[key] = value
 
-        config = self.wizard_steps['ext_config']['config_for_checks']
-        tracking_id = self.get_nested_keys(config.get('tracking_id'))
-        tracking_id = tracking_id is not None and tracking_id != ''
+        condition = self.wizard_steps['ext_config']['config_for_checks']['condition']
 
-        hdfs = self.get_nested_keys(config.get('hdfs'))
-        hdfs = hdfs is not None and hdfs != ''
+        and_result = []
+        for c_name in condition['and']:
+            and_result.append(attrs_values[c_name])
 
-        gigwork_poller = self.get_nested_keys(config.get('gigwork_poller'))
-        gigwork_poller = gigwork_poller is not None and gigwork_poller != ''
+        or_result = []
+        for c_name in condition['or']:
+            or_result.append(attrs_values[c_name])
 
-        return tracking_id and (hdfs or gigwork_poller)
+        return all(and_result) and any(or_result)
 
     def tasks_amount(self):
         if self.not_project_exist():

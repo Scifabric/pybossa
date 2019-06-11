@@ -20,7 +20,7 @@ import os
 import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
-    flash, _app_ctx_stack, abort, current_app
+    flash, _app_ctx_stack, abort
 from flask_login import current_user
 from flask_babel import gettext
 from flask_assets import Bundle
@@ -635,7 +635,7 @@ def setup_hooks(app):
             if not has_access:
                 return json.dumps(dict(list=[]))
 
-            wizard_steps = current_app.config.get('WIZARD_STEPS')
+            wizard_steps = app.config.get('WIZARD_STEPS')
             request_details = {'url': request.url, 'path': request.path}
             project_wizard = Wizard(project, wizard_steps, request_details)
             return json.dumps(dict(list=project_wizard.get_wizard_list()))

@@ -1,13 +1,7 @@
 
-import json
 from pybossa.wizard import Wizard
 from default import Test, with_context
-from factories import ProjectFactory, TaskFactory
-from pybossa.core import task_repo
-from nose.tools import assert_raises
 from collections import OrderedDict
-from mock import MagicMock
-from mock import patch
 
 
 class WizardTestHelper(Test):
@@ -30,10 +24,11 @@ class WizardTestHelper(Test):
                 'done_checks': {'and': ['ext_config'], 'or': []},
                 'enable_checks': {'and': ['project_exist'], 'or': []},
                 'visible_checks': {'always': True},
-                'config_for_checks':
-                    {'tracking_id': 'info.ext_config.data_access.tracking_id',
-                     'hdfs': 'info.ext_config.hdfs.path',
-                     'gigwork_poller': 'info.ext_config.gigwork_poller.target_bucket'}}),
+                'config_for_checks': {
+                    'condition': {'and': ['tracking_id'], 'or': ['hdfs', 'gigwork_poller']},
+                    'attrs': {'tracking_id': 'info.ext_config.data_access.tracking_id',
+                              'hdfs': 'info.ext_config.hdfs.path',
+                              'gigwork_poller': 'info.ext_config.gigwork_poller.target_bucket'}}}),
             ('publish', {
                 'title': 'Publish',
                 'icon': 'fa fa-check',
