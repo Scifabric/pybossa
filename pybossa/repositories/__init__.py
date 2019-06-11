@@ -218,7 +218,12 @@ class Repository(object):
                   last_id=None, fulltextsearch=None, desc=False,
                   orderby='id', **filters):
         """Filter by using several arguments and ordering items."""
+
+        finish_time = filters.pop('finish_time', None)
         query = self.create_context(filters, fulltextsearch, model)
+        if hasattr(model, 'finish_time') and finish_time:
+            query = query.filter(model.finish_time >= finish_time)
+
         if last_id:
             query = query.filter(model.id > last_id)
             query = self._set_orderby_desc(query, model, limit,

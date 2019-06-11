@@ -31,6 +31,7 @@ from pybossa.core import db, anonymizer
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
 from nose.tools import nottest
+from datetime import datetime, timedelta
 
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
@@ -395,6 +396,21 @@ class TestTaskrunAPI(TestAPI):
             assert item['project_id'] == project_two.id, item
         assert len(data) == 5, data
         assert data[0]['id'] == task_runs_two[5].id, data[0]['id']
+
+        # perform api call with finish_time
+        today = datetime.today().strftime('%Y-%m-%d')
+        tomorrow = (datetime.today() + timedelta(1)).strftime('%Y-%m-%d')
+        url = '/api/taskrun?project_id=1&api_key={}&finish_time={}' \
+            .format(owner.api_key, today)
+        res = self.app.get(url)
+        taskruns = json.loads(res.data)
+        assert len(taskruns) == 10, 'there should be total 10 completed taskruns returned'
+
+        url = '/api/completedtaskrun?project_id=1&api_key={}&exported=False&finish_time={}' \
+            .format(owner.api_key, tomorrow)
+        res = self.app.get(url)
+        taskruns = json.loads(res.data)
+        assert not len(taskruns), 'no completed taskruns for future date'
 
     @with_context
     @patch('pybossa.api.task_run.request')
