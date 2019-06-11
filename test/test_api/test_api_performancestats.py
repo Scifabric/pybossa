@@ -50,6 +50,9 @@ class TestPerformanceStatsAPI(TestAPI):
         project = ProjectFactory.create(owner=owner)
 
         url = '/api/performancestats'
+        res = self.app.get('{}'.format(url))
+        assert res.status_code == 401
+
         res = self.app.get('{}?api_key={}'.format(url, owner.api_key))
         assert json.loads(res.data) == []
 

@@ -76,7 +76,8 @@ from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
 
 from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
-                          result_repo, webhook_repo, auditlog_repo)
+                          result_repo, webhook_repo, auditlog_repo,
+                          performance_stats_repo)
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
@@ -3004,6 +3005,33 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
+
+def _answer_field_has_changed(new_field, old_field):
+    if new_field['type'] != old_field['type']:
+        return True
+    if new_field['config'] != old_field['config']:
+        return True
+    return False
+
+
+def _changed_answer_fields_iter(new_config, old_config):
+    deleted = set(old_config.keys()) - set(new_config.keys())
+    for field in deleted:
+        yield field
+
+    for field, new_val in new_config.items():
+        if field not in old_config:
+            continue
+        old_val = old_config[field]
+        if _answer_field_has_changed(new_val, old_val):
+            yield field
+
+
+def delete_stats_for_changed_fields(project_id, new_config, old_config):
+    for field in _changed_answer_fields_iter(new_config, old_config):
+        performance_stats_repo.bulk_delete(project_id, field)
+
+
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -3023,6 +3051,12 @@ def answerfieldsconfig(short_name):
             else :
                 key = consensus_config_key
             data = body.get(key) or {}
+            if answer_fields_key in body:
+                delete_stats_for_changed_fields(
+                    project.id,
+                    data,
+                    project.info.get(answer_fields_key) or {}
+                )
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
@@ -3046,7 +3080,7 @@ def answerfieldsconfig(short_name):
     return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/performancestats')
+@blueprint.route('/<short_name>/performancestats', methods=['GET', 'DELETE'])
 @login_required
 def show_performance_stats(short_name):
     """Returns Project Stats"""
@@ -3054,6 +3088,15 @@ def show_performance_stats(short_name):
     ensure_authorized_to('read', project)
     title = project_title(project, "Performance Statistics")
     pro = pro_features(owner)
+
+    if request.method == 'DELETE':
+        ensure_authorized_to('update', project)
+        performance_stats_repo.bulk_delete(
+            project_id=project.id,
+            field=request.args['field'],
+            user_id=request.args.get('user_id')
+        )
+        return Response('', 204)
 
     answer_fields = project.info.get('answer_fields', {})
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -3063,12 +3106,17 @@ def show_performance_stats(short_name):
     _, _, user_ids = stats.stats_users(project.id)
     users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
 
+    can_update = current_user.admin or \
+        (current_user.subadmin and current_user.id in project.owners_ids)
+
     response = dict(template='/projects/performancestats.html',
                     title=title,
                     project=project_sanitized,
                     answer_fields=answer_fields,
                     owner=owner_sanitized,
+                    can_update=can_update,
                     contributors=users,
+                    csrf=generate_csrf(),
                     pro_features=pro)
 
     return handle_content_type(response)

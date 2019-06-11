@@ -32,6 +32,8 @@ class PerformanceStatsAuth(object):
         return getattr(self, action)(user, stat)
 
     def _read(self, user, stat=None):
+        if not user.is_authenticated:
+            return False
         if not stat:
             return True
         if user.admin or user.subadmin:

@@ -36,7 +36,7 @@ class TestPerformanceStatsRepository(Test):
             project_id = project.id,
             user_id = user.id
         )
-        self.repo.bulk_delete(project, stat.field, stat.stat_type)
+        self.repo.bulk_delete(project.id, stat.field, stat.stat_type)
         deleted = self.repo.get(stat.id)
         assert deleted is None
 
@@ -50,7 +50,7 @@ class TestPerformanceStatsRepository(Test):
                 user_id = user.id
             )
         assert len(self.repo.filter_by(user_id=user.id)) == 2
-        self.repo.bulk_delete(projects[0], stat.field, stat.stat_type)
+        self.repo.bulk_delete(projects[0].id, stat.field, stat.stat_type)
         stats = self.repo.filter_by(user_id=user.id)
         assert len(stats) == 1
         assert all(stat.project_id == projects[1].id for stat in stats)
@@ -74,7 +74,7 @@ class TestPerformanceStatsRepository(Test):
         _type = types[0]
         user = users[0]
         project = projects[0]
-        self.repo.bulk_delete(project, stat[0].field, _type, user_id=user.id)
+        self.repo.bulk_delete(project.id, stat[0].field, _type, user_id=user.id)
         stats = self.repo.filter_by()
         assert len(stats) == 14
         assert all(
