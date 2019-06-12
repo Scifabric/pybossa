@@ -635,7 +635,7 @@ def setup_hooks(app):
             if not has_access:
                 return json.dumps(dict(list=[]))
 
-            wizard_steps = app.config.get('WIZARD_STEPS')
+            wizard_steps = app.config.get('WIZARD_STEPS') or {}
             request_details = {'url': request.url, 'path': request.path}
             project_wizard = Wizard(project, wizard_steps, request_details)
             return json.dumps(dict(list=project_wizard.get_wizard_list()))
