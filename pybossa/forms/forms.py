@@ -100,7 +100,7 @@ class ProjectForm(Form):
                              [validators.Required()], choices=[("", "")], default="")
 
     kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2, rounding=ROUND_UP,
-        validators=[validators.Required(), NumberRange(Decimal('0.1'), 120.0)])
+        validators=[validators.Required(), NumberRange(Decimal('0.1'), 120)])
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
