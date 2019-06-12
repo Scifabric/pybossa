@@ -105,7 +105,6 @@ class ProjectForm(Form):
         Form.__init__(self, *args, **kwargs)
 
     def validate_kpi(self, attributes = None):
-        # Validates the kpi form field. This method is called automatically upon submitting the form.
         kpi = 0
 
         try:
