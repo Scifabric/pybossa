@@ -38,6 +38,7 @@ from flask import safe_join
 from flask_login import current_user
 import os
 import json
+import decimal
 from pybossa.forms.fields.time_field import TimeField
 from pybossa.forms.fields.select_two import Select2Field
 from pybossa.sched import sched_variants
@@ -65,6 +66,13 @@ def is_json(json_type):
             assert isinstance(json.loads(field.data), json_type)
         except Exception:
             raise validators.ValidationError('Field must be JSON object.')
+    return v
+
+def range(min, max):
+    def v(form, field):
+        value = float(field.data)
+        if value < min or value > max:
+            raise validators.ValidationError('Number must be between ' + str(min) + ' and ' + str(max) + '.')
     return v
 
 BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
@@ -97,31 +105,11 @@ class ProjectForm(Form):
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")], default="")
 
-    kpi_meta = { "min": 0.1, "max": 120, "places": 2, "invalid": 'Number must be between 0.1 and 120.0.' }
-    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
-        [validators.Required()])
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2, rounding=decimal.ROUND_UP,
+        validators=[validators.Required(), range(0.1, 120)])
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-
-    def validate_kpi(self, attributes = None):
-        kpi = 0
-
-        try:
-            # Ensure kpi is a valid float.
-            kpi = float(self.kpi.data)
-        except ValueError:
-            self.kpi.errors.append(self.kpi_meta['invalid'])
-            return False
-
-        # Verify kpi range.
-        if kpi < self.kpi_meta['min'] or kpi > self.kpi_meta['max']:
-            self.kpi.errors.append(self.kpi_meta['invalid'])
-            return False
-        else:
-            # Round kpi to n decimal places.
-            self.kpi.data = round(kpi, self.kpi_meta['places'])
-            return True
 
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())
