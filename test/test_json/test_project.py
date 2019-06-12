@@ -213,7 +213,7 @@ class TestJsonProject(web.Helper):
             data = json.loads(res.data)
             assert data.get('status') != SUCCESS, data
             proj_repo = project_repo.get(1)
-            err_msg = {'kpi': ['Number must be between 0.1 and 120.0.']}
+            err_msg = {'kpi': ['Number must be between 0.1 and 120.']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
 
     @with_context
@@ -238,7 +238,7 @@ class TestJsonProject(web.Helper):
             data = json.loads(res.data)
             assert data.get('status') != SUCCESS, data
             proj_repo = project_repo.get(1)
-            err_msg = {'kpi': ['Number must be between 0.1 and 120.0.']}
+            err_msg = {'kpi': ['Number must be between 0.1 and 120.']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
 
     @with_context
@@ -313,26 +313,6 @@ class TestJsonProject(web.Helper):
             proj_repo = project_repo.get(1)
             err_msg = {'kpi': ['This field is required.']}
             assert data.get('errors') and data['form']['errors'] == err_msg, data
-
-    @with_context
-    def test_kpi_validate_non_numeric(self):
-        """Test kpi invalid non-numeric value."""
-        form = ProjectForm()
-        form.kpi.data = 'invalid-kpi-value'
-        form.kpi.errors = []
-
-        assert not form.validate_kpi()
-        assert form.kpi.errors[0] == 'Number must be between 0.1 and 120.0.'
-
-    @with_context
-    def test_kpi_validate_numeric(self):
-        """Test kpi valid numeric value."""
-        form = ProjectForm()
-        form.kpi.data = 10
-        form.kpi.errors = []
-
-        assert form.validate_kpi()
-        assert len(form.kpi.errors) == 0
 
     @with_context
     def test_new_project_data_access(self):

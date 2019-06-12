@@ -38,6 +38,8 @@ from flask import safe_join
 from flask_login import current_user
 import os
 import json
+from decimal import Decimal, ROUND_UP
+
 from pybossa.forms.fields.time_field import TimeField
 from pybossa.forms.fields.select_two import Select2Field
 from pybossa.sched import sched_variants
@@ -97,39 +99,11 @@ class ProjectForm(Form):
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")], default="")
 
-    kpi_meta = { "min": 0.1, "max": 120, "places": 2, "invalid": 'Number must be between 0.1 and 120.0.' }
-    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'),
-        [validators.Required()])
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2, rounding=ROUND_UP,
+        validators=[validators.Required(), NumberRange(Decimal('0.1'), 120)])
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-
-    def validate(self):
-        # Call default form validation.
-        if not Form.validate(self):
-            return False
-        else:
-            # Custom form validation.
-            return self.validate_kpi()
-
-    def validate_kpi(self, attributes = None):
-        kpi = 0
-
-        try:
-            # Ensure kpi is a valid float.
-            kpi = float(self.kpi.data)
-        except ValueError:
-            self.kpi.errors.append(self.kpi_meta['invalid'])
-            return False
-
-        # Verify kpi range.
-        if kpi < self.kpi_meta['min'] or kpi > self.kpi_meta['max']:
-            self.kpi.errors.append(self.kpi_meta['invalid'])
-            return False
-        else:
-            # Round kpi to n decimal places.
-            self.kpi.data = round(kpi, self.kpi_meta['places'])
-            return True
 
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())
