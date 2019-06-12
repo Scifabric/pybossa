@@ -630,8 +630,7 @@ def setup_hooks(app):
         ldap_enabled = app.config.get('LDAP_HOST', False)
 
         def get_wizard_steps(project=None):
-
-            has_access = project is None or (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
+            has_access = project is None or (current_user.subadmin and current_user.id in project['owners_ids']) or current_user.admin
             if not has_access:
                 return json.dumps(dict(list=[]))
 
