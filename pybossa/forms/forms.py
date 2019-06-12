@@ -104,14 +104,6 @@ class ProjectForm(Form):
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
 
-    def validate(self):
-        # Call default form validation.
-        if not Form.validate(self):
-            return False
-        else:
-            # Custom form validation.
-            return self.validate_kpi()
-
     def validate_kpi(self, attributes = None):
         kpi = 0
 
