@@ -3124,3 +3124,37 @@ def show_performance_stats(short_name):
                     pro_features=pro)
 
     return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/enrichment', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def configure_enrichment(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(
+        project, owner, current_user, ps)
+
+    if request.method != 'POST':
+        ensure_authorized_to('read', Project)
+        pro = pro_features()
+        enrichment_types = current_app.config.get('ENRICHMENT_TYPES', {})
+        dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+        enrichments = project_sanitized.get('info', {}).get('enrichments', [])
+        response = dict(template='projects/enrichment.html',
+                        title=gettext("Configure enrichment"),
+                        enrichments=json.dumps(enrichments),
+                        project=project_sanitized,
+                        pro_features=pro,
+                        csrf=generate_csrf(),
+                        enrichment_types=enrichment_types)
+        return handle_content_type(response)
+
+    ensure_authorized_to('update', Project)
+    data = json.loads(request.data)
+    if data and data.get('enrich_data'):
+        project.info['enrichments'] = data['enrich_data']
+        project_repo.save(project)
+        auditlogger.log_event(project, current_user, 'update', 'project',
+                                'enrichment', json.dumps(project.info['enrichments']))
+        flash(gettext("Success! Project data enrichment updated"))
+    return redirect_content_type(url_for('.settings', short_name=project.short_name))
