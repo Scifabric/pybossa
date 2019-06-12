@@ -38,7 +38,7 @@ from flask import safe_join
 from flask_login import current_user
 import os
 import json
-from decimal import Decimal, ROUND_UP
+from decimal import Decimal
 
 from pybossa.forms.fields.time_field import TimeField
 from pybossa.forms.fields.select_two import Select2Field
@@ -99,7 +99,7 @@ class ProjectForm(Form):
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")], default="")
 
-    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2, rounding=ROUND_UP,
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2,
         validators=[validators.Required(), NumberRange(Decimal('0.1'), 120)])
 
     def __init__(self, *args, **kwargs):
