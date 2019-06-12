@@ -631,11 +631,20 @@ def setup_hooks(app):
 
         def get_wizard_steps(project=None):
 
-            has_access = project is None or (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
+            if project is None:
+                return json.dumps(dict(list=[]))
+
+            if isinstance(project, dict):
+                owners_id = project['owners_ids']
+            else:
+                owners_id = project.owners_ids
+
+            has_access = (current_user.subadmin and current_user.id in owners_id) or current_user.admin
+
             if not has_access:
                 return json.dumps(dict(list=[]))
 
-            wizard_steps = app.config.get('WIZARD_STEPS')
+            wizard_steps = app.config.get('WIZARD_STEPS') or {}
             request_details = {'url': request.url, 'path': request.path}
             project_wizard = Wizard(project, wizard_steps, request_details)
             return json.dumps(dict(list=project_wizard.get_wizard_list()))
