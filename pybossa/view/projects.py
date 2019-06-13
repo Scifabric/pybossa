@@ -1628,12 +1628,16 @@ def export_to(short_name):
 
     zip_enabled(project, current_user)
 
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
     def respond():
         return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
-                               project=project,
+                               project=project_sanitized,
                                owner=owner,
                                n_tasks=ps.n_tasks,
                                n_task_runs=ps.n_task_runs,
@@ -2095,6 +2099,10 @@ def task_priority(short_name):
 @login_required
 def task_timeout(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
+                                                                    current_user,
+                                                                    ps)
     title = project_title(project, gettext('Timeout'))
     form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
@@ -2106,7 +2114,7 @@ def task_timeout(short_name):
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
-                               project=project,
+                               project=project_sanitized,
                                owner=owner,
                                pro_features=pro)
     if form.validate() and form.in_range():
@@ -2134,7 +2142,7 @@ def task_timeout(short_name):
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
-                               project=project,
+                               project=project_sanitized,
                                owner=owner,
                                pro_features=pro)
 
@@ -2274,9 +2282,12 @@ def update_blogpost(short_name, id):
         raise abort(404)
 
     def respond():
+        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
         return render_template('projects/new_blogpost.html',
                                title=gettext("Edit a post"),
-                               form=form, project=project, owner=owner,
+                               form=form, project=project_sanitized, owner=owner,
                                blogpost=blogpost,
                                overall_progress=ps.overall_progress,
                                n_task_runs=ps.n_task_runs,
@@ -2655,12 +2666,15 @@ def export_project_report(short_name):
 
     def respond():
         project, owner, ps = project_by_shortname(short_name)
+        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
         title = project_title(project, "Settings")
         pro = pro_features()
         project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
         owner_serialized = cached_users.get_user_summary(owner.name)
         response = dict(template='/projects/settings.html',
-                        project=project,
+                        project=project_sanitized,
                         owner=owner_serialized,
                         n_tasks=ps.n_tasks,
                         overall_progress=ps.overall_progress,
@@ -2677,6 +2691,7 @@ def export_project_report(short_name):
             return abort(404)
 
         try:
+
             res = project_report_csv_exporter.response_zip(project, ty)
             return res
         except Exception as e:
