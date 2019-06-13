@@ -52,10 +52,10 @@ def create_app(run_as_server=True):
         'default-src': ['*', '\'unsafe-inline\'', '\'unsafe-eval\'', 'data:',
                         'blob:']
     }, force_https=app.config.get('FORCE_HTTPS', True))
+    setup_theme(app)
     setup_assets(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)
-    setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
     setup_login_manager(app)
@@ -776,8 +776,160 @@ def setup_newsletter(app):
 
 def setup_assets(app):
     """Setup assets."""
-    from flask_assets import Environment
+    from flask_assets import Environment, Bundle
     assets = Environment(app)
+    all_assets = [{
+            'name': 'js_base',
+            'args': [
+                'js/vendor/jquery-2.2.3.js',
+                'js/vendor/bootstrap.js',
+                'js/vendor/modernizr.min.js',
+                'js/flashmessages.js',
+                'js/vendor/cookieconsent.min.js'
+            ],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/default.min.js'
+            }
+        }, {
+            'name': 'js_multi',
+            'args': ['js/vendor/multi.js'],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/multi.min.js'
+            }
+        }, {
+            'name': 'js_enrich',
+            'args': ['js/vendor/jsgrid.min.js'],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/enrichment.min.js'
+            }
+        }, {
+            'name': 'js_project_new',
+            'args': [
+                'js/forms.js',
+                'js/vendor/select2.min.js',
+                'js/project_forms.js'
+            ],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/projects_new.min.js'
+            }
+        }, {
+            'name': 'js_full',
+            'args': [
+                'js/vendor/jquery-2.2.3.js',
+                'js/vendor/bootstrap.js',
+                'js/vendor/modernizr.min.js',
+                'js/flashmessages.js',
+                'js/vendor/cookieconsent.min.js',
+                'js/pybossa/pybossa.js',
+                'js/pybossa-player/dist/pybossa-player.min.js'
+            ],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/full.min.js'
+            }
+        }, {
+            'name': 'js_taskpresentereditor',
+            'args': [
+              'vendor/codemirror/codemirror.js',
+              'vendor/codemirror/mode/xml/xml.js',
+              'vendor/codemirror/mode/javascript/javascript.js',
+              'vendor/codemirror/mode/css/css.js',
+              'vendor/codemirror/mode/htmlmixed/htmlmixed.js',
+              'vendor/codemirror/addons/search/search.js',
+              'vendor/codemirror/addons/search/searchcursor.js',
+              'vendor/codemirror/addons/search/jump-to-line.js',
+              'vendor/codemirror/addons/edit/closebrackets.js',
+              'vendor/codemirror/addons/edit/closetag.js',
+              'vendor/codemirror/addons/edit/continuelist.js',
+              'vendor/codemirror/addons/edit/matchbrackets.js',
+              'vendor/codemirror/addons/edit/matchtags.js',
+              'vendor/codemirror/addons/edit/trailingspace.js',
+              'vendor/codemirror/addons/fold/xml-fold.js',
+              'vendor/codemirror/addons/display/fullscreen.js',
+              'vendor/codemirror/addons/dialog/dialog.js'
+            ],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/pybossa.taskpresentereditor.min.js'
+            }
+        }, {
+            'name': 'js_taskbrowse',
+            'args': [
+                "js/vendor/jquery-ui-1.12.1.min.js",
+                "js/vendor/select2.min.js",
+                "vendor/slider/js/bootstrap-slider.js",
+                "js/tasks_browse.js"
+            ],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/taskbrowse.min.js'
+            }
+        }, {
+            'name': 'js_projects_update',
+            'args': [
+                'js/vendor/cropper.min.js',
+                'js/image_crop.js',
+                'js/vendor/select2.min.js',
+                'js/vendor/jquery-ui-1.12.1.min.js',
+                'js/project_forms.js'
+            ],
+            'kwargs': {
+                'filters': 'jsmin',
+                'output': 'js/gen/projects_update.min.js'
+            }
+        },
+
+        {
+            'name': 'css_pybossa',
+            'args': [
+                'sass/_pybossa.scss'
+            ],
+            'kwargs': {
+                'filters': 'libsass',
+                'output': 'css/gen/pybossa.min.css',
+                'depends': 'sass/**/*.scss'
+            }
+        }, {
+            'name': 'css_multi',
+            'args': [
+                'css/multi.css'
+            ],
+            'kwargs': {
+                'output': 'css/gen/multi.min.css',
+            }
+        }, {
+            'name': 'css_enrich',
+            'args': [
+                "css/jsgrid.min.css",
+                "css/jsgrid-theme.min.css"
+            ],
+            'kwargs': {
+                'output': 'css/gen/enrichment.min.css'
+            }
+        },
+        {
+            'name': 'css_taskbrowse',
+            'args': [
+                'vendor/slider/css/slider.css',
+                'css/task_browse.css',
+                'css/select2.min.css'
+            ],
+            'kwargs': {
+                'output': 'css/gen/taskbrowse.min.css'
+            }
+        }
+    ]
+
+    for conf in all_assets:
+        args = conf.get('args') or []
+        kwargs = conf.get('kwargs') or []
+        bundle = Bundle(*args, **kwargs)
+        assets.register(conf['name'], bundle)
+        bundle.build(force=True)
 
 
 def setup_strong_password(app):
