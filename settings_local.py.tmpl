@@ -415,3 +415,92 @@ PREFERRED_URL_SCHEME='https'
 
 # Instruct PYBOSSA to generate absolute paths or not for avatars
 AVATAR_ABSOLUTE = True
+
+
+# Wizard Steps
+# 'step_name': {
+#
+#        'title': 'Step 1', [Title that will be displayed on the UI]
+#        'icon': 'fa fa-pencil', [Icon class that will be use to be displayed on the UI]
+#        'href': {'url_for': 'project.new' [Url that will be redirected to when user click at step]
+#                 'args': ['short_name', 'published'] [arguments for url_for function possible values are "short_name" and "published" or empty]
+#                }
+#        'done_checks': {'always': False, 'and': [''], 'or': []},  [if True Step is going to be filled]
+#        'enable_checks': {'always': True, 'and': [''], 'or': []}, [if True Step border are going to be blue]
+#        'visible_checks': {'and': ['not_project_exist'], 'or': []}, [if True Step is going to be visible]
+#        [Checks:
+#           The 'always' key must be used to keep a static value {always: True/False}, it means no its not dependent on
+#           any logic.
+#
+#           All 'check-names' keys represent specific checks functions that can be found on the wizard.py class as check_options.
+#               each step can have combinations of checks in {'and':[], 'or': []} and the final result will be a bolean condition
+#               equivalent to"any('or') or all(and)"
+#         ]
+#    }
+
+WIZARD_STEPS = OrderedDict([
+    ('new_project', {
+        'title': 'Project Creation',
+        'icon': 'fa fa-pencil',
+        'href': {'url_for': 'project.new',
+                 'args': ['']},
+        'done_checks': {'always': False},
+        'enable_checks': {'always': True},
+        'visible_checks': {'and': ['not_project_exist'], 'or': []},
+    }),
+    ('project_details', {
+        'title': 'Project Details',
+        'icon': 'fa fa-pencil',
+        'href': {'url_for': 'project.update',
+                 'args': ['short_name']},
+        'done_checks': {'always': True},
+        'enable_checks': {'always': True},
+        'visible_checks': {'and': ['project_exist'], 'or': []}
+    }),
+    ('task_imports', {
+        'title': 'Task Imports',
+        'icon': 'fa fa-file',
+        'href': {'url_for': 'project.import_task',
+                 'args': ['short_name']},
+        'done_checks': {'and': ['tasks_amount'], 'or': []},
+        'enable_checks': {'and': ['project_exist'], 'or': []},
+        'visible_checks': {'always': True}
+    }),
+    ('task_presenter', {
+        'title': 'Task Presenter',
+        'icon': 'fa fa-pencil',
+        'href': {'url_for': 'project.task_presenter_editor',
+                 'args': ['short_name']},
+        'done_checks': {'and': ['task_presenter'], 'or': []},
+        'enable_checks': {'and': ['tasks_amount'], 'or': ['task_presenter', 'project_publish']},
+        'visible_checks': {'always': True}
+    }),
+    ('task_settings', {
+        'title': 'Task Settings',
+        'icon': 'fa fa-cogs',
+        'href': {'url_for': 'project.task_settings',
+                 'args': ['short_name']},
+        'done_checks': {'and': ['task_presenter', 'tasks_amount'], 'or': ['project_publish']},
+        'enable_checks': {'and': ['task_presenter', 'tasks_amount'], 'or': ['project_publish']},
+        'visible_checks': {'always': True}
+    }),
+    ('publish', {
+        'title': 'Publish',
+        'icon': 'fa fa-check',
+        'href': {'url_for': 'project.publish',
+                 'args': ['short_name', 'published']},
+        'done_checks': {'always': False},
+        'enable_checks': {'and': ['task_presenter', 'tasks_amount'], 'or': ['project_publish']},
+        'visible_checks': {'and': ['not_project_publish'], 'or': ['not_project_exist']},
+    }),
+    ('published', {
+        'title': 'Published',
+        'icon': 'fa fa-check',
+        'href': {'url_for': 'project.details',
+                 'args': ['short_name']},
+        'done_checks': {'always': True},
+        'enable_checks': {'always': True},
+        'visible_checks': {'and': ['project_publish'], 'or': []},
+    })]
+)
+
