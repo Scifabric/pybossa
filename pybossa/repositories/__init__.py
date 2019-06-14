@@ -42,8 +42,9 @@ import re
 from pybossa.model.project import Project, TaskRun, Task
 from pybossa.model.announcement import Announcement
 from pybossa.model.project_stats import ProjectStats
+from sqlalchemy import text
 from sqlalchemy.sql import and_, or_
-from sqlalchemy import cast, Text, func, desc
+from sqlalchemy import cast, Text, func, desc, text
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
 
@@ -179,7 +180,7 @@ class Repository(object):
             query = query.add_column(headlines[0])
         if len(orders) > 0:
             query = query.add_column(orders[0])
-            query = query.order_by('rank DESC')
+            query = query.order_by(text('rank DESC'))
         return query
 
     def _set_orderby_desc(self, query, model, limit,
@@ -204,9 +205,9 @@ class Repository(object):
                     query = query.order_by(getattr(model, orderby))
             else:
                 if descending:
-                    query = query.order_by(desc("n_favs"))
+                    query = query.order_by(desc(text("n_favs")))
                 else:
-                    query = query.order_by("n_favs")
+                    query = query.order_by(text("n_favs"))
         if last_id:
             query = query.limit(limit)
         else:
@@ -217,7 +218,12 @@ class Repository(object):
                   last_id=None, fulltextsearch=None, desc=False,
                   orderby='id', **filters):
         """Filter by using several arguments and ordering items."""
+
+        finish_time = filters.pop('finish_time', None)
         query = self.create_context(filters, fulltextsearch, model)
+        if hasattr(model, 'finish_time') and finish_time:
+            query = query.filter(model.finish_time >= finish_time)
+
         if last_id:
             query = query.filter(model.id > last_id)
             query = self._set_orderby_desc(query, model, limit,

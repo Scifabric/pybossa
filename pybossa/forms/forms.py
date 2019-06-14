@@ -38,6 +38,8 @@ from flask import safe_join
 from flask_login import current_user
 import os
 import json
+from decimal import Decimal
+
 from pybossa.forms.fields.time_field import TimeField
 from pybossa.forms.fields.select_two import Select2Field
 from pybossa.sched import sched_variants
@@ -69,8 +71,6 @@ def is_json(json_type):
 
 BooleanField.false_values = {False, 'false', '', 'off', 'n', 'no'}
 
-# Forms for projects view
-
 class ProjectForm(Form):
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
@@ -98,23 +98,12 @@ class ProjectForm(Form):
                           [validators.Required()], choices=[("", "")], default="")
     subproduct = SelectField(lazy_gettext('Subproduct'),
                              [validators.Required()], choices=[("", "")], default="")
-    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.5-120)'),
-                       places=1, validators=[NumberRange(0.5, 120.0)], default=0.5)
+
+    kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2,
+        validators=[validators.Required(), NumberRange(Decimal('0.1'), 120)])
 
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-        self.set_product_subproduct_choices()
-
-    def set_product_subproduct_choices(self):
-        choices = [("", "")]
-        products = list(current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).keys())
-        self.product.choices = choices + [(p, p) for p in products]
-        product = self.product.data
-        if product:
-            subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS').get(product, [])
-            choices += [(sp, sp) for sp in subproducts]
-        self.subproduct.choices = choices
-
 
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -136,12 +125,6 @@ class ProjectUpdateForm(ProjectForm):
                         pb_validator.CheckPasswordStrength(
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)])
-    if data_access.data_access_levels:
-        data_access = Select2Field(
-            lazy_gettext('Access Level(s)'),
-            [validators.Required()],
-            choices=data_access.data_access_levels['valid_access_levels'],
-            default=[])
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
     sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))

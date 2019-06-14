@@ -32,9 +32,11 @@ class PerformanceStatsAuth(object):
         return getattr(self, action)(user, stat)
 
     def _read(self, user, stat=None):
+        if not user.is_authenticated:
+            return False
         if not stat:
             return True
-        if user.admin:
+        if user.admin or user.subadmin:
             return True
         project = self.project_repo.get(stat.project_id)
         return user.id in project.owners_ids

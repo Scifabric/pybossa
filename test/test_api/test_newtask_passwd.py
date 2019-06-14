@@ -179,3 +179,18 @@ class TestNewtaskPasswd(TestAPI):
             res = self.app.get(next_url, headers=headers)
 
             assert 'Enter the password to contribute to this project' in res.data, res.data
+
+    @with_context
+    def test_newtask_no_gold_answers(self):
+        """Test newtask returns task without gold answers"""
+        project = ProjectFactory.create()
+        project_repo.save(project)
+        TaskFactory.create(project=project, info={'question': 'answer'}, gold_answers={'answer': 1})
+        api_key = project.owner.api_key
+
+        # as a real user, no password
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, api_key)
+        res = self.app.get(url)
+        assert res.status_code == 200, (res, res.data)
+        task = json.loads(res.data)
+        assert task.get('gold_answers') is None

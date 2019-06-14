@@ -53,3 +53,14 @@ class PerformanceStatsRepository(Repository):
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
+
+    def bulk_delete(self, project_id, field, stat_type=None, user_id=None):
+        rows = self.db.session.query(PerformanceStats) \
+            .filter(PerformanceStats.project_id == project_id) \
+            .filter(PerformanceStats.field == field)
+        if stat_type:
+            rows = rows.filter(PerformanceStats.stat_type == stat_type)
+        if user_id:
+            rows = rows.filter(PerformanceStats.user_id == user_id)
+        rows.delete()
+        self.db.session.commit()

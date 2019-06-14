@@ -133,6 +133,7 @@ def add_custom_contrib_button_to(project, user_id_or_ip, ps=None):
 
     project['n_blogposts'] = ps.n_blogposts
     project['n_results'] = ps.n_results
+    project['n_tasks'] = ps.n_tasks
 
     return project
 

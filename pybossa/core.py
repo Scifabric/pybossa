@@ -37,6 +37,9 @@ from pybossa.news import FEED_KEY as NEWS_FEED_KEY
 from pybossa.news import get_news
 from pybossa.messages import *
 import app_settings
+import json
+from pybossa.wizard import Wizard
+
 
 
 def create_app(run_as_server=True):
@@ -626,6 +629,24 @@ def setup_hooks(app):
         # LDAP enabled
         ldap_enabled = app.config.get('LDAP_HOST', False)
 
+        def get_wizard_steps(project=None):
+            show_wizard = True
+            if project is not None:
+                if isinstance(project, dict):
+                    owners_id = project['owners_ids']
+                else:
+                    owners_id = project.owners_ids
+
+                show_wizard = (current_user.subadmin and current_user.id in owners_id) or current_user.admin
+
+            if not show_wizard:
+                return json.dumps(dict(list=[]))
+
+            wizard_steps = app.config.get('WIZARD_STEPS') or {}
+            request_details = {'url': request.url, 'path': request.path}
+            project_wizard = Wizard(project, wizard_steps, request_details)
+            return json.dumps(dict(list=project_wizard.get_wizard_list()))
+
         return dict(
             brand=app.config['BRAND'],
             title=app.config['TITLE'],
@@ -644,7 +665,8 @@ def setup_hooks(app):
             news=news,
             notify_admin=notify_admin,
             plugins=plugins,
-            ldap_enabled=ldap_enabled)
+            ldap_enabled=ldap_enabled,
+            get_wizard_steps=get_wizard_steps)
 
     @app.errorhandler(CSRFError)
     def csrf_error_handler(err):

@@ -69,13 +69,15 @@ from pybossa.jobs import (webhook, send_mail,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT,
                           mail_project_report)
+from pybossa.forms.dynamic_forms import dynamic_project_form
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
 from pybossa.importers import BulkImportException
 from pybossa.pro_features import ProFeatureHandler
 
 from pybossa.core import (project_repo, user_repo, task_repo, blog_repo,
-                          result_repo, webhook_repo, auditlog_repo)
+                          result_repo, webhook_repo, auditlog_repo,
+                          performance_stats_repo)
 from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
@@ -347,15 +349,18 @@ def project_cat_index(category, page):
     return project_index(page, cached_projects.get_all, category, False, True,
                          order_by, desc)
 
-
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
 def new():
     ensure_authorized_to('create', Project)
-    form = ProjectForm(request.body)
+
+    form = dynamic_project_form(ProjectForm, request.body, data_access_levels,
+                                products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+
     def respond(errors):
         response = dict(template='projects/new.html',
+                        project=None,
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
                         message=current_app.config.get('PROJECT_CREATE_MESSAGE'),
@@ -401,6 +406,8 @@ def new():
                       owners_ids=[current_user.id])
 
     project.set_password(form.password.data)
+    ensure_data_access_assignment_from_form(project.info, form)
+
     project_repo.save(project)
 
     msg_1 = gettext('Project created!')
@@ -650,7 +657,9 @@ def update(short_name):
         project.subproduct = project.info.get('subproduct')
         project.kpi = project.info.get('kpi')
 
-        form = ProjectUpdateForm(obj=project)
+        form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
+                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
         categories = project_repo.get_all_categories()
@@ -666,7 +675,9 @@ def update(short_name):
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
         sync_form = ProjectSyncForm()
-        form = ProjectUpdateForm(request.body)
+        form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels,
+                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+
         categories = cached_cat.get_all()
         categories = sorted(categories,
                             key=lambda category: category.name)
@@ -1617,12 +1628,16 @@ def export_to(short_name):
 
     zip_enabled(project, current_user)
 
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
     def respond():
         return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
-                               project=project,
+                               project=project_sanitized,
                                owner=owner,
                                n_tasks=ps.n_tasks,
                                n_task_runs=ps.n_task_runs,
@@ -2084,6 +2099,10 @@ def task_priority(short_name):
 @login_required
 def task_timeout(short_name):
     project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
+                                                                    current_user,
+                                                                    ps)
     title = project_title(project, gettext('Timeout'))
     form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
@@ -2095,7 +2114,7 @@ def task_timeout(short_name):
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
-                               project=project,
+                               project=project_sanitized,
                                owner=owner,
                                pro_features=pro)
     if form.validate() and form.in_range():
@@ -2123,7 +2142,7 @@ def task_timeout(short_name):
         return render_template('/projects/task_timeout.html',
                                title=title,
                                form=form,
-                               project=project,
+                               project=project_sanitized,
                                owner=owner,
                                pro_features=pro)
 
@@ -2263,9 +2282,12 @@ def update_blogpost(short_name, id):
         raise abort(404)
 
     def respond():
+        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
         return render_template('projects/new_blogpost.html',
                                title=gettext("Edit a post"),
-                               form=form, project=project, owner=owner,
+                               form=form, project=project_sanitized, owner=owner,
                                blogpost=blogpost,
                                overall_progress=ps.overall_progress,
                                n_task_runs=ps.n_task_runs,
@@ -2644,12 +2666,15 @@ def export_project_report(short_name):
 
     def respond():
         project, owner, ps = project_by_shortname(short_name)
+        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
         title = project_title(project, "Settings")
         pro = pro_features()
         project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
         owner_serialized = cached_users.get_user_summary(owner.name)
         response = dict(template='/projects/settings.html',
-                        project=project,
+                        project=project_sanitized,
                         owner=owner_serialized,
                         n_tasks=ps.n_tasks,
                         overall_progress=ps.overall_progress,
@@ -2666,6 +2691,7 @@ def export_project_report(short_name):
             return abort(404)
 
         try:
+
             res = project_report_csv_exporter.response_zip(project, ty)
             return res
         except Exception as e:
@@ -2825,7 +2851,9 @@ def ext_config(short_name):
     """Manage configuration of external services."""
     from pybossa.forms.dynamic_forms import form_builder
 
-    project = project_repo.get_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+    sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
+
     ext_conf = project.info.get('ext_config', {})
 
     ensure_authorized_to('read', project)
@@ -2848,6 +2876,8 @@ def ext_config(short_name):
                 ext_conf[form_name] = form.data
                 project.info['ext_config'] = ext_conf
                 project_repo.save(project)
+                sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
+
                 current_app.logger.info('Project id {} external configurations set. {} {}'.format(
                     project.id, form_name, form.data))
                 flash(gettext('Configuration for {} was updated').format(display), 'success')
@@ -2857,7 +2887,7 @@ def ext_config(short_name):
 
     response = dict(
         template='/projects/external_config.html',
-        project=project.to_public_json(),
+        project=sanitize_project,
         title=gettext("Configure external services"),
         forms=template_forms,
         pro_features=pro_features()
@@ -2994,6 +3024,33 @@ def quiz_mode(short_name):
         all_user_quizzes=all_user_quizzes
     ))
 
+
+def _answer_field_has_changed(new_field, old_field):
+    if new_field['type'] != old_field['type']:
+        return True
+    if new_field['config'] != old_field['config']:
+        return True
+    return False
+
+
+def _changed_answer_fields_iter(new_config, old_config):
+    deleted = set(old_config.keys()) - set(new_config.keys())
+    for field in deleted:
+        yield field
+
+    for field, new_val in new_config.items():
+        if field not in old_config:
+            continue
+        old_val = old_config[field]
+        if _answer_field_has_changed(new_val, old_val):
+            yield field
+
+
+def delete_stats_for_changed_fields(project_id, new_config, old_config):
+    for field in _changed_answer_fields_iter(new_config, old_config):
+        performance_stats_repo.bulk_delete(project_id, field)
+
+
 @blueprint.route('/<short_name>/answerfieldsconfig', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
@@ -3013,6 +3070,12 @@ def answerfieldsconfig(short_name):
             else :
                 key = consensus_config_key
             data = body.get(key) or {}
+            if answer_fields_key in body:
+                delete_stats_for_changed_fields(
+                    project.id,
+                    data,
+                    project.info.get(answer_fields_key) or {}
+                )
             project.info[key] = data
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'update', 'project.' + key,
@@ -3036,7 +3099,7 @@ def answerfieldsconfig(short_name):
     return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/performancestats')
+@blueprint.route('/<short_name>/performancestats', methods=['GET', 'DELETE'])
 @login_required
 def show_performance_stats(short_name):
     """Returns Project Stats"""
@@ -3044,6 +3107,15 @@ def show_performance_stats(short_name):
     ensure_authorized_to('read', project)
     title = project_title(project, "Performance Statistics")
     pro = pro_features(owner)
+
+    if request.method == 'DELETE':
+        ensure_authorized_to('update', project)
+        performance_stats_repo.bulk_delete(
+            project_id=project.id,
+            field=request.args['field'],
+            user_id=request.args.get('user_id')
+        )
+        return Response('', 204)
 
     answer_fields = project.info.get('answer_fields', {})
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -3053,12 +3125,51 @@ def show_performance_stats(short_name):
     _, _, user_ids = stats.stats_users(project.id)
     users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
 
+    can_update = current_user.admin or \
+        (current_user.subadmin and current_user.id in project.owners_ids)
+
     response = dict(template='/projects/performancestats.html',
                     title=title,
                     project=project_sanitized,
                     answer_fields=answer_fields,
                     owner=owner_sanitized,
+                    can_update=can_update,
                     contributors=users,
+                    csrf=generate_csrf(),
                     pro_features=pro)
 
     return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/enrichment', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def configure_enrichment(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(
+        project, owner, current_user, ps)
+
+    if request.method != 'POST':
+        ensure_authorized_to('read', Project)
+        pro = pro_features()
+        enrichment_types = current_app.config.get('ENRICHMENT_TYPES', {})
+        dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+        enrichments = project_sanitized.get('info', {}).get('enrichments', [])
+        response = dict(template='projects/enrichment.html',
+                        title=gettext("Configure enrichment"),
+                        enrichments=json.dumps(enrichments),
+                        project=project_sanitized,
+                        pro_features=pro,
+                        csrf=generate_csrf(),
+                        enrichment_types=enrichment_types)
+        return handle_content_type(response)
+
+    ensure_authorized_to('update', Project)
+    data = json.loads(request.data)
+    if data and data.get('enrich_data'):
+        project.info['enrichments'] = data['enrich_data']
+        project_repo.save(project)
+        auditlogger.log_event(project, current_user, 'update', 'project',
+                                'enrichment', json.dumps(project.info['enrichments']))
+        flash(gettext("Success! Project data enrichment updated"))
+    return redirect_content_type(url_for('.settings', short_name=project.short_name))
