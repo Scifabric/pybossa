@@ -1277,7 +1277,7 @@ def export_users(fmt, email_addr):
                              'restrict')
 
     def respond_json():
-        print gen_json()
+        return gen_json()
 
     def gen_json():
         users = get_users_for_report()
