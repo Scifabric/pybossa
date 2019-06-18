@@ -73,6 +73,7 @@ from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.data_access import data_access_levels
 from pybossa.task_creator_helper import set_gold_answers
 from pybossa.auth.task import TaskAuth
+import requests
 
 blueprint = Blueprint('api', __name__)
 
@@ -461,3 +462,23 @@ def task_gold(project_id=None):
     task_repo.update(task)
 
     return Response(json.dumps({'success': True}), 200, mimetype="application/json")
+
+
+
+@jsonpify
+@csrf.exempt
+@blueprint.route('/project/<int:project_id>/services', methods=['POST'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def get_service_request(project_id):
+    """Call dtp service"""
+
+    data = request.json
+    url = 'http://localhost:8080/get-request'
+    headers = {'content-type': 'application/json', 'dtp-usvc-protocol-version': '2'}
+    ret = requests.post(url, json=data, headers=headers)
+
+    if ret is not None:
+        return Response({'error': 'Invalid service requested'}, 503, mimetype="application/json")
+
+    return Response(json.dumps(ret.json()), 200, mimetype="application/json")
+
