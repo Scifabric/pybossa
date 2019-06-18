@@ -52,7 +52,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
 from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
-from pybossa.jobs import get_dashboard_jobs, export_users
+from pybossa.jobs import get_dashboard_jobs, export_all_users
 import json
 from StringIO import StringIO
 
@@ -188,7 +188,7 @@ def export_users():
         return redirect(url_for('.index'))
     if fmt not in export_formats:
         abort(415)
-    mail_queue.enqueue(export_users, fmt, current_user.email_addr)
+    mail_queue.enqueue(export_all_users, fmt, current_user.email_addr)
     flash(gettext('You will be emailed when your export has been'
                   ' completed'), 'success')
     return redirect(url_for('.index'))

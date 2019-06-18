@@ -1266,7 +1266,7 @@ def get_management_dashboard_stats(user_email):
     send_mail(mail_dict)
 
 
-def export_users(fmt, email_addr):
+def export_all_users(fmt, email_addr):
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',
                              'created', 'admin', 'subadmin', 'enabled', 'languages',
                              'locations', 'work_hours_from', 'work_hours_to',

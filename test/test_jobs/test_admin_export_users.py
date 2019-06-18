@@ -24,7 +24,7 @@ from factories import UserFactory
 from helper import web
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from mock import patch
-from pybossa.jobs import export_users
+from pybossa.jobs import export_all_users
 
 
 class TestExportUsers(web.Helper):
@@ -54,7 +54,7 @@ class TestExportUsers(web.Helper):
         project = self.create_project_and_tasks()
         self.contribute(project)
 
-        export_users('json', 'hello@c.com')
+        export_all_users('json', 'hello@c.com')
         args, _ = send.call_args
         data = json.loads(args[0]['attachments'][0].data)
 
@@ -84,7 +84,7 @@ class TestExportUsers(web.Helper):
         self.signout()
         self.signin()
 
-        export_users('json', 'hello@c.com')
+        export_all_users('json', 'hello@c.com')
         args, _ = send.call_args
         data = args[0]['attachments'][0].data
         json_data = json.loads(data)
@@ -103,7 +103,7 @@ class TestExportUsers(web.Helper):
 
         restricted = UserFactory.create(restrict=True, id=5000015)
 
-        export_users('csv', 'hello@c.com')
+        export_all_users('csv', 'hello@c.com')
         args, _ = send.call_args
         data = args[0]['attachments'][0].data
 
@@ -136,7 +136,7 @@ class TestExportUsers(web.Helper):
         self.signout()
         self.signin()
 
-        export_users('csv', 'hello@c.com')
+        export_all_users('csv', 'hello@c.com')
         args, _ = send.call_args
         data = args[0]['attachments'][0].data
 
