@@ -495,14 +495,14 @@ class TestAdmin(web.Helper):
 
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
-      
+
         first_call = mail_queue_mock.enqueue.call_args_list[0]
-        args, kwargs = first_call 
+        args, kwargs = first_call
         assert args[1]['subject'] == 'Admin permissions have been granted on PYBOSSA', args[1]['subject']
         assert args[1]['bcc'] == [u'johndoe@example.com'] , args[1]
 
         second_call = mail_queue_mock.enqueue.call_args_list[1]
-        args, kwargs = second_call 
+        args, kwargs = second_call
         assert args[1]['subject'] == 'Account access update on PYBOSSA', args[1]['subject']
         assert args[1]['recipients'] == [u'juan@juan.com'] , args[1]
 
@@ -624,12 +624,12 @@ class TestAdmin(web.Helper):
         res = self.app.get('/admin/users/export?format=json',
                            follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert res.mimetype == 'application/json', res.mimetype
+        assert 'You will be emailed' in res.data
         # CSV is a valid format for exports
         res = self.app.get('/admin/users/export?format=csv',
                            follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert res.mimetype == 'text/csv', res.mimetype
+        assert 'You will be emailed' in res.data
 
     @with_context
     def test_17_admin_user_export_anonymous(self):
