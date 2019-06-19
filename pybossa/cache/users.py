@@ -357,21 +357,26 @@ def get_user_preferences(user_id):
 def get_users_for_report():
     """Return information for all users to generate report."""
     sql = text("""
-                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin, enabled, locale,
-                subadmin, user_pref->'languages' AS languages, user_pref->'locations' AS locations,
-                u.info->'metadata'->'work_hours_from' AS work_hours_from, u.info->'metadata'->'work_hours_to' AS work_hours_to,
-                u.info->'metadata'->'timezone' AS timezone, u.info->'metadata'->'user_type' AS type_of_user,
-                u.info->'metadata'->'review' AS additional_comments,
-                MIN(finish_time) AS first_submission_date,
-                MAX(finish_time) AS last_submission_date,
-                (SELECT COUNT(id) FROM task_run WHERE user_id = u.id)AS completed_tasks,
-                (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
-                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
-                FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent, u.restrict
-                FROM task_run t RIGHT JOIN "user" u ON t.user_id = u.id
-                WHERE u.restrict=False and u.email_addr not like 'del-%@del.com'
-                GROUP BY user_id, u.id;
-               """)
+        SELECT u.id AS u_id,
+            name, fullname, email_addr, u.created, admin, enabled, locale,
+            subadmin, consent, restrict,
+            user_pref->'languages' AS languages,
+            user_pref->'locations' AS locations,
+            u.info->'metadata'->'work_hours_from' AS work_hours_from,
+            u.info->'metadata'->'work_hours_to' AS work_hours_to,
+            u.info->'metadata'->'timezone' AS timezone,
+            u.info->'metadata'->'user_type' AS type_of_user,
+            u.info->'metadata'->'review' AS additional_comments,
+            count(t.id) AS completed_tasks,
+            min(finish_time) AS first_submission_date,
+            max(finish_time) AS last_submission_date,
+            coalesce(
+                AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') - to_timestamp(t.created, 'YYYY-MM-DD"T"HH24-MI-SS.US')),
+                interval '0s') AS avg_time_per_task
+        FROM "user" u LEFT JOIN task_run t ON u.id = t.user_id
+        WHERE u.email_addr NOT LIKE 'del-%@del.com'
+        GROUP BY u.id;
+    """)
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created, locale=row.locale,
