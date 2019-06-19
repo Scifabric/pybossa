@@ -374,7 +374,7 @@ def get_users_for_report():
                 AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') - to_timestamp(t.created, 'YYYY-MM-DD"T"HH24-MI-SS.US')),
                 interval '0s') AS avg_time_per_task
         FROM "user" u LEFT JOIN task_run t ON u.id = t.user_id
-        WHERE u.email_addr NOT LIKE 'del-%@del.com'
+        WHERE u.restrict=False AND u.email_addr NOT LIKE 'del-%@del.com'
         GROUP BY u.id;
     """)
     results = session.execute(sql)
