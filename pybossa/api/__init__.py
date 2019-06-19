@@ -467,18 +467,25 @@ def task_gold(project_id=None):
 
 @jsonpify
 @csrf.exempt
-@blueprint.route('/project/<int:project_id>/services', methods=['POST'])
+@blueprint.route('/project/<short_name>/services', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def get_service_request(project_id):
-    """Call dtp service"""
+def get_service_request(short_name):
+    """Proxy service call"""
+    if short_name:
+            project = project_repo.get_by_shortname(short_name)
 
-    data = request.json
-    url = 'http://localhost:8080/get-request'
-    headers = {'content-type': 'application/json', 'dtp-usvc-protocol-version': '2'}
-    ret = requests.post(url, json=data, headers=headers)
+    import pdb
+    pdb.set_trace()
+    payload = request.json
+    proxy_service_config = current_app.config.get('PROXY_SERVICE_CONFIG')
+    if project and payload['service_name'] in proxy_service_config['services']:
+        service = proxy_service_config['services'][payload['service_name']]
+        if payload['data'].keys() in service['requests']:
+            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], payload['service_name'], payload['service_version'])
+            headers = service['header']
+            ret = requests.post(url, header=headers, json=payload['data'])
+            return Response(json.dumps(ret.json()), 200, mimetype="application/json")
+    else:
+        return Response({'error': 'Invalid service requested, please confirm with GIGwork team the availabilty of the requested sevice.'}, 503, mimetype="application/json")
 
-    if ret is not None:
-        return Response({'error': 'Invalid service requested'}, 503, mimetype="application/json")
-
-    return Response(json.dumps(ret.json()), 200, mimetype="application/json")
 
