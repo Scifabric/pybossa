@@ -22,6 +22,7 @@ import copy
 import json
 import os
 import shutil
+import urllib
 import zipfile
 from StringIO import StringIO
 from default import db, Fixtures, with_context, with_context_settings, FakeResponse, mock_contributions_guard
@@ -698,6 +699,33 @@ class TestWeb(web.Helper):
             assert errors.get('code') == 400, err_msg
             assert res.status_code == 400, err_msg
 
+    @with_context
+    def test_get_tasks_completed_between(self):
+        user = UserFactory.create()
+        self.signin_user(user)
+        TaskRunFactory.create(user=user, created='2000-01-01T00:00:00.000')
+
+        qps = urllib.urlencode({
+            'start': '1999-01-01T00:00:00.000Z'
+        })
+        res = self.app.get('/account/{}/recent_tasks?{}'.format(user.name, qps))
+        assert res.status_code == 200, res
+        body = json.loads(res.data)
+        assert body['count'] == 1, body
+
+        qps = urllib.urlencode({
+            'start': '2001-01-01T00:00:00.000Z'
+        })
+        res = self.app.get('/account/{}/recent_tasks?{}'.format(user.name, qps))
+        assert res.status_code == 200, res
+        body = json.loads(res.data)
+        assert body['count'] == 0, body
+
+        qps = urllib.urlencode({
+            'start': '1999-01-01T00:00:00.000'
+        })
+        res = self.app.get('/account/{}/recent_tasks?{}'.format(user.name, qps))
+        assert res.status_code == 400, res
 
     @with_context
     def test_register_csrf_wrong(self):
