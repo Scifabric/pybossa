@@ -3686,7 +3686,7 @@ class TestWeb(web.Helper):
                             content_type="application/json",
                             headers={'X-CSRFToken': csrf})
         data = json.loads(res.data)
-        assert "Yay, you changed your password succesfully!" == data.get('flash'), res.data
+        assert "Yay, you changed your password successfully!" == data.get('flash'), res.data
         assert data.get('status') == SUCCESS, data
 
         password = "p4ssw0rd"
@@ -3762,7 +3762,7 @@ class TestWeb(web.Helper):
                                   'confirm': "p4ssw0rd",
                                   'btn': 'Password'},
                             follow_redirects=True)
-        assert "Yay, you changed your password succesfully!" in res.data, res.data
+        assert "Yay, you changed your password successfully!" in res.data, res.data
 
         password = "p4ssw0rd"
         self.signin(password=password)

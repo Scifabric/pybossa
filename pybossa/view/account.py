@@ -391,7 +391,7 @@ def register():
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
             create_account(account, project_slugs=project_slugs)
-            flash(gettext('Created user succesfully!'), 'success')
+            flash(gettext('Created user successfully!'), 'success')
             return redirect_content_type(url_for("home.home"))
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
@@ -460,7 +460,7 @@ def confirm_account():
     if user is not None:
         return _update_user_with_valid_email(user, userdict['email_addr'])
     create_account(userdict)
-    flash(gettext('Created user succesfully!'), 'success')
+    flash(gettext('Created user successfully!'), 'success')
     return redirect(url_for("home.home"))
 
 
@@ -843,7 +843,7 @@ def _handle_password_update(user, password_form):
         if user.check_password(password_form.current_password.data):
             user.set_password(password_form.new_password.data)
             user_repo.update(user)
-            flash(gettext('Yay, you changed your password succesfully!'),
+            flash(gettext('Yay, you changed your password successfully!'),
                   'success')
             return True
         else:
