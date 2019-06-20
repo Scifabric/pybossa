@@ -49,14 +49,3 @@ matrix:
     after_success:
     - pip install coveralls
     - coveralls
-  - language: node_js
-    node_js:
-    - "11.10.1"
-    before_install:
-    - cd pybossa/themes/default/static/src && ls
-    install:
-    - npm config set @dtwebservices:registry="https://api.bintray.com/npm/bloomberg/gigwork///"
-    - yarn install
-    - ls ./node_modules
-    - yarn test
-    - yarn lint
