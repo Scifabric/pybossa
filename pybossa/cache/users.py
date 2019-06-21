@@ -19,7 +19,7 @@
 from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
-from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_WEEK
+from pybossa.cache import cache, memoize, delete_memoized, FIVE_MINUTES, ONE_DAY, ONE_WEEK
 from pybossa.util import pretty_date, exists_materialized_view
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
@@ -504,3 +504,21 @@ def delete_published_projects(user_id):
     """Delete from cache the users (un)published project."""
     delete_memoized(draft_projects_cached, user_id)
     delete_memoized(published_projects_cached, user_id)
+
+
+@memoize(timeout=FIVE_MINUTES)
+def get_tasks_completed_between(user_id, beginning_time_utc, end_time_utc=None):
+    timestamp_tmpl = 'TO_TIMESTAMP({}, \'YYYY-MM-DD"T"HH24:MI:SS.US\')'
+    created_timestamp = timestamp_tmpl.format('created')
+    end_time_fragment = ''
+    if end_time_utc:
+        end_timestamp = timestamp_tmpl.format('\'{}\''.format(end_time_utc))
+        end_time_fragment = 'AND {} <= {}'.format(created_timestamp, end_timestamp)
+    beginning_timestamp = timestamp_tmpl.format('\'{}\''.format(beginning_time_utc))
+    sql = text('''
+        SELECT id, created
+        FROM "task_run"
+        WHERE user_id = {} AND {} >= {} {}
+    '''.format(str(user_id), created_timestamp, beginning_timestamp, end_time_fragment))
+    results = session.execute(sql)
+    return [dict(row) for row in results]
