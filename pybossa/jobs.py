@@ -23,7 +23,7 @@ from flask import current_app, render_template
 from flask_mail import Message, Attachment
 from pybossa.core import mail, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
-from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users
+from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users, UnicodeWriter
 import pybossa.dashboard.jobs as dashboard
 from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
@@ -34,6 +34,7 @@ from rq.timeouts import JobTimeoutException
 import app_settings
 from pybossa.cache import sentinel, management_dashboard_stats
 from pybossa.cache import settings, site_stats
+from pybossa.cache.users import get_users_for_report
 from collections import OrderedDict
 import json
 from StringIO import StringIO
@@ -1263,3 +1264,65 @@ def get_management_dashboard_stats(user_email):
             .format(msg, current_app.config.get('BRAND')))
     mail_dict = dict(recipients=[user_email], subject=subject, body=body)
     send_mail(mail_dict)
+
+
+def export_all_users(fmt, email_addr):
+    exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',
+                             'created', 'admin', 'subadmin', 'enabled', 'languages',
+                             'locations', 'work_hours_from', 'work_hours_to',
+                             'timezone', 'type_of_user', 'additional_comments',
+                             'total_projects_contributed', 'completed_tasks',
+                             'percentage_tasks_completed', 'first_submission_date',
+                             'last_submission_date', 'avg_time_per_task', 'consent',
+                             'restrict')
+
+    def respond_json():
+        return gen_json()
+
+    def gen_json():
+        users = get_users_for_report()
+        jdata = json.dumps(users)
+        return jdata
+
+    def respond_csv():
+        out = StringIO()
+        writer = UnicodeWriter(out)
+        tmp = 'attachment; filename=all_users.csv'
+        return gen_csv(out, writer, write_user)
+
+    def gen_csv(out, writer, write_user):
+        add_headers(writer)
+        users = get_users_for_report()
+        for user in users:
+            write_user(writer, user)
+        return out.getvalue()
+
+    def write_user(writer, user):
+        values = [user[attr] for attr in exportable_attributes]
+        writer.writerow(values)
+
+    def add_headers(writer):
+        writer.writerow(exportable_attributes)
+
+    try:
+        data = {"json": respond_json, "csv": respond_csv}[fmt]()
+        attachment = Attachment(
+            'user_export.{}'.format(fmt),
+            'application/{}'.format(fmt),
+            data
+        )
+        mail_dict = {
+            'recipients': [email_addr],
+            'subject': 'User Export',
+            'body': 'Your exported data is attached.',
+            'attachments': [attachment]
+        }
+    except Exception as e:
+        mail_dict = {
+            'recipients': [email_addr],
+            'subject': 'User Export Failed',
+            'body': 'User export failed, {}'.format(str(e))
+        }
+        raise
+    finally:
+        send_mail(mail_dict)

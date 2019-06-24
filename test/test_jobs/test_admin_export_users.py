@@ -24,6 +24,7 @@ from factories import UserFactory
 from helper import web
 from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
 from mock import patch
+from pybossa.jobs import export_all_users
 
 
 class TestExportUsers(web.Helper):
@@ -46,22 +47,24 @@ class TestExportUsers(web.Helper):
         res = self.app.post('api/taskrun', data=json.dumps(data))
 
     @with_context
-    def test_json_contains_all_attributes(self):
+    @patch('pybossa.jobs.send_mail')
+    def test_json_contains_all_attributes(self, send):
         self.register()
         self.signin()
         project = self.create_project_and_tasks()
         self.contribute(project)
 
-        res = self.app.get('/admin/users/export?format=json',
-                            follow_redirects=True)
-        data = json.loads(res.data)
+        export_all_users('json', 'hello@c.com')
+        args, _ = send.call_args
+        data = json.loads(args[0]['attachments'][0].data)
 
         for attribute in self.exportable_attributes:
             assert attribute in data[0], data
 
     @with_context
+    @patch('pybossa.jobs.send_mail')
     @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
-    def test_json_returns_all_users(self, password_needed):
+    def test_json_returns_all_users(self, password_needed, send):
         password_needed.return_value = False
         restricted = UserFactory.create(restrict=True, id=5000014)
         self.register(fullname="Manolita")
@@ -81,9 +84,9 @@ class TestExportUsers(web.Helper):
         self.signout()
         self.signin()
 
-        res = self.app.get('/admin/users/export?format=json',
-                            follow_redirects=True)
-        data = res.data
+        export_all_users('json', 'hello@c.com')
+        args, _ = send.call_args
+        data = args[0]['attachments'][0].data
         json_data = json.loads(data)
 
         assert "Juan Jose" in data, data
@@ -93,23 +96,25 @@ class TestExportUsers(web.Helper):
         assert restricted.name not in data, data
 
     @with_context
-    def test_csv_contains_all_attributes(self):
+    @patch('pybossa.jobs.send_mail')
+    def test_csv_contains_all_attributes(self, send):
         self.register()
         self.signin()
 
         restricted = UserFactory.create(restrict=True, id=5000015)
 
-        res = self.app.get('/admin/users/export?format=csv',
-                            follow_redirects=True)
-        data = res.data
+        export_all_users('csv', 'hello@c.com')
+        args, _ = send.call_args
+        data = args[0]['attachments'][0].data
 
         for attribute in self.exportable_attributes:
             assert attribute in data, data
         assert restricted.name not in data, data
 
     @with_context
+    @patch('pybossa.jobs.send_mail')
     @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
-    def test_csv_returns_all_users(self, password_needed):
+    def test_csv_returns_all_users(self, password_needed, send):
         password_needed.return_value = False
         restricted = UserFactory.create(restrict=True, id=5000016)
         self.register(fullname="Manolita")
@@ -131,9 +136,10 @@ class TestExportUsers(web.Helper):
         self.signout()
         self.signin()
 
-        res = self.app.get('/admin/users/export?format=csv',
-                            follow_redirects=True)
-        data = res.data
+        export_all_users('csv', 'hello@c.com')
+        args, _ = send.call_args
+        data = args[0]['attachments'][0].data
+
         assert restricted.name not in data
         csv_content = StringIO.StringIO(data)
         csvreader = unicode_csv_reader(csv_content)

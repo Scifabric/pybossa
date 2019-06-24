@@ -67,6 +67,7 @@ from pybossa.data_access import (data_access_levels, ensure_data_access_assignme
 import app_settings
 from flask import make_response
 import six
+import re
 
 blueprint = Blueprint('account', __name__)
 
@@ -391,7 +392,7 @@ def register():
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
             create_account(account, project_slugs=project_slugs)
-            flash(gettext('Created user succesfully!'), 'success')
+            flash(gettext('Created user successfully!'), 'success')
             return redirect_content_type(url_for("home.home"))
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
@@ -460,7 +461,7 @@ def confirm_account():
     if user is not None:
         return _update_user_with_valid_email(user, userdict['email_addr'])
     create_account(userdict)
-    flash(gettext('Created user succesfully!'), 'success')
+    flash(gettext('Created user successfully!'), 'success')
     return redirect(url_for("home.home"))
 
 
@@ -610,6 +611,21 @@ def _show_own_profile(user, form, current_user, can_update):
     response.headers['Cache-Control'] = 'no-store'
     response.headers['Pragma'] = 'no-cache'
     return response
+
+
+utc_dt_re = re.compile(r'^\d{4}(-\d{2}){2}T(\d{2}:){2}\d{2}\.\d{1,6}Z$')
+
+
+@blueprint.route('/<name>/recent_tasks', methods=['GET'])
+@login_required
+def recent_tasks(name):
+    current_app.logger.debug('recent_tasks: {}'.format(name))
+    start_time_utc = request.args.get('start')
+    if (not start_time_utc) or (not utc_dt_re.search(start_time_utc)):
+        abort(400)
+    user = user_repo.get_by_name(name)
+    recent = cached_users.get_tasks_completed_between(user.id, beginning_time_utc=start_time_utc[:-1])
+    return jsonify(dict(count=len(recent)))
 
 
 columns = {
@@ -843,7 +859,7 @@ def _handle_password_update(user, password_form):
         if user.check_password(password_form.current_password.data):
             user.set_password(password_form.new_password.data)
             user_repo.update(user)
-            flash(gettext('Yay, you changed your password succesfully!'),
+            flash(gettext('Yay, you changed your password successfully!'),
                   'success')
             return True
         else:

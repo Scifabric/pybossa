@@ -524,3 +524,29 @@ class TestUsersCache(Test):
         for field in fields:
             assert field in users[0].keys(), field
         assert len(users[0].keys()) == len(fields)
+
+
+    @with_context
+    def test_get_tasks_completed_between(self):
+        user = UserFactory.create()
+        TaskRunFactory.create(user=user, created='2000-01-01T00:00:00.000')
+
+        beg = '1999-01-01T00:00:00.000'
+        end = '2001-01-01T00:00:00.000'
+        task_runs = cached_users.get_tasks_completed_between(user.id, beginning_time_utc=beg, end_time_utc=end)
+        assert len(task_runs) == 1
+
+        beg = '2001-01-01T00:00:00.000'
+        end = '2002-01-01T00:00:00.000'
+        task_runs = cached_users.get_tasks_completed_between(user.id, beginning_time_utc=beg, end_time_utc=end)
+        assert len(task_runs) == 0
+
+        beg = '1999-01-01T00:00:00.000'
+        end = None
+        task_runs = cached_users.get_tasks_completed_between(user.id, beginning_time_utc=beg, end_time_utc=end)
+        assert len(task_runs) == 1
+
+        beg = '2001-01-01T00:00:00.000'
+        end = None
+        task_runs = cached_users.get_tasks_completed_between(user.id, beginning_time_utc=beg, end_time_utc=end)
+        assert len(task_runs) == 0

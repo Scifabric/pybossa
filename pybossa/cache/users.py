@@ -19,7 +19,7 @@
 from sqlalchemy.sql import text
 from sqlalchemy.exc import ProgrammingError
 from pybossa.core import db, timeouts
-from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_WEEK
+from pybossa.cache import cache, memoize, delete_memoized, FIVE_MINUTES, ONE_DAY, ONE_WEEK
 from pybossa.util import pretty_date, exists_materialized_view
 from pybossa.model.user import User
 from pybossa.cache.projects import overall_progress, n_tasks, n_volunteers
@@ -357,21 +357,26 @@ def get_user_preferences(user_id):
 def get_users_for_report():
     """Return information for all users to generate report."""
     sql = text("""
-                SELECT u.id AS u_id, name, fullname, email_addr, u.created, admin, enabled, locale,
-                subadmin, user_pref->'languages' AS languages, user_pref->'locations' AS locations,
-                u.info->'metadata'->'work_hours_from' AS work_hours_from, u.info->'metadata'->'work_hours_to' AS work_hours_to,
-                u.info->'metadata'->'timezone' AS timezone, u.info->'metadata'->'user_type' AS type_of_user,
-                u.info->'metadata'->'review' AS additional_comments,
-                MIN(finish_time) AS first_submission_date,
-                MAX(finish_time) AS last_submission_date,
-                (SELECT COUNT(id) FROM task_run WHERE user_id = u.id)AS completed_tasks,
-                (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
-                to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
-                FROM task_run WHERE user_id = u.id) AS avg_time_per_task, u.consent, u.restrict
-                FROM task_run t RIGHT JOIN "user" u ON t.user_id = u.id
-                WHERE u.restrict=False and u.email_addr not like 'del-%@del.com'
-                GROUP BY user_id, u.id;
-               """)
+        SELECT u.id AS u_id,
+            name, fullname, email_addr, u.created, admin, enabled, locale,
+            subadmin, consent, restrict,
+            user_pref->'languages' AS languages,
+            user_pref->'locations' AS locations,
+            u.info->'metadata'->'work_hours_from' AS work_hours_from,
+            u.info->'metadata'->'work_hours_to' AS work_hours_to,
+            u.info->'metadata'->'timezone' AS timezone,
+            u.info->'metadata'->'user_type' AS type_of_user,
+            u.info->'metadata'->'review' AS additional_comments,
+            count(t.id) AS completed_tasks,
+            min(finish_time) AS first_submission_date,
+            max(finish_time) AS last_submission_date,
+            coalesce(
+                AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') - to_timestamp(t.created, 'YYYY-MM-DD"T"HH24-MI-SS.US')),
+                interval '0s') AS avg_time_per_task
+        FROM "user" u LEFT JOIN task_run t ON u.id = t.user_id
+        WHERE u.restrict=False AND u.email_addr NOT LIKE 'del-%@del.com'
+        GROUP BY u.id;
+    """)
     results = session.execute(sql)
     users_report = [ dict(id=row.u_id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created, locale=row.locale,
@@ -499,3 +504,21 @@ def delete_published_projects(user_id):
     """Delete from cache the users (un)published project."""
     delete_memoized(draft_projects_cached, user_id)
     delete_memoized(published_projects_cached, user_id)
+
+
+@memoize(timeout=FIVE_MINUTES)
+def get_tasks_completed_between(user_id, beginning_time_utc, end_time_utc=None):
+    timestamp_tmpl = 'TO_TIMESTAMP({}, \'YYYY-MM-DD"T"HH24:MI:SS.US\')'
+    created_timestamp = timestamp_tmpl.format('created')
+    end_time_fragment = ''
+    if end_time_utc:
+        end_timestamp = timestamp_tmpl.format('\'{}\''.format(end_time_utc))
+        end_time_fragment = 'AND {} <= {}'.format(created_timestamp, end_timestamp)
+    beginning_timestamp = timestamp_tmpl.format('\'{}\''.format(beginning_time_utc))
+    sql = text('''
+        SELECT id, created
+        FROM "task_run"
+        WHERE user_id = {} AND {} >= {} {}
+    '''.format(str(user_id), created_timestamp, beginning_timestamp, end_time_fragment))
+    results = session.execute(sql)
+    return [dict(row) for row in results]

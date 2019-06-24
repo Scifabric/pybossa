@@ -37,7 +37,7 @@ from sqlalchemy.exc import ProgrammingError
 from pybossa.model import make_timestamp
 from pybossa.model.category import Category
 from pybossa.model.announcement import Announcement
-from pybossa.util import admin_required, UnicodeWriter, handle_content_type
+from pybossa.util import admin_required, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import generate_notification_email_for_admins
@@ -52,7 +52,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.core import announcement_repo, project_repo, user_repo, sentinel
 from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
-from pybossa.jobs import get_dashboard_jobs
+from pybossa.jobs import get_dashboard_jobs, export_all_users
 import json
 from StringIO import StringIO
 
@@ -62,7 +62,6 @@ from pybossa.news import NOTIFY_ADMIN
 from pybossa.jobs import send_mail
 from pybossa.core import userimporter
 from pybossa.importers import BulkImportException
-from pybossa.cache.users import get_users_for_report
 from collections import OrderedDict
 import app_settings
 from datetime import datetime
@@ -182,54 +181,6 @@ def users(user_id=None):
 @admin_required
 def export_users():
     """Export Users list in the given format, only for admins."""
-    exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',
-                             'created', 'admin', 'subadmin', 'enabled', 'languages',
-                             'locations', 'work_hours_from', 'work_hours_to',
-                             'timezone', 'type_of_user', 'additional_comments',
-                             'total_projects_contributed', 'completed_tasks',
-                             'percentage_tasks_completed', 'first_submission_date',
-                             'last_submission_date', 'avg_time_per_task', 'consent',
-                             'restrict')
-
-    def respond_json():
-        tmp = 'attachment; filename=all_users.json'
-        res = Response(gen_json(), mimetype='application/json')
-        res.headers['Content-Disposition'] = tmp
-        return res
-
-    def gen_json():
-        users = get_users_for_report()
-        jdata = json.dumps(users)
-        return jdata
-
-    def dictize_with_exportable_attributes(user):
-        dict_user = {}
-        for attr in exportable_attributes:
-            dict_user[attr] = user[attr]
-        return dict_user
-
-    def respond_csv():
-        out = StringIO()
-        writer = UnicodeWriter(out)
-        tmp = 'attachment; filename=all_users.csv'
-        res = Response(gen_csv(out, writer, write_user), mimetype='text/csv')
-        res.headers['Content-Disposition'] = tmp
-        return res
-
-    def gen_csv(out, writer, write_user):
-        add_headers(writer)
-        users = get_users_for_report()
-        for user in users:
-            write_user(writer, user)
-        yield out.getvalue()
-
-    def write_user(writer, user):
-        values = [user[attr] for attr in exportable_attributes]
-        writer.writerow(values)
-
-    def add_headers(writer):
-        writer.writerow(exportable_attributes)
-
     export_formats = ["json", "csv"]
 
     fmt = request.args.get('format')
@@ -237,7 +188,10 @@ def export_users():
         return redirect(url_for('.index'))
     if fmt not in export_formats:
         abort(415)
-    return {"json": respond_json, "csv": respond_csv}[fmt]()
+    mail_queue.enqueue(export_all_users, fmt, current_user.email_addr)
+    flash(gettext('You will be emailed when your export has been'
+                  ' completed'), 'success')
+    return redirect(url_for('.index'))
 
 
 @blueprint.route('/users/add/<int:user_id>')
