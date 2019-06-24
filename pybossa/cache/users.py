@@ -353,6 +353,13 @@ def get_user_preferences(user_id):
     return get_user_pref_db_clause(user_pref)
 
 
+@memoize(timeout=ONE_DAY)
+def get_user_email(user_id):
+    assert user_id is not None or user_id > 0
+    user_email = User.query.get(user_id).email_addr or {}
+    return user_email
+
+
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_users_for_report():
     """Return information for all users to generate report."""

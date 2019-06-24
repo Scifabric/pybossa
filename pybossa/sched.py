@@ -28,6 +28,7 @@ from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest, Forbidden
 import random
+import json
 from pybossa.cache import users as cached_users
 from flask import current_app
 from pybossa import data_access
@@ -54,6 +55,7 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
              desc=True, rand_within_priority=False,
              gold_only=False):
     """Get a new task by calling the appropriate scheduler function."""
+    # import pdb; pdb.set_trace()
     sched_map = {
         'default': get_locked_task,
         'breadth_first': get_breadth_first_task,
@@ -269,10 +271,11 @@ def locked_scheduler(query_factory):
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
                                          limit=user_count + 5))
-
         for task_id, taskcount, n_answers, calibration, timeout in rows:
+            print('HERE')
             timeout = timeout or TIMEOUT
             remaining = float('inf') if calibration else n_answers - taskcount
+            print('checking: ', task_id)
             if acquire_lock(task_id, user_id, remaining, timeout):
                 rows.close()
                 save_task_id_project_id(task_id, project_id, 2 * timeout)
@@ -358,7 +361,9 @@ def get_user_pref_task(
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
+    # import pdb; pdb.set_trace()
 
+    user_email = cached_users.get_user_email(user_id)
     user_pref_list = cached_users.get_user_preferences(user_id)
     secondary_order = 'random()' if rand_within_priority else 'id ASC'
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
@@ -375,6 +380,7 @@ def get_user_pref_task(
            WHERE NOT EXISTS
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
            user_id=:user_id AND task_id=task.id)
+           AND (user_pref->'assign_user' IS NULL or user_pref->>'assign_user' LIKE '%{}%')
            AND task.project_id=:project_id
            AND ({})
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
@@ -386,14 +392,52 @@ def get_user_pref_task(
            {}
            LIMIT :limit;
            '''.format(
+                user_email,
                 user_pref_list,
                 allowed_task_levels_clause,
                 gold_only_clause,
                 order_by_calib,
                 secondary_order
             )
-    return text(sql)
 
+    # user_email_assign = '''
+    #         task.user_pref->\'assign_user\' IS NULL
+    #         OR task.user_pref @> \'{}\'
+    #         '''.format(json.dumps({'assign_user': [user_email]}).lower())
+    # if user_pref:
+    #     user_pref_sql = '({}) AND ({})'.format(user_email_assign, user_pref_list)
+    # else:
+    #     user_pref_list = '({}) OR ({})'.format(user_email_assign, user_pref_list)
+    # sql = '''
+    #        SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
+    #           (SELECT info->'timeout'
+    #            FROM project
+    #            WHERE id=:project_id) as timeout
+    #        FROM task
+    #        LEFT JOIN task_run ON (task.id = task_run.task_id)
+    #        WHERE NOT EXISTS
+    #        (SELECT 1 FROM task_run WHERE project_id=:project_id AND
+    #        user_id=:user_id AND task_id=task.id)
+    #        AND task.project_id=:project_id
+    #        AND ({})
+    #        AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
+    #        AND task.state !='completed'
+    #        {}
+    #        {}
+    #        group by task.id
+    #        ORDER BY task.calibration {}, priority_0 DESC,
+    #        {}
+    #        LIMIT :limit;
+    #        '''.format(
+    #             user_pref_sql,
+    #             allowed_task_levels_clause,
+    #             gold_only_clause,
+    #             order_by_calib,
+    #             secondary_order
+    #         )
+    print(sql)
+    print(user_pref_list)
+    return text(sql)
 
 TASK_USERS_KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
 USER_TASKS_KEY_PREFIX = 'pybossa:user:task_acquired:timestamps:{0}'
