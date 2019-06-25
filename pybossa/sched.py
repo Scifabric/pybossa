@@ -364,11 +364,21 @@ def get_user_pref_task(
     # import pdb; pdb.set_trace()
 
     user_email = cached_users.get_user_email(user_id)
+    user_pref = cached_users.get_user_pref(user_id)
     user_pref_list = cached_users.get_user_preferences(user_id)
     secondary_order = 'random()' if rand_within_priority else 'id ASC'
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
     gold_only_clause = 'AND task.calibration = 1' if gold_only else ''
+
+    user_email_assign = '''
+            (task.user_pref->\'assign_user\' IS NULL
+            OR task.user_pref @> \'{}\')
+            '''.format(json.dumps({'assign_user': [user_email]}).lower())
+    if user_pref:
+        user_pref_sql = '({}) AND ({})'.format(user_email_assign, user_pref_list)
+    else:
+        user_pref_list = '({}) OR ({})'.format(user_email_assign, user_pref_list)
 
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
@@ -380,7 +390,6 @@ def get_user_pref_task(
            WHERE NOT EXISTS
            (SELECT 1 FROM task_run WHERE project_id=:project_id AND
            user_id=:user_id AND task_id=task.id)
-           AND (user_pref->'assign_user' IS NULL or user_pref->>'assign_user' LIKE '%{}%')
            AND task.project_id=:project_id
            AND ({})
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
@@ -392,51 +401,12 @@ def get_user_pref_task(
            {}
            LIMIT :limit;
            '''.format(
-                user_email,
-                user_pref_list,
+                user_pref_sql,
                 allowed_task_levels_clause,
                 gold_only_clause,
                 order_by_calib,
                 secondary_order
             )
-
-    # user_email_assign = '''
-    #         task.user_pref->\'assign_user\' IS NULL
-    #         OR task.user_pref @> \'{}\'
-    #         '''.format(json.dumps({'assign_user': [user_email]}).lower())
-    # if user_pref:
-    #     user_pref_sql = '({}) AND ({})'.format(user_email_assign, user_pref_list)
-    # else:
-    #     user_pref_list = '({}) OR ({})'.format(user_email_assign, user_pref_list)
-    # sql = '''
-    #        SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
-    #           (SELECT info->'timeout'
-    #            FROM project
-    #            WHERE id=:project_id) as timeout
-    #        FROM task
-    #        LEFT JOIN task_run ON (task.id = task_run.task_id)
-    #        WHERE NOT EXISTS
-    #        (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-    #        user_id=:user_id AND task_id=task.id)
-    #        AND task.project_id=:project_id
-    #        AND ({})
-    #        AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
-    #        AND task.state !='completed'
-    #        {}
-    #        {}
-    #        group by task.id
-    #        ORDER BY task.calibration {}, priority_0 DESC,
-    #        {}
-    #        LIMIT :limit;
-    #        '''.format(
-    #             user_pref_sql,
-    #             allowed_task_levels_clause,
-    #             gold_only_clause,
-    #             order_by_calib,
-    #             secondary_order
-    #         )
-    print(sql)
-    print(user_pref_list)
     return text(sql)
 
 TASK_USERS_KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
