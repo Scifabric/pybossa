@@ -363,7 +363,6 @@ def new():
                         project=None,
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
-                        message=current_app.config.get('PROJECT_CREATE_MESSAGE'),
                         prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
         return handle_content_type(response)
 
