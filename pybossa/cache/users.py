@@ -348,8 +348,6 @@ def delete_user_pref_metadata(name):
 
 @memoize(timeout=ONE_DAY)
 def get_user_preferences(user_id):
-    # assert user_id is not None or user_id > 0
-    # user_pref = User.query.get(user_id).user_pref or {}
     user_pref = get_user_pref(user_id)
     return get_user_pref_db_clause(user_pref)
 

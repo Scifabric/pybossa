@@ -55,7 +55,6 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
              desc=True, rand_within_priority=False,
              gold_only=False):
     """Get a new task by calling the appropriate scheduler function."""
-    # import pdb; pdb.set_trace()
     sched_map = {
         'default': get_locked_task,
         'breadth_first': get_breadth_first_task,
@@ -272,10 +271,8 @@ def locked_scheduler(query_factory):
                                          user_id=user_id,
                                          limit=user_count + 5))
         for task_id, taskcount, n_answers, calibration, timeout in rows:
-            print('HERE')
             timeout = timeout or TIMEOUT
             remaining = float('inf') if calibration else n_answers - taskcount
-            print('checking: ', task_id)
             if acquire_lock(task_id, user_id, remaining, timeout):
                 rows.close()
                 save_task_id_project_id(task_id, project_id, 2 * timeout)
@@ -361,8 +358,6 @@ def get_user_pref_task(
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
-    # import pdb; pdb.set_trace()
-
     user_email = cached_users.get_user_email(user_id)
     user_pref = cached_users.get_user_pref(user_id)
     user_pref_list = cached_users.get_user_preferences(user_id)
