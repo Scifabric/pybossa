@@ -373,7 +373,7 @@ def get_user_pref_task(
     if user_pref:
         user_pref_sql = '({}) AND ({})'.format(user_email_assign, user_pref_list)
     else:
-        user_pref_list = '({}) OR ({})'.format(user_email_assign, user_pref_list)
+        user_pref_sql = '({}) OR ({})'.format(user_email_assign, user_pref_list)
 
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
