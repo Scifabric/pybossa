@@ -358,23 +358,13 @@ def get_user_pref_task(
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
-    user_email = cached_users.get_user_email(user_id)
-    user_pref = cached_users.get_user_pref(user_id)
     user_pref_list = cached_users.get_user_preferences(user_id)
     secondary_order = 'random()' if rand_within_priority else 'id ASC'
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
     gold_only_clause = 'AND task.calibration = 1' if gold_only else ''
 
-    user_email_assign = '''
-            (task.user_pref->\'assign_user\' IS NULL
-            OR task.user_pref @> \'{}\')
-            '''.format(json.dumps({'assign_user': [user_email]}).lower())
-    if user_pref:
-        user_pref_sql = '({}) AND ({})'.format(user_email_assign, user_pref_list)
-    else:
-        user_pref_sql = '({}) OR ({})'.format(user_email_assign, user_pref_list)
-
+    print(user_pref_list)
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
               (SELECT info->'timeout'
@@ -396,7 +386,7 @@ def get_user_pref_task(
            {}
            LIMIT :limit;
            '''.format(
-                user_pref_sql,
+                user_pref_list,
                 allowed_task_levels_clause,
                 gold_only_clause,
                 order_by_calib,

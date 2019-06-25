@@ -349,7 +349,8 @@ def delete_user_pref_metadata(name):
 @memoize(timeout=ONE_DAY)
 def get_user_preferences(user_id):
     user_pref = get_user_pref(user_id)
-    return get_user_pref_db_clause(user_pref)
+    user_email = get_user_email(user_id)
+    return get_user_pref_db_clause(user_pref, user_email)
 
 @memoize(timeout=ONE_DAY)
 def get_user_pref(user_id):
