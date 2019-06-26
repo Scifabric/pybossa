@@ -194,11 +194,11 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                AND id NOT IN
                (SELECT task_id FROM task_run WHERE
                project_id=:project_id AND user_id=:user_id)
-               AND (user_pref IS NULL OR {}) {} ;
+               AND ({}) {} ;
                '''.format(user_pref_list, allowed_task_levels_clause)
     sqltext = text(sql)
     try:
-        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id, assign_users=assign_user))
+        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id, assign_user=assign_user))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None

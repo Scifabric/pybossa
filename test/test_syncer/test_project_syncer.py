@@ -129,7 +129,7 @@ class TestProjectSyncer(Test):
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target')
-    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_user_email')
+    @patch('pybossa.cache.users.get_user_email')
     @patch('pybossa.syncer.requests')
     def test_get_target_owners(self, fake_requests, mock_get_user_email, mock_get):
         user = UserFactory.create(admin=True, email_addr=u'user@test.com')
@@ -138,14 +138,5 @@ class TestProjectSyncer(Test):
         mock_get.return_value = create_target()
         project = ProjectFactory.build(short_name=self.target_id)
         project_syncer.get_target_owners(project)
-        project_syncer.get_user_email.assert_called()
+        mock_get_user_email.assert_called()
 
-    @with_context
-    @patch('pybossa.syncer.project_syncer.requests')
-    @patch('pybossa.syncer.requests')
-    def test_get_user_email(self, fake_requests, mock_requests):
-        user = UserFactory.create(admin=True, email_addr=u'user@test.com')
-        project_syncer = ProjectSyncer(self.target_url, self.target_key)
-        content = json.dumps(user.dictize())
-        mock_requests.get.return_value = create_response(content=content)
-        project_syncer.get_user_email(user.id) == 'user@test.com'

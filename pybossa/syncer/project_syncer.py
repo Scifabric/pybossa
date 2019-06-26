@@ -26,6 +26,7 @@ import requests
 from pybossa.core import project_repo, http_signer
 from pybossa.syncer import Syncer, NotEnabled, SyncUnauthorized
 from pybossa.syncer.category_syncer import CategorySyncer
+from pybossa.cache import users as cached_users
 
 
 class ProjectSyncer(Syncer):
@@ -132,19 +133,8 @@ class ProjectSyncer(Syncer):
         """
         target = self.get_target(short_name=project.short_name)
 
-        owner_emails = [self.get_user_email(owner_id)
+        owner_emails = [cached_users.get_user_email(owner_id)
                         for owner_id in target['owners_ids']]
 
         return [owner_email for owner_email in owner_emails
                 if owner_email is not None]
-
-    def get_user_email(self, user_id):
-        url = '{}/api/user/{}'.format(self.target_url, user_id)
-        headers = {'Authorization': self.target_key}
-
-        try:
-            res = requests.get(url, headers=headers)
-            user = json.loads(res.content)
-            return user['email_addr']
-        except:
-            return None

@@ -492,7 +492,7 @@ class TestNTaskAvailable(sched.Helper):
         tasks[0].user_pref = {'languages': ['en', 'zh']}
         task_repo.save(tasks[0])
         tasks[1].user_pref = {'languages': ['de']}
-        task_repo.save(tasks[0])
+        task_repo.save(tasks[1])
         assert n_available_tasks_for_user(project, 500) == 2
 
     @with_context
@@ -523,6 +523,35 @@ class TestNTaskAvailable(sched.Helper):
 
         with patch.object(data_access, 'data_access_levels', patch_data_access_levels):
             assert n_available_tasks_for_user(project, 501) == 3
+
+    @with_context
+    def test_task_6(self):
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['de', 'en']}
+        owner.email_addr = 'test@test.com'
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        task = TaskFactory.create_batch(2, project=project, n_answers=10)[0]
+        task.user_pref = {'languages': ['ch', 'zh'], 'assign_user': ['test@test.com']}
+        task_repo.save(task)
+        print(task.user_pref)
+        assert n_available_tasks_for_user(project, 500) == 0
+
+    @with_context
+    def test_task_7(self):
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['de', 'en']}
+        owner.email_addr = 'test@test.com'
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        tasks = TaskFactory.create_batch(2, project=project, n_answers=10)
+        tasks[0].user_pref = {'languages': ['en', 'zh'], 'assign_user': ['test@test.com']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['de'], 'assign_user': ['dummy@dummy.com']}
+        task_repo.save(tasks[1])
+        assert n_available_tasks_for_user(project, 500) == 1
 
     @with_context
     @patch('pybossa.sched.random.randint')
