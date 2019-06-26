@@ -352,6 +352,7 @@ def get_user_preferences(user_id):
     user_email = get_user_email(user_id)
     return get_user_pref_db_clause(user_pref, user_email)
 
+
 @memoize(timeout=ONE_DAY)
 def get_user_pref(user_id):
     assert user_id is not None or user_id > 0
@@ -361,7 +362,7 @@ def get_user_pref(user_id):
 @memoize(timeout=ONE_DAY)
 def get_user_email(user_id):
     assert user_id is not None or user_id > 0
-    user_email = User.query.get(user_id).email_addr or {}
+    user_email = User.query.get(user_id).email_addr
     return user_email
 
 
