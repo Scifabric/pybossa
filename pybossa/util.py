@@ -1063,13 +1063,13 @@ def get_user_pref_db_clause(user_pref, user_email=None):
     if not user_prefs:
         user_pref_sql = '''(task.user_pref IS NULL OR task.user_pref = \'{}\' )'''
         email_sql = ''' OR (task.user_pref->\'{}\' IS NOT NULL
-                AND task.user_pref @> :assign)
+                AND task.user_pref @> :assign_user)
                 '''.format(assign_key)
     else:
         user_pref_sql = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
                    for up in user_prefs)
         user_pref_sql = '({})'.format(' OR '.join(user_pref_sql))
-        email_sql = ''' AND (task.user_pref->\'{}\' IS NULL OR task.user_pref @> :assign)
+        email_sql = ''' AND (task.user_pref->\'{}\' IS NULL OR task.user_pref @> :assign_user)
                 '''.format(assign_key)
 
     return user_pref_sql + email_sql if user_email else user_pref_sql

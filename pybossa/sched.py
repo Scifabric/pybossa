@@ -250,7 +250,7 @@ def locked_scheduler(query_factory):
             if task:
                 return [task]
         user_count = get_active_user_count(project_id, sentinel.master)
-        assign = json.dumps({'assign_user': [cached_users.get_user_email(user_id)]}) if user_id else None
+        assign_user = json.dumps({'assign_user': [cached_users.get_user_email(user_id)]}) if user_id else None
         current_app.logger.info(
             "Project {} - number of current users: {}"
             .format(project_id, user_count))
@@ -270,8 +270,9 @@ def locked_scheduler(query_factory):
         )
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
-                                         assign=assign,
+                                         assign_user=assign_user,
                                          limit=user_count + 5))
+
         for task_id, taskcount, n_answers, calibration, timeout in rows:
             timeout = timeout or TIMEOUT
             remaining = float('inf') if calibration else n_answers - taskcount
@@ -360,6 +361,7 @@ def get_user_pref_task(
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
+
     user_pref_list = cached_users.get_user_preferences(user_id)
     secondary_order = 'random()' if rand_within_priority else 'id ASC'
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)

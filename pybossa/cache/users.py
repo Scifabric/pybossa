@@ -354,16 +354,20 @@ def get_user_preferences(user_id):
 
 
 @memoize(timeout=ONE_DAY)
+def get_user_by_id(user_id):
+    assert user_id is not None or user_id > 0
+    user = User.query.get(user_id)
+    return user
+
+
 def get_user_pref(user_id):
-    assert user_id is not None or user_id > 0
-    return User.query.get(user_id).user_pref or {}
+    user= get_user_by_id(user_id)
+    return user.user_pref or {} if user else {}
 
 
-@memoize(timeout=ONE_DAY)
 def get_user_email(user_id):
-    assert user_id is not None or user_id > 0
-    user_email = User.query.get(user_id).email_addr
-    return user_email
+    user= get_user_by_id(user_id)
+    return user.email_addr if user else None
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
