@@ -9201,6 +9201,20 @@ class TestWebQuizModeUpdate(web.Helper):
         return u'/project/{}/quiz-mode'.format(project.short_name)
 
     @with_context
+    def test_change_completion_mode(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        quiz = {'enabled':True,'questions':10,'passing':5}
+        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
+        quiz['completion_mode'] = 'all_questions'
+        self.update_project(project, quiz)
+        assert project.get_quiz()['short_circuit'] is False
+        quiz['completion_mode'] = 'short_circuit'
+        self.update_project(project, quiz)
+        assert project.get_quiz()['short_circuit'] is True
+
+    @with_context
     def test_reset(self):
         admin = UserFactory.create()
         self.signin_user(admin)
