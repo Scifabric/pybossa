@@ -1059,16 +1059,21 @@ def get_user_pref_db_clause(user_pref, user_email=None):
     user_prefs = [{k: [item]} for k, pref_list in _valid
                   for item in pref_list]
     assign_key = 'assign_user'
+    location_key = 'locations'
+    language_key = 'languages'
 
-    if not user_prefs:
+    if not user_pref:
         user_pref_sql = '''(task.user_pref IS NULL OR task.user_pref = \'{}\' )'''
-        email_sql = ''' OR (task.user_pref->\'{}\' IS NOT NULL
-                AND task.user_pref @> :assign_user)
-                '''.format(assign_key)
+        email_sql = ''' OR (task.user_pref->\'{}\' IS NULL AND task.user_pref->\'{}\' IS NULL
+                AND task.user_pref->\'{}\' IS NOT NULL AND task.user_pref @> :assign_user)
+                '''.format(location_key, language_key, assign_key)
     else:
-        user_pref_sql = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
+        sql = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
                    for up in user_prefs)
-        user_pref_sql = '({})'.format(' OR '.join(user_pref_sql))
+        user_pref_sql = '''(
+                (task.user_pref-> \'{}\' IS NULL AND task.user_pref-> \'{}\' IS NULL)
+                OR ({})
+                )'''.format(location_key, language_key, ' OR '.join(sql))
         email_sql = ''' AND (task.user_pref->\'{}\' IS NULL OR task.user_pref @> :assign_user)
                 '''.format(assign_key)
 
