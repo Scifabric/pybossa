@@ -265,12 +265,12 @@ class TestQuizUpdate(QuizTest):
         '''Test quiz does not end until all questions have been presented'''
         project, user = self.create_project_and_user(short_circuit=False)
         task_answers = {}
-        for i in range(10):
+        quiz = project.get_quiz()
+
+        for i in range(quiz['questions']):
             gold_answers = {'answer':i}
             golden_task = TaskFactory.create(project=project, n_answers=1, calibration=1, gold_answers=gold_answers)
             task_answers[golden_task.id] = gold_answers
-
-        non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
 
         def submit_wrong_answer():
             new_task_url = '/api/project/{}/newtask'.format(project.id)
@@ -286,8 +286,6 @@ class TestQuizUpdate(QuizTest):
                 task_run_url,
                 data=json.dumps(task_run_data)
             )
-
-        quiz = project.get_quiz()
 
         for _ in range(quiz['questions'] - 1):
             submit_wrong_answer()
