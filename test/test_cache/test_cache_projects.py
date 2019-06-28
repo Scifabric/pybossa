@@ -704,7 +704,7 @@ class TestProjectsCache(Test):
         expected_params = {'task_id': 1, 'pcomplete_from': '0.5', 'pcomplete_to': '0.7', 'ftime_to': '2018-12-12T05:00:00.000100+00:00', 'created_from': '2018-01-01T05:00:00.000100+00:00', 'ftime_from': '2018-01-01T05:00:00.000100+00:00', 'state':'ongoing', 'priority_to': 0.5, 'priority_from': 0.0, 'filter_by_field_0': 'abc%', 'created_to': '2018-12-12T05:00:00.000100+00:00'}
 
         filters, params = get_task_filters(filters)
-        assert filters.replace(" ", "") == expected_filter_query.replace(" ", ""), filters
+        assert filters == expected_filter_query, filters
         assert params == expected_params, params
 
     def test_task_browse_gold_task_filters(self):
