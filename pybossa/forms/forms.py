@@ -150,6 +150,13 @@ class ProjectQuizForm(Form):
             validators.NumberRange(min=0) # Making this 0 to allow quizzes with free-form answers.
         ]
     )
+    completion_mode = SelectField(
+        lazy_gettext('Completion mode'),
+        choices=[
+            ('all_questions', 'Present all the quiz questions'),
+            ('short_circuit', 'End as soon as pass/fail status is known')
+        ]
+    )
 
     def validate_passing(form, field):
         correct = field.data

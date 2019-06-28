@@ -172,12 +172,13 @@ class User(db.Model, DomainObject, UserMixin):
     def update_quiz_status(self, project):
         quiz = self.get_quiz_for_project(project)
         right_count = quiz['result']['right']
+        wrong_count = quiz['result']['wrong']
         correct_to_pass = quiz['config']['passing']
         questions = quiz['config']['questions']
         status = None
         if right_count >= correct_to_pass:
             status = 'passed'
-        elif quiz['result']['wrong'] > questions - correct_to_pass:
+        elif wrong_count > questions - correct_to_pass:
             status = 'failed'
 
         if not status:

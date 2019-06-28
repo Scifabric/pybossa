@@ -9158,7 +9158,8 @@ class TestWebQuizModeUpdate(web.Helper):
     disabled_update = {
         'questions': 20,
         'passing': 15,
-        'garbage': 'junk'
+        'garbage': 'junk',
+        'completion_mode': 'short_circuit'
     }
 
     enabled_update = dict.copy(disabled_update)
@@ -9168,7 +9169,8 @@ class TestWebQuizModeUpdate(web.Helper):
         'enabled': False,
         'questions': disabled_update['questions'],
         'passing': disabled_update['passing'],
-        'short_circuit': True
+        'short_circuit': True,
+        'completion_mode': 'short_circuit'
     }
 
     enabled_result = dict.copy(disabled_result)
@@ -9202,7 +9204,7 @@ class TestWebQuizModeUpdate(web.Helper):
     def test_reset(self):
         admin = UserFactory.create()
         self.signin_user(admin)
-        quiz = {'enabled':True,'questions':10,'passing':5}
+        quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
         project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         assert admin.get_quiz_not_started(project)
@@ -9215,12 +9217,12 @@ class TestWebQuizModeUpdate(web.Helper):
     def test_not_enough_gold(self):
         admin = UserFactory.create()
         self.signin_user(admin)
-        quiz = {'enabled':True,'questions':10,'passing':5}
+        quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
         project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         quiz['questions'] = 100
         response = self.update_project(project, quiz)
-        assert "There must be at least as many gold tasks as the number of questions in the quiz." in response.data
+        assert "There must be at least as many gold tasks as the number of questions in the quiz." in response.data, response.data
 
     @with_context
     def test_enable(self):

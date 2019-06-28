@@ -363,7 +363,6 @@ def new():
                         project=None,
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
-                        message=current_app.config.get('PROJECT_CREATE_MESSAGE'),
                         prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
         return handle_content_type(response)
 
@@ -2965,6 +2964,7 @@ def assign_users(short_name):
 
 def process_quiz_mode_request(project):
     current_quiz_config = project.get_quiz()
+    current_quiz_config['completion_mode'] = 'short_circuit' if current_quiz_config['short_circuit'] else 'all_questions'
 
     if request.method == 'GET':
         return ProjectQuizForm(**current_quiz_config)
@@ -2985,6 +2985,7 @@ def process_quiz_mode_request(project):
         )
         return form
 
+    new_quiz_config['short_circuit'] = (new_quiz_config['completion_mode'] == 'short_circuit')
     project.set_quiz(new_quiz_config)
     project_repo.update(project)
     auditlogger.log_event(
