@@ -52,7 +52,7 @@ class TestSched(sched.Helper):
         project = ProjectFactory.create(owner=owner)
         TaskFactory.create_batch(1, project=project, n_answers=10)
         tasks = get_user_pref_task(1, 500)
-        assert not tasks
+        assert tasks
 
     @with_context
     def test_no_user_pref(self):
@@ -532,10 +532,9 @@ class TestNTaskAvailable(sched.Helper):
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
         project.info['sched'] = Schedulers.user_pref
-        task = TaskFactory.create_batch(2, project=project, n_answers=10)[0]
+        task = TaskFactory.create_batch(1, project=project, n_answers=10)[0]
         task.user_pref = {'languages': ['ch', 'zh'], 'assign_user': ['test@test.com']}
         task_repo.save(task)
-        print(task.user_pref)
         assert n_available_tasks_for_user(project, 500) == 0
 
     @with_context
@@ -546,12 +545,12 @@ class TestNTaskAvailable(sched.Helper):
         user_repo.save(owner)
         project = ProjectFactory.create(owner=owner)
         project.info['sched'] = Schedulers.user_pref
-        tasks = TaskFactory.create_batch(2, project=project, n_answers=10)
-        tasks[0].user_pref = {'languages': ['en', 'zh'], 'assign_user': ['test@test.com']}
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=10)
+        tasks[0].user_pref = {'assign_user': ['test@test.com']}
         task_repo.save(tasks[0])
         tasks[1].user_pref = {'languages': ['de'], 'assign_user': ['dummy@dummy.com']}
         task_repo.save(tasks[1])
-        assert n_available_tasks_for_user(project, 500) == 1
+        assert n_available_tasks_for_user(project, 500) == 2
 
     @with_context
     @patch('pybossa.sched.random.randint')
