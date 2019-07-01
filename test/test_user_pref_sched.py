@@ -433,6 +433,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_0(self):
+        '''
+        Task doesn't match user profile
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de']}
         user_repo.save(owner)
@@ -445,6 +448,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_1(self):
+        '''
+        Default user scheduler doesn't check user preference
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de']}
         user_repo.save(owner)
@@ -457,6 +463,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_2(self):
+        '''
+        Task matches user profile
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
@@ -483,6 +492,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_4(self):
+        '''
+        Tasks match user profile
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
@@ -526,6 +538,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_6(self):
+        '''
+        Task is assigned to a user whose profile doesn't match task preference
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         owner.email_addr = 'test@test.com'
@@ -539,6 +554,11 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_7(self):
+        '''
+        task[0]: doesn't have any language/country preference, should be able to
+        assign to the user.
+        task[1]: both preference and email match, should be able to assign to the user
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         owner.email_addr = 'test@test.com'
