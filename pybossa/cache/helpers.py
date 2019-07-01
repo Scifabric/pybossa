@@ -17,6 +17,7 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module with helper functions."""
 
+import json
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
@@ -175,6 +176,7 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     n_tasks = 0
     if user_id is None or user_id <= 0:
         return n_tasks
+    assign_user = json.dumps({'assign_user': [cached_users.get_user_email(user_id)]}) if user_id else None
     scheduler = project.info.get('sched', 'default')
     if scheduler != Schedulers.user_pref:
         sql = '''
@@ -192,11 +194,11 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                AND id NOT IN
                (SELECT task_id FROM task_run WHERE
                project_id=:project_id AND user_id=:user_id)
-               AND (user_pref IS NULL OR {}) {} ;
+               AND ({}) {} ;
                '''.format(user_pref_list, allowed_task_levels_clause)
     sqltext = text(sql)
     try:
-        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id))
+        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id, assign_user=assign_user))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None

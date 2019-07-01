@@ -348,9 +348,22 @@ def delete_user_pref_metadata(name):
 
 @memoize(timeout=ONE_DAY)
 def get_user_preferences(user_id):
+    user = get_user_by_id(user_id)
+    user_pref = user.user_pref or {} if user else {}
+    user_email = user.email_addr if user else None
+    return get_user_pref_db_clause(user_pref, user_email)
+
+
+@memoize(timeout=ONE_DAY)
+def get_user_by_id(user_id):
     assert user_id is not None or user_id > 0
-    user_pref = User.query.get(user_id).user_pref or {}
-    return get_user_pref_db_clause(user_pref)
+    user = User.query.get(user_id)
+    return user
+
+
+def get_user_email(user_id):
+    user= get_user_by_id(user_id)
+    return user.email_addr if user else None
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))

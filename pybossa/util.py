@@ -1051,20 +1051,32 @@ def get_unique_user_preferences(user_prefs):
     return duser_prefs
 
 
-def get_user_pref_db_clause(user_pref):
+def get_user_pref_db_clause(user_pref, user_email=None):
     # expand user preferences as per sql format for jsonb datatype
     # single user preference with multiple value or
     # multiple user preferences with single/multiple values
     _valid = ((k, v) for k, v in user_pref.iteritems() if isinstance(v, list))
     user_prefs = [{k: [item]} for k, pref_list in _valid
                   for item in pref_list]
+    assign_key = 'assign_user'
+    location_key = 'locations'
+    language_key = 'languages'
 
     if not user_prefs:
-        return 'task.user_pref IS NULL OR task.user_pref = \'{}\''
-
-    sql_strings = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
+        user_pref_sql = '''(task.user_pref IS NULL OR task.user_pref = \'{}\' )'''
+        if user_email:
+            email_sql = ''' OR (task.user_pref->\'{}\' IS NULL AND task.user_pref->\'{}\' IS NULL
+                    AND task.user_pref->\'{}\' IS NOT NULL AND task.user_pref @> :assign_user)
+                    '''.format(location_key, language_key, assign_key)
+    else:
+        sql = ('task.user_pref @> \'{}\''.format(json.dumps(up).lower())
                    for up in user_prefs)
-    return ' OR '.join(sql_strings)
+        user_pref_sql = '''( (task.user_pref-> \'{}\' IS NULL AND task.user_pref-> \'{}\' IS NULL) OR ({}) )'''.format(location_key, language_key, ' OR '.join(sql))
+        if user_email:
+            email_sql = ''' AND (task.user_pref->\'{}\' IS NULL OR task.user_pref @> :assign_user)
+                    '''.format(assign_key)
+
+    return user_pref_sql + email_sql if user_email else user_pref_sql
 
 
 def validate_required_fields(data):

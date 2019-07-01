@@ -836,8 +836,8 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         filters = json.loads('{"filter_by_upref": {"languages": ["japanese"]}}')
         self.task_repo.update_tasks_redundancy(project, 1, filters)
         tasks = self.task_repo.filter_tasks_by(project_id=project.id)
-        assert tasks[0].n_answers == 2, tasks[0].n_answers
-        assert tasks[0].state == 'ongoing', tasks[0].state
+        assert tasks[0].n_answers == 1, tasks[0].n_answers
+        assert tasks[0].state == 'completed', tasks[0].state
 
         assert tasks[1].n_answers == 1, tasks[1].n_answers
         assert tasks[1].state == 'ongoing', tasks[1].state

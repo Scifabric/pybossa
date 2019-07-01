@@ -52,7 +52,7 @@ class TestSched(sched.Helper):
         project = ProjectFactory.create(owner=owner)
         TaskFactory.create_batch(1, project=project, n_answers=10)
         tasks = get_user_pref_task(1, 500)
-        assert not tasks
+        assert tasks
 
     @with_context
     def test_no_user_pref(self):
@@ -433,6 +433,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_0(self):
+        '''
+        Task doesn't match user profile
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de']}
         user_repo.save(owner)
@@ -445,6 +448,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_1(self):
+        '''
+        Default user scheduler doesn't check user preference
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de']}
         user_repo.save(owner)
@@ -457,6 +463,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_2(self):
+        '''
+        Task matches user profile
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
@@ -483,6 +492,9 @@ class TestNTaskAvailable(sched.Helper):
 
     @with_context
     def test_task_4(self):
+        '''
+        Tasks match user profile
+        '''
         owner = UserFactory.create(id=500)
         owner.user_pref = {'languages': ['de', 'en']}
         user_repo.save(owner)
@@ -492,7 +504,7 @@ class TestNTaskAvailable(sched.Helper):
         tasks[0].user_pref = {'languages': ['en', 'zh']}
         task_repo.save(tasks[0])
         tasks[1].user_pref = {'languages': ['de']}
-        task_repo.save(tasks[0])
+        task_repo.save(tasks[1])
         assert n_available_tasks_for_user(project, 500) == 2
 
     @with_context
@@ -523,6 +535,42 @@ class TestNTaskAvailable(sched.Helper):
 
         with patch.object(data_access, 'data_access_levels', patch_data_access_levels):
             assert n_available_tasks_for_user(project, 501) == 3
+
+    @with_context
+    def test_task_6(self):
+        '''
+        Task is assigned to a user whose profile doesn't match task preference
+        '''
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['de', 'en']}
+        owner.email_addr = 'test@test.com'
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        task = TaskFactory.create_batch(1, project=project, n_answers=10)[0]
+        task.user_pref = {'languages': ['ch', 'zh'], 'assign_user': ['test@test.com']}
+        task_repo.save(task)
+        assert n_available_tasks_for_user(project, 500) == 0
+
+    @with_context
+    def test_task_7(self):
+        '''
+        task[0]: doesn't have any language/country preference, should be able to
+        assign to the user.
+        task[1]: both preference and email match, should be able to assign to the user
+        '''
+        owner = UserFactory.create(id=500)
+        owner.user_pref = {'languages': ['de', 'en']}
+        owner.email_addr = 'test@test.com'
+        user_repo.save(owner)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.user_pref
+        tasks = TaskFactory.create_batch(3, project=project, n_answers=10)
+        tasks[0].user_pref = {'assign_user': ['test@test.com']}
+        task_repo.save(tasks[0])
+        tasks[1].user_pref = {'languages': ['de'], 'assign_user': ['dummy@dummy.com']}
+        task_repo.save(tasks[1])
+        assert n_available_tasks_for_user(project, 500) == 2
 
     @with_context
     @patch('pybossa.sched.random.randint')

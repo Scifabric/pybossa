@@ -28,6 +28,7 @@ from redis_lock import LockManager, get_active_user_count, register_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest, Forbidden
 import random
+import json
 from pybossa.cache import users as cached_users
 from flask import current_app
 from pybossa import data_access
@@ -249,6 +250,7 @@ def locked_scheduler(query_factory):
             if task:
                 return [task]
         user_count = get_active_user_count(project_id, sentinel.master)
+        assign_user = json.dumps({'assign_user': [cached_users.get_user_email(user_id)]}) if user_id else None
         current_app.logger.info(
             "Project {} - number of current users: {}"
             .format(project_id, user_count))
@@ -268,6 +270,7 @@ def locked_scheduler(query_factory):
         )
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
+                                         assign_user=assign_user,
                                          limit=user_count + 5))
 
         for task_id, taskcount, n_answers, calibration, timeout in rows:
@@ -364,7 +367,6 @@ def get_user_pref_task(
     allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
     order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
     gold_only_clause = 'AND task.calibration = 1' if gold_only else ''
-
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
               (SELECT info->'timeout'
@@ -393,7 +395,6 @@ def get_user_pref_task(
                 secondary_order
             )
     return text(sql)
-
 
 TASK_USERS_KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
 USER_TASKS_KEY_PREFIX = 'pybossa:user:task_acquired:timestamps:{0}'
