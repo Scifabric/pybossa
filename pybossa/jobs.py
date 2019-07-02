@@ -740,7 +740,8 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         recipients.append(user.email_addr)
 
     try:
-        report = importer.create_tasks(task_repo, project, **form_data)
+        with current_app.test_request_context():
+            report = importer.create_tasks(task_repo, project, **form_data)
     except JobTimeoutException:
         from pybossa.core import db
         db.session.rollback()
