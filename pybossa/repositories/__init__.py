@@ -250,6 +250,7 @@ from .auditlog_repository import AuditlogRepository
 from .webhook_repository import WebhookRepository
 from .result_repository import ResultRepository
 from .helping_repository import HelpingMaterialRepository
+from .page_repository import PageRepository
 
 assert ProjectRepository
 assert ProjectStatsRepository
