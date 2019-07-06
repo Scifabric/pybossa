@@ -248,7 +248,7 @@ class TestPageAPI(TestAPI):
         project = ProjectFactory.create(owner=owner)
         file_info = {'file_name': 'name.jpg', 'container': 'user_3'}
         page = PageFactory.create(project_id=project.id,
-                                                        info=file_info)
+                                  info=file_info)
         page2 = PageFactory.create(project_id=project.id)
 
         # As anon
