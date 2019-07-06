@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * page
 
 """
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.page import Page
 from flask_login import current_user
 from werkzeug.exceptions import BadRequest
