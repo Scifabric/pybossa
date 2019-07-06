@@ -417,6 +417,7 @@ class TestTaskAPI(TestAPI):
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
+        print(data[0]['id'], tasks[2]['id'])
         assert data[0]['id'] == tasks[2]['id'], err_msg
 
         # Related
