@@ -333,7 +333,9 @@ class TestTaskAPI(TestAPI):
     def test_task_query_without_params(self):
         """ Test API Task query"""
         project = ProjectFactory.create()
-        t1 = TaskFactory.create(created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
+        t1 = TaskFactory.create(
+            created='2015-01-01T14:37:30.642119',
+            info={'question': 'answer'})
         tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
         t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119',
                                 info={'question': 'answer'},
@@ -346,6 +348,7 @@ class TestTaskAPI(TestAPI):
         tasks.insert(0, t1)
         tasks.append(t2)
         tasks.append(t3)
+        print(tasks)
 
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
@@ -409,11 +412,12 @@ class TestTaskAPI(TestAPI):
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['id'] == t3.id, err_msg
+
         url = "/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=2"
         res = self.app.get(url)
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
-        assert data[0]['id'] == tasks[1]['id'], err_msg
+        assert data[0]['id'] == tasks[2]['id'], err_msg
 
         # Related
         taskruns = TaskRunFactory.create_batch(8, project=project, task=t2)
