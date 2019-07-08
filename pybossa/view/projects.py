@@ -2366,18 +2366,27 @@ def auditlog(short_name):
 @blueprint.route('/<short_name>/<int:published>/publish', methods=['GET', 'POST'])
 @login_required
 def publish(short_name, published):
+
     project, owner, ps = project_by_shortname(short_name)
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
                                                                 ps)
+
     pro = pro_features()
     ensure_authorized_to('publish', project)
     published = bool(published)
     if request.method == 'GET':
+        sync_form = ProjectSyncForm()
+        sync = project.info.get('sync')
+        if sync:
+            project.sync_enabled = sync.get('enabled')
         template_args = {"project": project_sanitized,
                          "pro_features": pro,
                          "csrf": generate_csrf(),
-                         "published": published}
+                         "sync_form": sync_form,
+                         "sync_enabled": current_app.config.get('SYNC_ENABLED'),
+                         "target_url": current_app.config.get('DEFAULT_SYNC_TARGET'),
+                         "server_url": current_app.config.get('SERVER_URL'),}
         response = dict(template = '/projects/publish.html', **template_args)
         return handle_content_type(response)
 
@@ -2386,11 +2395,10 @@ def publish(short_name, published):
         project_repo.save(project)
         cached_users.delete_published_projects(current_user.id)
         cached_projects.reset()
-
     if not published:
         auditlogger.log_event(project, current_user, 'update', 'published', True, False)
         flash(gettext('Project unpublished! Volunteers cannot contribute to the project now.'))
-        return redirect(url_for('.details', short_name=project.short_name))
+        return redirect(url_for('.publish', short_name=project.short_name, published=published))
 
     force_reset = request.form.get("force_reset") == 'on'
     if force_reset:
@@ -2402,7 +2410,7 @@ def publish(short_name, published):
 
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
-    return redirect(url_for('.details', short_name=project.short_name))
+    return redirect(url_for('.publish', short_name=project.short_name, published=published))
 
 
 def project_event_stream(short_name, channel_type):
@@ -2757,7 +2765,7 @@ def sync_project(short_name):
         if not able_to_sync or not auth_to_sync:
             flash(msg, 'error')
             return redirect_content_type(
-                url_for('.update', short_name=short_name))
+                url_for('.publish', short_name=short_name, published=project.published))
 
         # Perform sync
         project_syncer = ProjectSyncer(
@@ -2803,7 +2811,7 @@ def sync_project(short_name):
                 'A request error occurred while syncing {}: {}'
                 .format(project.short_name, str(res.__dict__)))
             msg = gettext(
-                'This project already exists on the target server, '
+                'This project already exists on the production server, '
                 'but you are not an owner.')
             flash(msg, 'error')
         else:
@@ -2811,7 +2819,7 @@ def sync_project(short_name):
                 'A request error occurred while syncing {}: {}'
                 .format(project.short_name, str(res.__dict__)))
             msg = gettext(
-                'The target server returned an unexpected error.')
+                'The production server returned an unexpected error.')
             flash(msg, 'error')
     except SyncUnauthorized as err:
         if err.sync_type == 'ProjectSyncer':
@@ -2822,11 +2830,11 @@ def sync_project(short_name):
         elif err.sync_type == 'CategorySyncer':
             msg = gettext('You are not authorized to create a new '
                           'category. Please change the category to '
-                          'one that already exists on the target server '
+                          'one that already exists on the production server '
                           'or contact an admin.')
             flash(msg, 'error')
     except NotEnabled:
-        msg = 'The target project is not enabled for syncing. '
+        msg = 'The current project is not enabled for syncing. '
         enable_msg = Markup('{} <strong><a href="{}/update" '
                             'target="_blank">{}</a></strong>')
         flash(enable_msg.format(msg, synced_url, 'Enable Here'),
@@ -2835,12 +2843,11 @@ def sync_project(short_name):
         current_app.logger.exception(
             'An error occurred while syncing {}'
             .format(project.short_name))
-        msg = gettext('An unexpected error occurred while trying to '
-                      'reach your target.')
+        msg = gettext('An unexpected error occurred while trying to sync your project')
         flash(msg, 'error')
 
     return redirect_content_type(
-        url_for('.update', short_name=short_name))
+        url_for('.publish', short_name=short_name, published=project.published))
 
 
 @blueprint.route('/<short_name>/ext-config', methods=['GET', 'POST'])
