@@ -660,7 +660,6 @@ def update(short_name):
                                     products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
 
         upload_form = AvatarUploadForm()
-        sync_form = ProjectSyncForm()
         categories = project_repo.get_all_categories()
         categories = sorted(categories,
                             key=lambda category: category.name)
@@ -673,7 +672,6 @@ def update(short_name):
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
-        sync_form = ProjectSyncForm()
         form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels,
                                     products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
 
@@ -724,7 +722,6 @@ def update(short_name):
     response = dict(template='/projects/update.html',
                     form=form,
                     upload_form=upload_form,
-                    sync_form=sync_form,
                     project=project_sanitized,
                     owner=owner_sanitized,
                     n_tasks=ps.n_tasks,
@@ -735,8 +732,6 @@ def update(short_name):
                     n_volunteers=ps.n_volunteers,
                     title=title,
                     pro_features=pro,
-                    target_url=current_app.config.get('DEFAULT_SYNC_TARGET'),
-                    server_url=current_app.config.get('SERVER_URL'),
                     sync_enabled=sync_enabled,
                     private_instance=bool(data_access_levels),
                     prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
@@ -2377,14 +2372,10 @@ def publish(short_name, published):
     published = bool(published)
     if request.method == 'GET':
         sync_form = ProjectSyncForm()
-        sync = project.info.get('sync')
-        if sync:
-            project.sync_enabled = sync.get('enabled')
         template_args = {"project": project_sanitized,
                          "pro_features": pro,
                          "csrf": generate_csrf(),
                          "sync_form": sync_form,
-                         "sync_enabled": current_app.config.get('SYNC_ENABLED'),
                          "target_url": current_app.config.get('DEFAULT_SYNC_TARGET'),
                          "server_url": current_app.config.get('SERVER_URL'),}
         response = dict(template = '/projects/publish.html', **template_args)
