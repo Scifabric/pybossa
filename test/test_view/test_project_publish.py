@@ -174,8 +174,8 @@ class TestProjectPublicationView(web.Helper):
         res = self.app.get(url)
         assert res.status_code == 200, res.status_code
 
-        assert 'You are about to publish your project.' in res.data, \
-            'You are about to publish your project. message should be provided'
+        assert 'You are about to publish your project in' in res.data, \
+            'You are about to publish your project in message should be provided'
 
     @with_context
     def test_unpublish_project(self):
