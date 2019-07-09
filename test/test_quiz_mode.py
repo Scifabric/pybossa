@@ -8,7 +8,7 @@ from nose.tools import assert_raises
 
 class QuizTest(web.Helper):
 
-    def create_project_and_user(self):
+    def create_project_and_user(self, short_circuit=None):
         admin = UserFactory.create()
         user = UserFactory.create()
         project_quiz = {
@@ -16,6 +16,9 @@ class QuizTest(web.Helper):
             'questions':10,
             'passing':7
         }
+        if short_circuit is not None:
+            project_quiz['short_circuit'] = short_circuit
+
         project = ProjectFactory.create(
             owner=admin, 
             published=True,
@@ -256,3 +259,40 @@ class TestQuizUpdate(QuizTest):
         '''Test reset_quiz() does not error if there is no quiz'''
         project, user = self.create_project_and_user()
         user.reset_quiz(project)
+
+    @with_context
+    def test_completion_mode_all_questions(self):
+        '''Test quiz does not end until all questions have been presented'''
+        project, user = self.create_project_and_user(short_circuit=False)
+        task_answers = {}
+        quiz = project.get_quiz()
+
+        for i in range(quiz['questions']):
+            gold_answers = {'answer':i}
+            golden_task = TaskFactory.create(project=project, n_answers=1, calibration=1, gold_answers=gold_answers)
+            task_answers[golden_task.id] = gold_answers
+
+        def submit_wrong_answer():
+            new_task_url = '/api/project/{}/newtask'.format(project.id)
+            new_task_response = self.app.get(new_task_url)
+            task = json.loads(new_task_response.data)
+            task_run_url = '/api/taskrun'
+            task_run_data = {
+                'project_id': project.id,
+                'task_id': task['id'],
+                'info': {'answer': 'wrong'}
+            }
+            return self.app.post(
+                task_run_url,
+                data=json.dumps(task_run_data)
+            )
+
+        for _ in range(quiz['questions'] - 1):
+            submit_wrong_answer()
+            updated_quiz = user.get_quiz_for_project(project)
+            assert updated_quiz['status'] == 'in_progress'
+
+        submit_wrong_answer()
+        updated_quiz = user.get_quiz_for_project(project)
+        assert updated_quiz['status'] == 'failed'
+
