@@ -3203,7 +3203,6 @@ def answerfieldsconfig(short_name):
     project, owner, ps = project_by_shortname(short_name)
     pro = pro_features()
     ensure_authorized_to('update', project)
-    print(project)
 
     answer_fields_key = 'answer_fields'
     consensus_config_key = 'consensus_config'
