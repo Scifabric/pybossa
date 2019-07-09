@@ -161,8 +161,25 @@ class TestProjectPublicationView(web.Helper):
             assert res.status_code == 200, res.status_code
 
     @with_context
+    def test_publish_project(self):
+        project = ProjectFactory.create(published=False, info=dict(
+            task_presenter='task presenter'))
+        make_subadmin(project.owner)
+        task = TaskFactory.create(project=project, n_answers=1)
+        TaskRunFactory.create(task=task)
+
+        #unpublish project
+        url = '/project/%s/1/publish?api_key=%s' % (project.short_name,
+                                                  project.owner.api_key)
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+
+        assert 'You are about to publish your project in' in res.data, \
+            'You are about to publish your project in message should be provided'
+
+    @with_context
     def test_unpublish_project(self):
-        project = ProjectFactory.create(info=dict(published=True,
+        project = ProjectFactory.create(published=True, info=dict(
             task_presenter='task presenter'))
         make_subadmin(project.owner)
         task = TaskFactory.create(project=project, n_answers=1)
@@ -174,10 +191,9 @@ class TestProjectPublicationView(web.Helper):
                                                   project.owner.api_key)
         res = self.app.get(url)
         assert res.status_code == 200, res.status_code
-        assert 'Are you sure you want to publish this project?' in res.data, \
-            'Confirmation message to publish project should be provided'
-        assert 'Force remove taskruns and results' in res.data, \
-            'Option to remove taskruns and results should be provided'
+
+        assert 'You are about to unpublish your project.' in res.data, \
+            'You are about to unpublish your project. message should be provided'
 
         resp = self.app.post('/project/%s/0/publish' % project.short_name,
                              follow_redirects=True)

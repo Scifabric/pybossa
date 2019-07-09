@@ -666,7 +666,8 @@ def setup_hooks(app):
             notify_admin=notify_admin,
             plugins=plugins,
             ldap_enabled=ldap_enabled,
-            get_wizard_steps=get_wizard_steps)
+            get_wizard_steps=get_wizard_steps,
+            server_type=app.config['SERVER_TYPE'])
 
     @app.errorhandler(CSRFError)
     def csrf_error_handler(err):

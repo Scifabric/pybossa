@@ -8105,9 +8105,10 @@ class TestWeb(web.Helper):
         expected_flash = ('The API key entered is not authorized to '
                           'perform this action. Please ensure you '
                           'have entered the appropriate API key.')
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
         assert data['flash'] == expected_flash, data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'error', data
 
     @with_context
@@ -8143,9 +8144,9 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'sync' },
                                  follow_redirects=True)
         data = json.loads(res.data)
-
+        next_url = '/project/{}/1/publish'.format(project.short_name)
         assert data['flash'].startswith('Project sync completed!'), data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'success', data
 
     @with_context
@@ -8183,9 +8184,10 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'sync' },
                                  follow_redirects=True)
         data = json.loads(res.data)
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
         assert data['flash'].startswith('Project sync completed!'), data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'success', data
 
     @with_context
@@ -8226,9 +8228,10 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'sync' },
                                  follow_redirects=True)
         data = json.loads(res.data)
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
         assert data['flash'].startswith('Project sync completed!'), data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'success', data
 
     @with_context
@@ -8269,9 +8272,10 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'sync' },
                                  follow_redirects=True)
         data = json.loads(res.data)
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
         assert data['flash'].startswith('You are not authorized to create a new category.'), data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'error', data
 
     @with_context
@@ -8362,10 +8366,11 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'sync' },
                                  follow_redirects=True)
         data = json.loads(res.data)
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
         assert data['flash'].startswith(
-                'The target project is not enabled for syncing.'), data
-        assert data['next'] == csrf_url, data
+                'The current project is not enabled for syncing.'), data
+        assert data['next'] == next_url, data
         assert data['status'] == 'error', data
 
     @with_context
@@ -8394,9 +8399,10 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'sync' },
                                  follow_redirects=True)
         data = json.loads(res.data)
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
-        assert data['flash'] == 'An unexpected error occurred while trying to reach your target.', data
-        assert data['next'] == csrf_url, data
+        assert data['flash'] == 'An unexpected error occurred while trying to sync your project', data
+        assert data['next'] == next_url, data
         assert data['status'] == 'error', data
 
     @with_context
@@ -8436,9 +8442,10 @@ class TestWeb(web.Helper):
                                  data={'target_key': '1234', 'btn': 'undo'},
                                  follow_redirects=True)
         data = json.loads(res.data)
+        next_url = '/project/{}/1/publish'.format(project.short_name)
 
         assert data['flash'].startswith('Last sync has been reverted!'), data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'success', data
 
         res = self.app_post_json(url=url,
@@ -8448,7 +8455,7 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
 
         assert data['flash'] == 'There is nothing to revert.', data
-        assert data['next'] == csrf_url, data
+        assert data['next'] == next_url, data
         assert data['status'] == 'warning', data
 
     @with_context
