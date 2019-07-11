@@ -1150,7 +1150,8 @@ def export(short_name, task_id):
     if task:
         taskruns = task_repo.filter_task_runs_by(task_id=task_id, project_id=project.id)
         taskruns_info = [tr.dictize() for tr in taskruns]
-        gold_answers = task.gold_answers if task.calibration and task.gold_answers else {}
+        can_know_task_is_gold = current_user.subadmin or current_user.admin
+        gold_answers = task.gold_answers if can_know_task_is_gold and task.calibration and task.gold_answers else {}
         results = dict(taskruns_info=taskruns_info, gold_answers=gold_answers)
         return Response(json.dumps(results), mimetype='application/json')
     else:
@@ -1268,6 +1269,12 @@ def tasks_browse(short_name, page=1, records_per_page=10):
         flash(gettext('Invalid filtering criteria'), 'error')
         abort(404)
 
+    can_know_task_is_gold = current_user.subadmin or current_user.admin
+    if not can_know_task_is_gold:
+        # This has to be a list and not a set because it is JSON stringified in the template
+        # and sets are not stringifiable.
+        args['display_columns'] = list(set(args['display_columns']) - {'pcomplete', 'gold_task'})
+
     def respond():
         if records_per_page in allowed_records_per_page:
             per_page = records_per_page
@@ -1331,7 +1338,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                     filter_columns=columns,
                     language_options=language_options,
                     location_options=location_options,
-                    rdancy_upd_exp=rdancy_upd_exp)
+                    rdancy_upd_exp=rdancy_upd_exp,
+                    can_know_task_is_gold=can_know_task_is_gold)
 
         return handle_content_type(data)
 
