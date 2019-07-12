@@ -24,6 +24,7 @@ import math
 import requests
 from StringIO import StringIO
 import six
+from functools import partial
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
@@ -1364,7 +1365,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                 task_run = TaskRun(project_id=project.get('id'))
                 ensure_authorized_to('read', task_run)
 
-            export_queue.enqueue(export_tasks,
+            export_queue.enqueue(partial(export_tasks, disclose_gold=can_know_task_is_gold),
                                  current_user.email_addr,
                                  short_name,
                                  ty=download_obj,

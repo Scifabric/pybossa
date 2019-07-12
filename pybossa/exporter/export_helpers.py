@@ -30,7 +30,7 @@ USER_FIELDS = [
     '"user".user_pref  AS {}user_pref'
 ]
 
-TASKRUN_FIELDS = [
+TASKRUN_FIELDS_WITHOUT_GOLD = [
     'task_run.id           AS {}id',
     'task_run.created      AS {}created',
     'task_run.project_id   AS {}project_id',
@@ -39,18 +39,20 @@ TASKRUN_FIELDS = [
     'task_run.user_ip      AS {}user_ip',
     'task_run.finish_time  AS {}finish_time',
     'task_run.timeout      AS {}timeout',
-    'task_run.calibration  AS {}calibration',
     'task_run.external_uid AS {}external_uid',
     'task_run.info         AS {}info'
 ]
 
-TASK_FIELDS = [
+TASKRUN_FIELDS_WITH_GOLD = TASKRUN_FIELDS_WITHOUT_GOLD + [
+    'task_run.calibration  AS {}calibration'
+]
+
+TASK_FIELDS_WITHOUT_GOLD = [
     'task.id          AS {}id',
     'task.created     AS {}created',
     'task.project_id  AS {}project_id',
     'task.state       AS {}state',
     'task.quorum      AS {}quorum',
-    'task.calibration AS {}calibration',
     'task.priority_0  AS {}priority_0',
     'task.info        AS {}info',
     'task.n_answers   AS {}n_answers',
@@ -58,7 +60,13 @@ TASK_FIELDS = [
     'task.user_pref   AS {}user_pref'
 ]
 
-TASK_GOLD_FIELD = [
+TASK_FIELDS_WITH_GOLD = TASK_FIELDS_WITHOUT_GOLD + [
+    'task.calibration AS {}calibration'
+]
+
+TASK_GOLD_FIELD_WITHOUT_GOLD = []
+
+TASK_GOLD_FIELD_WITH_GOLD = TASK_GOLD_FIELD_WITHOUT_GOLD + [
    'task.gold_answers AS {}gold_answers'
 ]
 
@@ -69,11 +77,16 @@ def _field_mapreducer(fields, prefix=''):
     return ',\n'.join(field.format(prefix) for field in fields)
 
 
-def browse_tasks_export(obj, project_id, expanded, filters):
+def browse_tasks_export(obj, project_id, expanded, filters, disclose_gold):
     """Export tasks from the browse tasks view for a project
     using the same filters that are selected by the user
     in the UI.
     """
+    TASK_FIELDS, TASK_GOLD_FIELD, TASKRUN_FIELDS = (
+      TASK_FIELDS_WITH_GOLD, TASK_GOLD_FIELD_WITH_GOLD, TASKRUN_FIELDS_WITH_GOLD
+      if disclose_gold
+      else TASK_FIELDS_WITHOUT_GOLD, TASK_GOLD_FIELD_WITHOUT_GOLD, TASKRUN_FIELDS_WITHOUT_GOLD
+    )
     conditions, filter_params = get_task_filters(filters)
     if obj == 'task':
         sql = text('''
