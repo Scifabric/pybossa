@@ -253,7 +253,8 @@ class APIBase(MethodView):
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
-                         'participated', 'full', 'stats']:
+                         'participated', 'full', 'stats',
+                         'from_finish_time', 'to_finish_time']:
                 # Raise an error if the k arg is not a column
                 if self.__class__ == Task and k == 'external_uid':
                     pass

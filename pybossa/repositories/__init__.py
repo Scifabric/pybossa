@@ -47,6 +47,7 @@ from sqlalchemy.sql import and_, or_
 from sqlalchemy import cast, Text, func, desc, text
 from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm.base import _entity_descriptor
+from datetime import datetime
 
 class Repository(object):
 
@@ -219,10 +220,16 @@ class Repository(object):
                   orderby='id', **filters):
         """Filter by using several arguments and ordering items."""
 
-        finish_time = filters.pop('finish_time', None)
+        from_finish_time = filters.pop('from_finish_time', None) or \
+            filters.pop('finish_time', None)
+        to_finish_time = filters.pop('to_finish_time', None)
         query = self.create_context(filters, fulltextsearch, model)
-        if hasattr(model, 'finish_time') and finish_time:
-            query = query.filter(model.finish_time >= finish_time)
+        if hasattr(model, 'finish_time'):
+            if from_finish_time:
+                if not to_finish_time:
+                    to_finish_time = datetime.now().isoformat()
+                query = query.filter(and_(model.finish_time >= from_finish_time,
+                                          model.finish_time <= to_finish_time))
 
         if last_id:
             query = query.filter(model.id > last_id)

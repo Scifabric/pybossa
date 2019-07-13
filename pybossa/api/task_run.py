@@ -84,6 +84,13 @@ class TaskRunAPI(APIBase):
         if not can_post(project_id, task_id, get_user_id_or_ip()):
             raise Forbidden("You must request a task first!")
 
+    def _custom_filter(self, filters):
+        if request.args.get('from_finish_time'):
+            filters['from_finish_time'] = request.args['from_finish_time']
+        if request.args.get('to_finish_time'):
+            filters['to_finish_time'] = request.args['to_finish_time']
+        return filters
+
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
         self.check_can_post(taskrun.project_id, taskrun.task_id)

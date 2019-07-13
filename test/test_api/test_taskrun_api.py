@@ -1190,3 +1190,43 @@ class TestTaskrunAPI(TestAPI):
 
         assert result is None, result
         # assert result is not None, result
+
+    @with_context
+    def test_query_taskrun_with_daterange_finish_time(self):
+        """Test API query for taskrun with params works with date range for finish_time."""
+        owner = UserFactory.create()
+        project = ProjectFactory.create(owner=owner)
+
+        today = datetime.today().isoformat()
+        date_2d_old = (datetime.today() - timedelta(2)).isoformat()
+        date_5d_old = (datetime.today() - timedelta(5)).isoformat()
+
+        task_runs_today = TaskRunFactory.create_batch(2, project=project, finish_time=today)
+        task_runs_2d = TaskRunFactory.create_batch(2, project=project, finish_time=date_2d_old)
+        task_runs_5d = TaskRunFactory.create_batch(5, project=project, finish_time=date_5d_old)
+
+        # Test all tasks are returned when no filter passed for finish_time
+        res = self.app.get("/api/taskrun?api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        assert len(data) == 9, data
+
+        # Test all tasks are returned when finish_time filter for 2 days old tasks
+        res = self.app.get("/api/taskrun?from_finish_time=" + date_2d_old + "&to_finish_time=" + date_2d_old + "&api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        assert len(data) == 2, data
+        assert data[0]['finish_time'] == date_2d_old and data[1]['finish_time'] == date_2d_old, 'task run finish_time should be 2 days old'
+
+        # Test all tasks are returned when finish_time filter for 5 days old tasks
+        res = self.app.get("/api/taskrun?from_finish_time=" + date_5d_old + "&to_finish_time=" + date_5d_old + "&api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        assert len(data) == 5, data
+        assert data[0]['finish_time'] == date_5d_old and \
+            data[1]['finish_time'] == date_5d_old and \
+            data[2]['finish_time'] == date_5d_old and \
+            data[3]['finish_time'] == date_5d_old and \
+            data[4]['finish_time'] == date_5d_old, 'task run finish_time should be 5 days old'
+
+        # Test all tasks are returned when only from_finish_time filter passed for 5 days old tasks returns all tasks till date
+        res = self.app.get("/api/taskrun?from_finish_time=" + date_5d_old + "&api_key=" + owner.api_key + "&project_id=" + str(project.id))
+        data = json.loads(res.data)
+        assert len(data) == 9, data
