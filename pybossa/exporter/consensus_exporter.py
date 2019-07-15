@@ -20,11 +20,11 @@ __KEY_RE = re.compile(
     '^consensus__(?P<ans_key>.+)__contributorsConsensusPercentage$')
 
 
-def export_consensus_json(project, ty, expanded, filters):
+def export_consensus_json(project, ty, expanded, filters, *nargs):
     return export_consensus(project, ty, 'json', expanded, filters)
 
 
-def export_consensus_csv(project, ty, expanded, filters):
+def export_consensus_csv(project, ty, expanded, filters, *nargs):
     return export_consensus(project, ty, 'csv', expanded, filters)
 
 
