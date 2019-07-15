@@ -1634,6 +1634,9 @@ def export_to(short_name):
                                                                 owner,
                                                                 current_user,
                                                                 ps)
+
+    disclose_gold = current_user.admin or current_user.subadmin
+
     def respond():
         return render_template('/projects/export.html',
                                title=title,
@@ -1657,7 +1660,8 @@ def export_to(short_name):
                                  short_name,
                                  ty,
                                  expanded,
-                                 'json')
+                                 'json',
+                                 disclose_gold=disclose_gold)
             flash(gettext('You will be emailed when your export has been completed.'),
                   'success')
         except Exception as e:
@@ -1679,7 +1683,8 @@ def export_to(short_name):
                                  short_name,
                                  ty,
                                  expanded,
-                                 'csv')
+                                 'csv',
+                                 disclose_gold=disclose_gold)
             flash(gettext('You will be emailed when your export has been completed.'),
                   'success')
         except Exception as e:
