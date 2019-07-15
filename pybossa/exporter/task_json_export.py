@@ -107,8 +107,10 @@ class TaskJsonExporter(JsonExporter):
     def gen_json(self, obj, project_id, expanded=False, disclose_gold=False):
         if obj == 'task':
             query_filter = task_repo.filter_tasks_by
+            remove_gold = self.remove_task_fold_fields
         elif obj == 'task_run':
             query_filter = task_repo.filter_task_runs_by
+            remove_gold = self.remove_taskrun_gold_fields
         else:
             return
 
@@ -119,12 +121,11 @@ class TaskJsonExporter(JsonExporter):
         for i, tr in enumerate(query_filter(project_id=project_id, yielded=True), 1):
             if expanded:
                 item = self.merge_objects(tr)
-                if not disclose_gold:
-                    self.remove_taskrun_gold_fields(item)
             else:
                 item = tr.dictize()
-                if not disclose_gold:
-                    self.remove_task_gold_fields(item)
+
+            if not disclose_gold:
+                remove_gold(item)
 
             item = json.dumps(item)
 
