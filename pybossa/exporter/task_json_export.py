@@ -24,6 +24,17 @@ from pybossa.uploader import local
 from pybossa.exporter.json_export import JsonExporter
 from export_helpers import browse_tasks_export, browse_tasks_export_count
 
+TASK_GOLD_FIELDS = [
+    'n_answers',
+    'calibration',
+    'state',
+    'gold_answers',
+    'exported'
+]
+
+TASKRUN_GOLD_FIELDS = [
+    'calibration'
+]
 
 class TaskJsonExporter(JsonExporter):
     """JSON Exporter for exporting ``Task``s and ``TaskRun``s
@@ -78,7 +89,22 @@ class TaskJsonExporter(JsonExporter):
 
         return new_row
 
-    def gen_json(self, obj, project_id, expanded=False):
+    @staticmethod
+    def remove_task_gold_fields(task_dict):
+        if not task_dict:
+            return
+
+        for field_name in TASK_GOLD_FIELDS:
+            task_dict.pop(field_name, None)
+    
+    @staticmethod
+    def remove_taskrun_gold_fields(taskrun_dict):
+        for field_name in TASKRUN_GOLD_FIELDS:
+            taskrun_dict.pop(field_name, None)
+
+        remove_task_gold_fields(taskrun_dict.get('task'))
+
+    def gen_json(self, obj, project_id, expanded=False, disclose_gold=False):
         if obj == 'task':
             query_filter = task_repo.filter_tasks_by
         elif obj == 'task_run':
@@ -93,8 +119,12 @@ class TaskJsonExporter(JsonExporter):
         for i, tr in enumerate(query_filter(project_id=project_id, yielded=True), 1):
             if expanded:
                 item = self.merge_objects(tr)
+                if not disclose_gold:
+                    self.remove_taskrun_gold_fields(item)
             else:
                 item = tr.dictize()
+                if not disclose_gold:
+                    self.remove_task_gold_fields(item)
 
             item = json.dumps(item)
 
@@ -103,8 +133,8 @@ class TaskJsonExporter(JsonExporter):
             yield item + sep
         yield "]"
 
-    def gen_json_with_filters(self, obj, project_id, expanded, filters):
-        objs = browse_tasks_export(obj, project_id, expanded, filters)
+    def gen_json_with_filters(self, obj, project_id, expanded, filters, disclose_gold):
+        objs = browse_tasks_export(obj, project_id, expanded, filters, disclose_gold)
         n = browse_tasks_export_count(obj, project_id, expanded, filters)
 
         sep = ", "
@@ -120,12 +150,12 @@ class TaskJsonExporter(JsonExporter):
             yield item + sep
         yield "]"
 
-    def _respond_json(self, ty, project_id, expanded=False, filters=None):
+    def _respond_json(self, ty, project_id, expanded=False, filters=None, disclose_gold=False):
         if filters:
             return self.gen_json_with_filters(
-                    ty, project_id, expanded, filters)
+                    ty, project_id, expanded, filters, disclose_gold)
         else:
-            return self.gen_json(ty, project_id, expanded)
+            return self.gen_json(ty, project_id, expanded, disclose_gold)
 
     def response_zip(self, project, ty, expanded=False):
         return self.get_zip(project, ty, expanded)
@@ -152,9 +182,9 @@ class TaskJsonExporter(JsonExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def make_zip(self, project, obj, expanded=False, filters=None):
+    def make_zip(self, project, obj, expanded=False, filters=None, disclose_gold=False):
         file_format = 'json'
-        obj_generator = self._respond_json(obj, project.id, expanded, filters)
+        obj_generator = self._respond_json(obj, project.id, expanded, filters, disclose_gold)
         return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 

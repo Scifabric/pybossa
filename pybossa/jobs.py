@@ -784,7 +784,7 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
 
 
 def export_tasks(current_user_email_addr, short_name,
-                 ty, expanded, filetype, filters=None):
+                 ty, expanded, filetype, filters=None, disclose_gold=False):
     """Export tasks/taskruns from a project."""
     from pybossa.core import (task_csv_exporter, task_json_exporter,
                               project_repo)
@@ -826,7 +826,7 @@ def export_tasks(current_user_email_addr, short_name,
 
         # Attach export file to message
         if export_fn is not None:
-            with export_fn(project, ty, expanded, filters) as fp:
+            with export_fn(project, ty, expanded, filters, disclose_gold) as fp:
                 message.attach(fp.filename, "application/zip", fp.read())
 
         mail.send(message)
