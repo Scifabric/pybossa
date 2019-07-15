@@ -90,7 +90,6 @@ class TestTaskCsvExporter(Test):
         assert smart_quotes_value == u'\u201CHello\u201D'
     
     @with_context
-    @unittest.skip("Skipping Test until we make flatten available")
     def test_task_csv_exporter_flatten(self):
         """Test that TaskCsvExporter flatten method works."""
         exporter = TaskCsvExporter()
