@@ -51,6 +51,70 @@ class TestLockedSched(sched.Helper):
     )
 
     @with_context
+    def test_get_locked_task_randomize(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
+        project_repo.save(project)
+
+        TaskFactory.create(project=project, info='task 1', n_answers=2)
+        TaskFactory.create(project=project, info='task 2', n_answers=2)
+
+        assert get_locked_task(project.id, 1, rand_within_priority=True)
+        assert get_locked_task(project.id, 2, rand_within_priority=True)
+        assert get_locked_task(project.id, 3, rand_within_priority=True)
+        assert get_locked_task(project.id, 4, rand_within_priority=True)
+        assert not get_locked_task(project.id, 5, rand_within_priority=True)
+
+    @with_context
+    def test_get_locked_task_no_gold(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
+        project_repo.save(project)
+
+        TaskFactory.create(project=project, info='task 1', calibration=1, n_answers=2)
+        assert not get_locked_task(project.id, 1, task_type='no_gold')
+        TaskFactory.create(project=project, info='task 1', calibration=0, n_answers=2)
+        assert get_locked_task(project.id, 1, task_type='no_gold')
+
+    @with_context
+    def test_get_locked_task_gold_only(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
+        project_repo.save(project)
+
+        TaskFactory.create(project=project, info='task 1', calibration=0, n_answers=2)
+        assert not get_locked_task(project.id, 1, task_type='gold')
+        TaskFactory.create(project=project, info='task 1', calibration=1, n_answers=2)
+        assert get_locked_task(project.id, 1, task_type='gold')
+
+    @with_context
+    def test_get_locked_task_gold_first(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
+        project_repo.save(project)
+
+        TaskFactory.create(project=project, info='task 1', calibration=0, n_answers=2)
+        task2 = TaskFactory.create(project=project, info='task 1', calibration=1, n_answers=2)
+        task = get_locked_task(project.id, 1, task_type='gold_first')[0]
+        assert task.id == task2.id, (task, task2)
+
+    @with_context
+    def test_get_locked_task_gold_last(self):
+        owner = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=owner)
+        project.info['sched'] = Schedulers.locked
+        project_repo.save(project)
+
+        TaskFactory.create(project=project, info='task 1', calibration=1, n_answers=2)
+        task2 = TaskFactory.create(project=project, info='task 1', calibration=0, n_answers=2)
+        task = get_locked_task(project.id, 1, task_type='gold_last')[0]
+        assert task.id == task2.id, (task, task2)
+
+    @with_context
     def test_get_locked_task(self):
         owner = UserFactory.create(id=500)
         project = ProjectFactory.create(owner=owner)
