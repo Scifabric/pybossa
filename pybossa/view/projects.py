@@ -200,10 +200,12 @@ def project_by_shortname(short_name):
 
 def allow_deny_project_info(project_short_name):
     """Return project info for user as admin, subadmin or project coowner."""
+    result = project_by_shortname(project_short_name)
+    project = result[0]
     if (current_user.admin 
         or subadmins_are_privileged(current_user)
         or current_user.id in project.owners_ids):
-        return project_by_shortname(project_short_name)
+        return result
     return abort(403)
 
 
