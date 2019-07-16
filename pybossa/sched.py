@@ -33,8 +33,6 @@ from pybossa.cache import users as cached_users
 from flask import current_app
 from pybossa import data_access
 from datetime import datetime
-#TODO: Can this be removed? It's a duplicate.
-from flask import current_app
 
 
 session = db.slave_session
@@ -65,24 +63,28 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
         'depth_first_all': get_depth_first_all_task
     }
     scheduler = sched_map.get(sched, sched_map['default'])
-
     project = project_repo.get(project_id)
-    # This is here for testing. It removes the random variable to make testing deterministic.
     disable_gold = not project.info.get('enable_gold', True)
-    present_gold_task = False if gold_only or disable_gold else not random.randint(0, 10)
-    return scheduler(
-        project_id,
-        user_id,
-        user_ip,
-        external_uid,
-        offset=offset,
-        limit=limit,
-        orderby=orderby,
-        desc=desc,
-        rand_within_priority=rand_within_priority,
-        present_gold_task=present_gold_task,
-        gold_only=gold_only
-    )
+
+    task_type = 'gold_last'
+    if disable_gold:
+        # This is here for testing. It removes the random variable to make testing deterministic.
+        task_type = 'no_gold'
+    elif gold_only:
+        task_type = 'gold'
+    elif not random.randint(0, 10):
+        task_type = 'gold_first'
+
+    return scheduler(project_id,
+                     user_id,
+                     user_ip,
+                     external_uid,
+                     offset=offset,
+                     limit=limit,
+                     orderby=orderby,
+                     desc=desc,
+                     rand_within_priority=rand_within_priority,
+                     task_type=task_type)
 
 
 def is_locking_scheduler(sched):
@@ -237,9 +239,7 @@ def locked_scheduler(query_factory):
     def template_get_locked_task(project_id, user_id=None, user_ip=None,
                                  external_uid=None, limit=1, offset=0,
                                  orderby='priority_0', desc=True,
-                                 rand_within_priority=False,
-                                 present_gold_task=False,
-                                 gold_only=False):
+                                 rand_within_priority=False, task_type='gold_last'):
         if offset > 2:
             raise BadRequest('')
         if offset > 0:
@@ -255,19 +255,9 @@ def locked_scheduler(query_factory):
             "Project {} - number of current users: {}"
             .format(project_id, user_count))
 
-        sql = query_factory(
-            project_id,
-            user_id=user_id,
-            user_ip=user_ip,
-            external_uid=external_uid,
-            limit=limit,
-            offset=offset,
-            orderby=orderby,
-            desc=desc,
-            rand_within_priority=rand_within_priority,
-            present_gold_task=present_gold_task,
-            gold_only=gold_only
-        )
+        sql = query_factory(project_id, user_id=user_id, limit=limit,
+                            rand_within_priority=rand_within_priority,
+                            task_type=task_type)
         rows = session.execute(sql, dict(project_id=project_id,
                                          user_id=user_id,
                                          assign_user=assign_user,
@@ -292,24 +282,35 @@ def locked_scheduler(query_factory):
     return template_get_locked_task
 
 
-@locked_scheduler
-def get_locked_task(
-    project_id,
-    user_id=None,
-    user_ip=None,
-    external_uid=None,
-    offset=0,
-    limit=1,
-    orderby='priority_0',
-    desc=True,
-    rand_within_priority=False,
-    present_gold_task=False,
-    gold_only=False
-):
-    having_clause = 'HAVING COUNT(task_run.task_id) < n_answers' if not (present_gold_task or gold_only) else ''
-    allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
-    order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
-    gold_only_clause = 'AND task.calibration = 1' if gold_only else ''
+def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=False,
+                    task_type='gold_last', filter_user_prefs=False):
+    '''
+    `task_type` will affect the type of tasks return by the query and can be one
+    one of the following values:
+        gold ->         only gold tasks will be returned
+        no_gold ->      only non-gold tasks will be returned
+        gold_last ->    non-gold tasks will be returned before gold tasks. (Default)
+        gold_first ->   gold tasks will be returned before non-gold tasks.
+    '''
+    filters = []
+    if filter_user_prefs:
+        filters.append('AND ({})'.format(cached_users.get_user_preferences(user_id)))
+    filters.append(data_access.get_data_access_db_clause_for_task_assignment(user_id) or '')
+    if task_type == 'gold':
+        filters.append('AND task.calibration = 1')
+    elif task_type == 'no_gold':
+        filters.append('AND task.calibration != 1')
+
+    order_by = []
+    if task_type == 'gold_last':
+        order_by.append('task.calibration')
+    elif task_type == 'gold_first':
+        order_by.append('task.calibration DESC NULLS LAST')
+    order_by.append('priority_0 DESC')
+    if rand_within_priority:
+        order_by.append('random()')
+    else:
+        order_by.append('id ASC')
 
     sql = '''
            SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
@@ -325,34 +326,25 @@ def get_locked_task(
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
            {}
-           {}
            group by task.id
-           {}
-           ORDER BY task.calibration {}, priority_0 DESC, {} LIMIT :limit;
-           '''.format(
-                allowed_task_levels_clause,
-                gold_only_clause,
-                having_clause,
-                order_by_calib,
-                'random()' if rand_within_priority else 'id ASC'
-            )
+           ORDER BY {}
+           LIMIT :limit;
+           '''.format(' '.join(filters),
+                      ','.join(order_by))
     return text(sql)
 
 
 @locked_scheduler
-def get_user_pref_task(
-    project_id,
-    user_id=None,
-    user_ip=None,
-    external_uid=None,
-    limit=1,
-    offset=0,
-    orderby='priority_0',
-    desc=True,
-    rand_within_priority=False,
-    present_gold_task=False,
-    gold_only=False
-):
+def get_locked_task(project_id, user_id=None, limit=1, rand_within_priority=False,
+                    task_type='gold_last'):
+    return locked_task_sql(project_id, user_id=user_id, limit=limit,
+                           rand_within_priority=rand_within_priority, task_type=task_type,
+                           filter_user_prefs=False)
+
+
+@locked_scheduler
+def get_user_pref_task(project_id, user_id=None, limit=1, rand_within_priority=False,
+                       task_type='gold_last'):
     """ Select a new task based on user preference set under user profile.
 
     For each incomplete task, check if the number of users working on the task
@@ -361,40 +353,10 @@ def get_user_pref_task(
     and return the task to the user. If offset is nonzero, skip that amount of
     available tasks before returning to the user.
     """
+    return locked_task_sql(project_id, user_id=user_id, limit=limit,
+                           rand_within_priority=rand_within_priority, task_type=task_type,
+                           filter_user_prefs=True)
 
-    user_pref_list = cached_users.get_user_preferences(user_id)
-    secondary_order = 'random()' if rand_within_priority else 'id ASC'
-    allowed_task_levels_clause = data_access.get_data_access_db_clause_for_task_assignment(user_id)
-    order_by_calib = 'DESC NULLS LAST' if present_gold_task else ''
-    gold_only_clause = 'AND task.calibration = 1' if gold_only else ''
-    sql = '''
-           SELECT task.id, COUNT(task_run.task_id) AS taskcount, n_answers, task.calibration,
-              (SELECT info->'timeout'
-               FROM project
-               WHERE id=:project_id) as timeout
-           FROM task
-           LEFT JOIN task_run ON (task.id = task_run.task_id)
-           WHERE NOT EXISTS
-           (SELECT 1 FROM task_run WHERE project_id=:project_id AND
-           user_id=:user_id AND task_id=task.id)
-           AND task.project_id=:project_id
-           AND ({})
-           AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
-           AND task.state !='completed'
-           {}
-           {}
-           group by task.id
-           ORDER BY task.calibration {}, priority_0 DESC,
-           {}
-           LIMIT :limit;
-           '''.format(
-                user_pref_list,
-                allowed_task_levels_clause,
-                gold_only_clause,
-                order_by_calib,
-                secondary_order
-            )
-    return text(sql)
 
 TASK_USERS_KEY_PREFIX = 'pybossa:project:task_requested:timestamps:{0}'
 USER_TASKS_KEY_PREFIX = 'pybossa:user:task_acquired:timestamps:{0}'

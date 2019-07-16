@@ -20,9 +20,9 @@ class QuizTest(web.Helper):
             project_quiz['short_circuit'] = short_circuit
 
         project = ProjectFactory.create(
-            owner=admin, 
+            owner=admin,
             published=True,
-            info=dict(quiz=project_quiz, enable_gold=False))
+            info=dict(quiz=project_quiz))
         self.set_proj_passwd_cookie(project, user=user)
         self.signin_user(user)
         return project, user
@@ -117,6 +117,7 @@ class TestQuizUpdate(QuizTest):
         new_task_response = self.app.get(new_task_url)
         task = json.loads(new_task_response.data)
         task_run_url = '/api/taskrun'
+        print(task_answers, task)
         task_run_data = {
             'project_id': project.id,
             'task_id': task['id'],
