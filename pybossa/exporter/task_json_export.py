@@ -25,11 +25,8 @@ from pybossa.exporter.json_export import JsonExporter
 from export_helpers import browse_tasks_export, browse_tasks_export_count
 
 TASK_GOLD_FIELDS = [
-    'n_answers',
     'calibration',
-    'state',
-    'gold_answers',
-    'exported'
+    'gold_answers'
 ]
 
 TASKRUN_GOLD_FIELDS = [
