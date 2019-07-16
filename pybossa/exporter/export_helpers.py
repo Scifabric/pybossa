@@ -51,17 +51,17 @@ TASK_FIELDS_WITHOUT_GOLD = [
     'task.id          AS {}id',
     'task.created     AS {}created',
     'task.project_id  AS {}project_id',
+    'task.state       AS {}state',
     'task.quorum      AS {}quorum',
     'task.priority_0  AS {}priority_0',
     'task.info        AS {}info',
+    'task.n_answers   AS {}n_answers',
+    'task.exported    AS {}exported',
     'task.user_pref   AS {}user_pref'
 ]
 
 TASK_FIELDS_WITH_GOLD = TASK_FIELDS_WITHOUT_GOLD + [
-    'task.calibration AS {}calibration',
-    'task.state       AS {}state',
-    'task.n_answers   AS {}n_answers',
-    'task.exported    AS {}exported'
+    'task.calibration AS {}calibration'
 ]
 
 TASK_GOLD_FIELD_WITHOUT_GOLD = []
