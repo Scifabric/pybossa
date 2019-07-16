@@ -200,12 +200,13 @@ def project_by_shortname(short_name):
 
 def allow_deny_project_info(project_short_name):
     """Return project info for user as admin, subadmin or project coowner."""
-    project, owner, ps = project_by_shortname(project_short_name)
-    if not current_user.admin \
-        and not subadmins_are_privileged(current_user) \
-        and not current_user.id in project.owners_ids:
-        return abort(403)
-    return project, owner, ps
+    result = project_by_shortname(project_short_name)
+    project = result[0]
+    if (current_user.admin 
+        or subadmins_are_privileged(current_user)
+        or current_user.id in project.owners_ids):
+        return result
+    return abort(403)
 
 
 def pro_features(owner=None):
@@ -1370,7 +1371,8 @@ def tasks_browse(short_name, page=1, records_per_page=10):
                                  ty=download_obj,
                                  expanded=metadata,
                                  filetype=download_format,
-                                 filters=args)
+                                 filters=args,
+                                 disclose_gold=can_know_task_is_gold)
             flash(gettext('You will be emailed when your export has been completed.'),
                   'success')
         except Exception:
@@ -1634,6 +1636,9 @@ def export_to(short_name):
                                                                 owner,
                                                                 current_user,
                                                                 ps)
+
+    disclose_gold = current_user.admin or current_user.subadmin
+
     def respond():
         return render_template('/projects/export.html',
                                title=title,
@@ -1657,7 +1662,8 @@ def export_to(short_name):
                                  short_name,
                                  ty,
                                  expanded,
-                                 'json')
+                                 'json',
+                                 disclose_gold=disclose_gold)
             flash(gettext('You will be emailed when your export has been completed.'),
                   'success')
         except Exception as e:
@@ -1679,7 +1685,8 @@ def export_to(short_name):
                                  short_name,
                                  ty,
                                  expanded,
-                                 'csv')
+                                 'csv',
+                                 disclose_gold=disclose_gold)
             flash(gettext('You will be emailed when your export has been completed.'),
                   'success')
         except Exception as e:

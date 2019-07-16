@@ -19,7 +19,7 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache.task_browse_helpers import get_task_filters
-
+from itertools import chain
 
 USER_FIELDS = [
     '"user".id         AS {}id',
@@ -30,7 +30,7 @@ USER_FIELDS = [
     '"user".user_pref  AS {}user_pref'
 ]
 
-TASKRUN_FIELDS = [
+TASKRUN_FIELDS_WITHOUT_GOLD = [
     'task_run.id           AS {}id',
     'task_run.created      AS {}created',
     'task_run.project_id   AS {}project_id',
@@ -39,18 +39,20 @@ TASKRUN_FIELDS = [
     'task_run.user_ip      AS {}user_ip',
     'task_run.finish_time  AS {}finish_time',
     'task_run.timeout      AS {}timeout',
-    'task_run.calibration  AS {}calibration',
     'task_run.external_uid AS {}external_uid',
     'task_run.info         AS {}info'
 ]
 
-TASK_FIELDS = [
+TASKRUN_FIELDS_WITH_GOLD = TASKRUN_FIELDS_WITHOUT_GOLD + [
+    'task_run.calibration  AS {}calibration'
+]
+
+TASK_FIELDS_WITHOUT_GOLD = [
     'task.id          AS {}id',
     'task.created     AS {}created',
     'task.project_id  AS {}project_id',
     'task.state       AS {}state',
     'task.quorum      AS {}quorum',
-    'task.calibration AS {}calibration',
     'task.priority_0  AS {}priority_0',
     'task.info        AS {}info',
     'task.n_answers   AS {}n_answers',
@@ -58,27 +60,38 @@ TASK_FIELDS = [
     'task.user_pref   AS {}user_pref'
 ]
 
-TASK_GOLD_FIELD = [
+TASK_FIELDS_WITH_GOLD = TASK_FIELDS_WITHOUT_GOLD + [
+    'task.calibration AS {}calibration'
+]
+
+TASK_GOLD_FIELD_WITHOUT_GOLD = []
+
+TASK_GOLD_FIELD_WITH_GOLD = TASK_GOLD_FIELD_WITHOUT_GOLD + [
    'task.gold_answers AS {}gold_answers'
 ]
 
 session = db.slave_session
 
+def _field_mapreducer(*fieldsAndPrefixTuples):
+    return ',\n'.join(chain.from_iterable(map(lambda fieldsAndPrefix: _field_mapper(*fieldsAndPrefix), fieldsAndPrefixTuples)))
 
-def _field_mapreducer(fields, prefix=''):
-    return ',\n'.join(field.format(prefix) for field in fields)
+def _field_mapper(fields, prefix=''):
+  return (field.format(prefix) for field in fields)
 
-
-def browse_tasks_export(obj, project_id, expanded, filters):
+def browse_tasks_export(obj, project_id, expanded, filters, disclose_gold):
     """Export tasks from the browse tasks view for a project
     using the same filters that are selected by the user
     in the UI.
     """
+    TASK_FIELDS, TASK_GOLD_FIELD, TASKRUN_FIELDS = (
+      (TASK_FIELDS_WITH_GOLD, TASK_GOLD_FIELD_WITH_GOLD, TASKRUN_FIELDS_WITH_GOLD)
+      if disclose_gold
+      else (TASK_FIELDS_WITHOUT_GOLD, TASK_GOLD_FIELD_WITHOUT_GOLD, TASKRUN_FIELDS_WITHOUT_GOLD)
+    )
     conditions, filter_params = get_task_filters(filters)
     if obj == 'task':
         sql = text('''
                    SELECT {0}
-                        , {1}
                      FROM task
                      LEFT OUTER JOIN (
                        SELECT task_id
@@ -90,18 +103,17 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                        ) AS log_counts
                        ON task.id = log_counts.task_id
                      WHERE project_id = :project_id
-                     {2}
-                   '''.format(_field_mapreducer(TASK_FIELDS, ''),
-                              _field_mapreducer(TASK_GOLD_FIELD, ''),
-                              conditions)
+                     {1}
+                   '''.format(_field_mapreducer(
+                                  (TASK_FIELDS,),
+                                  (TASK_GOLD_FIELD,)
+                                ),
+                                conditions)
                   )
     elif obj == 'task_run':
         if expanded:
            sql = text('''
                       SELECT {0}
-                           , {1}
-                           , {2}
-                           , {3}
                         FROM task_run
                         LEFT JOIN task
                           ON task_run.task_id = task.id
@@ -117,17 +129,18 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                         LEFT JOIN "user"
                           ON task_run.user_id = "user".id
                         WHERE task_run.project_id = :project_id
-                        {4}
-                      '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
-                                 _field_mapreducer(TASK_FIELDS, 'task__'),
-                                 _field_mapreducer(USER_FIELDS, 'user__'),
-                                 _field_mapreducer(TASK_GOLD_FIELD, 'task__'),
-                                 conditions)
+                        {1}
+                      '''.format(_field_mapreducer(
+                                    (TASKRUN_FIELDS, ''),
+                                    (TASK_FIELDS, 'task__'),
+                                    (USER_FIELDS, 'user__'),
+                                    (TASK_GOLD_FIELD, 'task__')
+                                  ),
+                                  conditions)
                      )
         else:
            sql = text('''
                       SELECT {0}
-                           , {1}
                         FROM task_run
                         LEFT JOIN task
                           ON task_run.task_id = task.id
@@ -141,10 +154,12 @@ def browse_tasks_export(obj, project_id, expanded, filters):
                           ) AS log_counts
                           ON task_run.task_id = log_counts.task_id
                         WHERE task_run.project_id = :project_id
-                        {2}
-                      '''.format(_field_mapreducer(TASKRUN_FIELDS, ''),
-                                 _field_mapreducer(TASK_GOLD_FIELD, 'task__'),
-                                 conditions)
+                        {1}
+                      '''.format(_field_mapreducer(
+                                    (TASKRUN_FIELDS, ''),
+                                    (TASK_GOLD_FIELD, 'task__')
+                                  ),
+                                  conditions)
                      )
     else:
         return

@@ -163,8 +163,8 @@ class TaskCsvExporter(CsvExporter):
                 yield kk, vv                                        
 
     def _get_csv_with_filters(self, out, writer, table, project_id,
-                              expanded, filters):
-        objs = browse_tasks_export(table, project_id, expanded, filters)
+                              expanded, filters, disclose_gold):
+        objs = browse_tasks_export(table, project_id, expanded, filters, disclose_gold)
         rows = [obj for obj in objs]
         # for row in rows:
         #     if row['info']:
@@ -220,12 +220,12 @@ class TaskCsvExporter(CsvExporter):
         headers = self.get_keys(obj_dict, obj_name)
         return headers
 
-    def _respond_csv(self, ty, project_id, expanded=False, filters=None):
+    def _respond_csv(self, ty, project_id, expanded=False, filters=None, disclose_gold=False):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
 
         return self._get_csv_with_filters(
-                    out, writer, ty, project_id, expanded, filters)
+                    out, writer, ty, project_id, expanded, filters, disclose_gold)
 
     def response_zip(self, project, ty, expanded=False):
         return self.get_zip(project, ty, expanded)
@@ -253,9 +253,9 @@ class TaskCsvExporter(CsvExporter):
                                     container=self._container(project),
                                     _external=True))
 
-    def make_zip(self, project, obj, expanded=False, filters=None):
+    def make_zip(self, project, obj, expanded=False, filters=None, disclose_gold=False):
         file_format = 'csv'
-        obj_generator = self._respond_csv(obj, project.id, expanded, filters)
+        obj_generator = self._respond_csv(obj, project.id, expanded, filters, disclose_gold)
         return self._make_zipfile(
                 project, obj, file_format, obj_generator, expanded)
 
