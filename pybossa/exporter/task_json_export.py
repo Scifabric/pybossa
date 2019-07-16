@@ -33,6 +33,19 @@ TASKRUN_GOLD_FIELDS = [
     'calibration'
 ]
 
+def remove_task_gold_fields(task_dict):
+    if not task_dict:
+        return
+
+    for field_name in TASK_GOLD_FIELDS:
+        task_dict.pop(field_name, None)
+
+def remove_taskrun_gold_fields(taskrun_dict):
+    for field_name in TASKRUN_GOLD_FIELDS:
+        taskrun_dict.pop(field_name, None)
+
+    remove_task_gold_fields(taskrun_dict.get('task'))
+
 class TaskJsonExporter(JsonExporter):
     """JSON Exporter for exporting ``Task``s and ``TaskRun``s
     for a project.
@@ -86,28 +99,13 @@ class TaskJsonExporter(JsonExporter):
 
         return new_row
 
-    @staticmethod
-    def remove_task_gold_fields(task_dict):
-        if not task_dict:
-            return
-
-        for field_name in TASK_GOLD_FIELDS:
-            task_dict.pop(field_name, None)
-    
-    @staticmethod
-    def remove_taskrun_gold_fields(taskrun_dict):
-        for field_name in TASKRUN_GOLD_FIELDS:
-            taskrun_dict.pop(field_name, None)
-
-        remove_task_gold_fields(taskrun_dict.get('task'))
-
     def gen_json(self, obj, project_id, expanded=False, disclose_gold=False):
         if obj == 'task':
             query_filter = task_repo.filter_tasks_by
-            remove_gold = self.remove_task_gold_fields
+            remove_gold = remove_task_gold_fields
         elif obj == 'task_run':
             query_filter = task_repo.filter_task_runs_by
-            remove_gold = self.remove_taskrun_gold_fields
+            remove_gold = remove_taskrun_gold_fields
         else:
             return
 
