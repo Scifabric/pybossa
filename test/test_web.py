@@ -9292,3 +9292,190 @@ class TestWebQuizModeUpdate(web.Helper):
         self.signin_user(worker)
         result = self.update_project(project, self.enabled_update)
         assert result.status_code == 403
+
+
+class TestServiceRequest(web.Helper):
+
+    @with_context
+    @patch('pybossa.api.has_lock')
+    @patch('pybossa.api.get_project_scheduler_and_timeout')
+    def test_service_request_without_proxy_service_config(self, get_project_scheduler_and_timeout, has_lock):
+        """Test code as Public instance with proxy_service_config undefined """
+
+        has_lock.return_value = True
+        get_project_scheduler_and_timeout.return_value = ['user_pref_scheduler', None]
+        url = "/api/task/1/services"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'test': 'test'}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+    @with_context
+    @patch('pybossa.api.has_lock')
+    @patch('pybossa.api.get_project_scheduler_and_timeout')
+    def test_service_request_with_task_not_locked_by_user(self, get_project_scheduler_and_timeout, has_lock):
+        """Test with unlocked task"""
+
+        has_lock.return_value = False
+        get_project_scheduler_and_timeout.return_value = ['user_pref_scheduler', None]
+        url = "/api/task/1/services"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'test': 'test'}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+    @with_context
+    @patch('pybossa.api.has_lock')
+    @patch('pybossa.api.get_project_scheduler_and_timeout')
+    def test_service_request_with_invalid_payload(self, get_project_scheduler_and_timeout, has_lock):
+        """Test with invalid payload """
+
+        from flask import current_app
+        has_lock.return_value = True
+        get_project_scheduler_and_timeout.return_value = ['user_pref_scheduler', None]
+
+        current_app.config['PROXY_SERVICE_CONFIG'] = {
+            'uri': 'http://test-service.com:8080',
+            'services':
+                {
+                    'autocomplete_service': {
+                        'name': 'test-service-name',
+                        'headers': {'CCRT-test': 'test'},
+                        'requests': ['queryTest'],
+                        'context': ['test_context']
+                    }
+                }
+        }
+        url = "/api/task/1/services"
+        user = UserFactory.create()
+        user.set_password('1234')
+        user_repo.save(user)
+        self.signin(email=user.email_addr, password='1234')
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        payload = {'test': 'test'}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        payload = {'test': 'test'}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        payload = {
+            'service_version': "37",
+            'service_name': 'invalid-test-service-name',
+            'data': { 'queryTest':{
+                'context':"test_context",
+                'query': "½.½ uuujfA 11109",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        payload = {
+            'service_version': "37",
+            'service_name': 'test-service-name',
+            'data': { 'invalid-queryTest':{
+                'context':"test_context",
+                'query': "½.½ uuujfA 11109",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        payload = {
+            'service_version': "37",
+            'service_name': 'test-service-name',
+            'data': { 'queryTest':{
+                'context':"invalid-test_context",
+                'query': "½.½ uuujfA 11109",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        payload = {
+            'service_version': "37",
+            'service_name': 'test-service-name',
+            'data': { 'queryTest':{
+                'context':"test_context",
+                'query': "½.½ @ invalid query",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+
+    @with_context
+    @patch('pybossa.api.requests.post')
+    @patch('pybossa.api.has_lock')
+    @patch('pybossa.api.get_project_scheduler_and_timeout')
+    def test_service_request_with_valid_payload(self, get_project_scheduler_and_timeout, has_lock, post):
+        """Test with valid payload """
+        from flask import current_app, Response
+
+        has_lock.return_value = True
+        get_project_scheduler_and_timeout.return_value = ['user_pref_scheduler', None]
+        mock_response = {'test': 'test'}
+        post.return_value.json.return_value = mock_response
+
+
+        current_app.config['PROXY_SERVICE_CONFIG'] = {
+            'uri': 'http://test-service.com:8080',
+            'services':
+                {
+                    'autocomplete_service': {
+                        'name': 'test-service-name',
+                        'headers': {'CCRT-test': 'test'},
+                        'requests': ['queryTest'],
+                        'context': ['test_context']
+                    }
+                }
+        }
+
+        valid_request = {
+            'service_version': "37",
+            'service_name': 'test-service-name',
+            'data': { 'queryTest':{
+                'context':"test_context",
+                'query': "½.½ uuujfA 11109",
+                'maxresults':10}}}
+
+        url = "/api/task/1/services"
+        user = UserFactory.create()
+        user.set_password('1234')
+        user_repo.save(user)
+        self.signin(email=user.email_addr, password='1234')
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+
+        res = self.app_post_json(url,
+                            data=valid_request,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data == mock_response, data
+

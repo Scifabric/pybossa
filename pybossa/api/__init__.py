@@ -33,7 +33,7 @@ import json
 import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask import current_app
-from flask_login import current_user
+from flask_login import current_user, login_required
 from time import time
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
@@ -74,6 +74,7 @@ from pybossa.data_access import data_access_levels
 from pybossa.task_creator_helper import set_gold_answers
 from pybossa.auth.task import TaskAuth
 import requests
+import regex
 
 blueprint = Blueprint('api', __name__)
 
@@ -464,28 +465,61 @@ def task_gold(project_id=None):
     return Response(json.dumps({'success': True}), 200, mimetype="application/json")
 
 
-
 @jsonpify
+@login_required
 @csrf.exempt
-@blueprint.route('/project/<short_name>/services', methods=['POST'])
+@blueprint.route('/task/<task_id>/services', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def get_service_request(short_name):
+def get_service_request(task_id):
     """Proxy service call"""
-    if short_name:
-            project = project_repo.get_by_shortname(short_name)
-
-    import pdb
-    pdb.set_trace()
+    proxy_service_config = current_app.config.get('PROXY_SERVICE_CONFIG', None)
+    task = task_repo.get_task(task_id)
     payload = request.json
-    proxy_service_config = current_app.config.get('PROXY_SERVICE_CONFIG')
-    if project and payload['service_name'] in proxy_service_config['services']:
-        service = proxy_service_config['services'][payload['service_name']]
-        if payload['data'].keys() in service['requests']:
-            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], payload['service_name'], payload['service_version'])
-            headers = service['header']
-            ret = requests.post(url, header=headers, json=payload['data'])
-            return Response(json.dumps(ret.json()), 200, mimetype="application/json")
-    else:
-        return Response({'error': 'Invalid service requested, please confirm with GIGwork team the availabilty of the requested sevice.'}, 503, mimetype="application/json")
 
+    if not task or not proxy_service_config:
+        return abort(400)
+
+    scheduler, timeout = get_project_scheduler_and_timeout(
+        task.project_id)
+
+    task_locked_by_user = False
+
+    if scheduler in (Schedulers.locked, Schedulers.user_pref):
+        task_locked_by_user = has_lock(task.id, current_user.id, timeout)
+
+    if task_locked_by_user:
+        service = _get_valid_service(task_id, payload, proxy_service_config) if isinstance(payload, dict) else None
+        if service:
+            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service['name'], payload['service_version'])
+            headers = service['headers']
+            ret = requests.post(url, headers=headers, json=payload['data'])
+            return Response(json.dumps(ret.json()), 200, mimetype="application/json")
+
+    current_app.logger.info(
+        'Task id {} with lock-status {} by user {} with this payload {} failed.'
+        .format(task_id, task_locked_by_user, current_user.id, payload))
+    return abort(403)
+
+
+def _get_valid_service(task_id, payload, proxy_service_config):
+    whitelist_regex = regex.compile(ur"[^a-zAz0-9\.\u00BC-\u00BE\u2150-\u215E\s]")
+    service_name = payload.get('service_name', None)
+    service_version = payload.get('service_version', None)
+    service_data = payload.get('data', None)
+    service_request = service_data.keys()[0] if isinstance(service_data, dict) and len(service_data.keys()) == 1 else None
+
+    if service_name == proxy_service_config['services']['autocomplete_service']['name']:
+        service = proxy_service_config['services']['autocomplete_service']
+        if service and service_request in service['requests'] and service_version:
+            query = service_data[service_request].get('query', None)
+            matches = whitelist_regex.search(query)
+            context = service_data[service_request].get('context', None)
+            if len(query) < 20 and not matches and context in service['context']:
+                return service
+
+    current_app.logger.info(
+        'Task {} loaded for user {} failed calling autocomplete service with payload {}'
+        .format(task_id, current_user.id, payload))
+
+    return None
 
