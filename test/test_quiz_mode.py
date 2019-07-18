@@ -117,7 +117,6 @@ class TestQuizUpdate(QuizTest):
         new_task_response = self.app.get(new_task_url)
         task = json.loads(new_task_response.data)
         task_run_url = '/api/taskrun'
-        print(task_answers, task)
         task_run_data = {
             'project_id': project.id,
             'task_id': task['id'],
