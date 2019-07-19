@@ -73,8 +73,9 @@ from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.data_access import data_access_levels
 from pybossa.task_creator_helper import set_gold_answers
 from pybossa.auth.task import TaskAuth
+from pybossa.service_validators import ServiceValidators
 import requests
-import regex
+
 
 blueprint = Blueprint('api', __name__)
 
@@ -468,29 +469,25 @@ def task_gold(project_id=None):
 @jsonpify
 @login_required
 @csrf.exempt
-@blueprint.route('/task/<task_id>/services', methods=['POST'])
+@blueprint.route('/task/<task_id>/services/<service_name>/<service_version>', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def get_service_request(task_id):
+def get_service_request(task_id, service_name, service_version):
     """Proxy service call"""
     proxy_service_config = current_app.config.get('PROXY_SERVICE_CONFIG', None)
     task = task_repo.get_task(task_id)
-    payload = request.json
+    project = project_repo.get(task.project_id)
 
-    if not task or not proxy_service_config:
+    if not task or not proxy_service_config or not service_name or not service_version:
         return abort(400)
 
-    scheduler, timeout = get_project_scheduler_and_timeout(
-        task.project_id)
-
-    task_locked_by_user = False
-
-    if scheduler in (Schedulers.locked, Schedulers.user_pref):
-        task_locked_by_user = has_lock(task.id, current_user.id, timeout)
+    timeout = project.info.get('timeout', ContributionsGuard.STAMP_TTL)
+    task_locked_by_user = has_lock(task.id, current_user.id, timeout)
+    payload = request.json
 
     if task_locked_by_user:
-        service = _get_valid_service(task_id, payload, proxy_service_config) if isinstance(payload, dict) else None
-        if service:
-            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service['name'], payload['service_version'])
+        service = _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config) if isinstance(payload, dict) else None
+        if isinstance(service, dict):
+            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service_name, service_version)
             headers = service['headers']
             ret = requests.post(url, headers=headers, json=payload['data'])
             return Response(json.dumps(ret.json()), 200, mimetype="application/json")
@@ -501,25 +498,18 @@ def get_service_request(task_id):
     return abort(403)
 
 
-def _get_valid_service(task_id, payload, proxy_service_config):
-    whitelist_regex = regex.compile(ur"[^a-zAz0-9\.\u00BC-\u00BE\u2150-\u215E\s]")
-    service_name = payload.get('service_name', None)
-    service_version = payload.get('service_version', None)
+def _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config):
     service_data = payload.get('data', None)
     service_request = service_data.keys()[0] if isinstance(service_data, dict) and len(service_data.keys()) == 1 else None
+    service = proxy_service_config['services'].get(service_name, None)
 
-    if service_name == proxy_service_config['services']['autocomplete_service']['name']:
-        service = proxy_service_config['services']['autocomplete_service']
-        if service and service_request in service['requests'] and service_version:
-            query = service_data[service_request].get('query', None)
-            matches = whitelist_regex.search(query)
-            context = service_data[service_request].get('context', None)
-            if len(query) < 20 and not matches and context in service['context']:
-                return service
+    if service and service_request in service['requests'] and service_version:
+        service_validator = ServiceValidators(service, service_request, payload)
+        if service_validator.run_validators():
+            return service
 
     current_app.logger.info(
-        'Task {} loaded for user {} failed calling autocomplete service with payload {}'
-        .format(task_id, current_user.id, payload))
+        'Task {} loaded for user {} failed calling {} service with version {} with payload {}'
+        .format(task_id, current_user.id, service_name, service_version, payload))
 
-    return None
-
+    return abort(403, 'The request data failed validation')
