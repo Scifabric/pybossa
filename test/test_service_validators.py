@@ -32,33 +32,33 @@ class TestServiceValidator(ServiceValidatorTestHelper):
 
     @with_context
     def test_is_valid_query(self):
-        service_validator = ServiceValidators(self.get_service(), 'queryTest', self.get_valid_payload())
-        assert service_validator.is_valid_query()
+        service_validator = ServiceValidators(self.get_service())
+        assert service_validator.is_valid_query('queryTest', self.get_valid_payload())
 
     @with_context
     def test_is_valid_query_with_invalid_query(self):
-        service_validator = ServiceValidators(self.get_service(), 'queryTest', self.get_invalid_payload())
-        assert not service_validator.is_valid_query()
+        service_validator = ServiceValidators(self.get_service())
+        assert not service_validator.is_valid_query('queryTest', self.get_invalid_payload())
 
     @with_context
     def test_is_valid_context(self):
-        service_validator = ServiceValidators(self.get_service(), 'queryTest', self.get_valid_payload())
-        assert service_validator.is_valid_context()
+        service_validator = ServiceValidators(self.get_service())
+        assert service_validator.is_valid_context('queryTest', self.get_valid_payload())
 
     @with_context
     def test_is_valid_context_with_invalid_context(self):
-        service_validator = ServiceValidators(self.get_service(), 'queryTest', self.get_invalid_payload())
-        assert not service_validator.is_valid_context()
+        service_validator = ServiceValidators(self.get_service())
+        assert not service_validator.is_valid_context('queryTest', self.get_invalid_payload())
 
     @with_context
     def test_run_validators_with_valid_payload(self):
-        service_validator = ServiceValidators(self.get_service(), 'queryTest', self.get_valid_payload())
-        assert service_validator.run_validators()
+        service_validator = ServiceValidators(self.get_service())
+        assert service_validator.run_validators('queryTest', self.get_valid_payload())
 
     @with_context
     def test_run_validators_with_invalid_payload(self):
-        service_validator = ServiceValidators(self.get_service(), 'queryTest', self.get_invalid_payload())
-        assert not service_validator.run_validators()
+        service_validator = ServiceValidators(self.get_service())
+        assert not service_validator.run_validators('queryTest', self.get_invalid_payload())
 
 
 

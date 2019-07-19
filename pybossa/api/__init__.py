@@ -505,8 +505,8 @@ def _get_valid_service(task_id, service_name, service_version, payload, proxy_se
     service = proxy_service_config['services'].get(service_name, None)
 
     if service and service_request in service['requests'] and service_version:
-        service_validator = ServiceValidators(service, service_request, payload)
-        if service_validator.run_validators():
+        service_validator = ServiceValidators(service)
+        if service_validator.run_validators(service_request, payload):
             return service
 
     current_app.logger.info(
