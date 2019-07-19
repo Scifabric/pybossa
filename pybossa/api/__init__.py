@@ -477,15 +477,15 @@ def get_service_request(task_id, service_name, service_version):
     task = task_repo.get_task(task_id)
     project = project_repo.get(task.project_id)
 
-    if not task or not proxy_service_config or not service_name or not service_version:
+    if not (task and proxy_service_config and service_name and service_version):
         return abort(400)
 
     timeout = project.info.get('timeout', ContributionsGuard.STAMP_TTL)
     task_locked_by_user = has_lock(task.id, current_user.id, timeout)
-    payload = request.json
+    payload = request.json if isinstance(request.json, dict) else None
 
-    if task_locked_by_user:
-        service = _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config) if isinstance(payload, dict) else None
+    if payload and task_locked_by_user:
+        service = _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config)
         if isinstance(service, dict):
             url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service_name, service_version)
             headers = service['headers']
@@ -500,7 +500,8 @@ def get_service_request(task_id, service_name, service_version):
 
 def _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config):
     service_data = payload.get('data', None)
-    service_request = service_data.keys()[0] if isinstance(service_data, dict) and len(service_data.keys()) == 1 else None
+    service_request = service_data.keys()[0] if isinstance(service_data, dict) and \
+        len(service_data.keys()) == 1 else None
     service = proxy_service_config['services'].get(service_name, None)
 
     if service and service_request in service['requests'] and service_version:

@@ -9301,6 +9301,8 @@ class TestServiceRequest(web.Helper):
     def test_service_request_without_proxy_service_config(self, has_lock):
         """Test code as Public instance with proxy_service_config undefined """
 
+        from flask import current_app, Response
+        current_app.config['PROXY_SERVICE_CONFIG'] = None
         has_lock.return_value = True
         url = "/api/task/1/services/test-service-name/1"
 
@@ -9315,7 +9317,7 @@ class TestServiceRequest(web.Helper):
                             follow_redirects=False,
                             )
         data = json.loads(res.data)
-        assert data.get('status_code') == 403, data
+        assert data.get('status_code') == 400, data
 
     @with_context
     @patch('pybossa.api.has_lock')
