@@ -9160,6 +9160,65 @@ class TestWebUserMetadataUpdate(web.Helper):
         self.assert_updates_applied_correctly(user_normal_updated.id)
 
 
+    @with_context
+    def test_cancel_task(self):
+        """Test cancel task with wrong payload"""
+
+        url = "/api/task/1/canceltask"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 400, data
+
+
+    @with_context
+    def test_cancel_task_without_auth(self):
+        """Test cancel task without auth"""
+
+        url = "/api/task/1/canceltask"
+
+        payload = {}
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 401, data
+
+
+    @with_context
+    @patch('pybossa.api.release_lock')
+    @patch('pybossa.api.has_lock')
+    def test_cancel_task_succed(self, has_lock, release_lock):
+        """Test cancel """
+
+        has_lock.return_value = True
+        url = "/api/task/1/canceltask"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(info= {'sched': 'user_pref_scheduler', 'timeout': 60 * 60}, owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'projectname': project.short_name}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('success') == True, data
+        assert release_lock.call_count == 1, release_lock.call_count
+
+
 class TestWebQuizModeUpdate(web.Helper):
 
     disabled_update = {
