@@ -20,9 +20,9 @@ class QuizTest(web.Helper):
             project_quiz['short_circuit'] = short_circuit
 
         project = ProjectFactory.create(
-            owner=admin, 
+            owner=admin,
             published=True,
-            info=dict(quiz=project_quiz, enable_gold=False))
+            info=dict(quiz=project_quiz))
         self.set_proj_passwd_cookie(project, user=user)
         self.signin_user(user)
         return project, user
