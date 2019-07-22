@@ -9160,6 +9160,65 @@ class TestWebUserMetadataUpdate(web.Helper):
         self.assert_updates_applied_correctly(user_normal_updated.id)
 
 
+    @with_context
+    def test_cancel_task(self):
+        """Test cancel task with wrong payload"""
+
+        url = "/api/task/1/canceltask"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 400, data
+
+
+    @with_context
+    def test_cancel_task_without_auth(self):
+        """Test cancel task without auth"""
+
+        url = "/api/task/1/canceltask"
+
+        payload = {}
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 401, data
+
+
+    @with_context
+    @patch('pybossa.api.release_lock')
+    @patch('pybossa.api.has_lock')
+    def test_cancel_task_succed(self, has_lock, release_lock):
+        """Test cancel """
+
+        has_lock.return_value = True
+        url = "/api/task/1/canceltask"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(info= {'sched': 'user_pref_scheduler', 'timeout': 60 * 60}, owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'projectname': project.short_name}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('success') == True, data
+        assert release_lock.call_count == 1, release_lock.call_count
+
+
 class TestWebQuizModeUpdate(web.Helper):
 
     disabled_update = {
@@ -9292,3 +9351,170 @@ class TestWebQuizModeUpdate(web.Helper):
         self.signin_user(worker)
         result = self.update_project(project, self.enabled_update)
         assert result.status_code == 403
+
+
+class TestServiceRequest(web.Helper):
+
+    @with_context
+    @patch('pybossa.api.has_lock')
+    def test_service_request_without_proxy_service_config(self, has_lock):
+        """Test code as Public instance with proxy_service_config undefined """
+
+        from flask import current_app, Response
+        current_app.config['PROXY_SERVICE_CONFIG'] = None
+        has_lock.return_value = True
+        url = "/api/task/1/services/test-service-name/1"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'test': 'test'}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 400, data
+
+    @with_context
+    @patch('pybossa.api.has_lock')
+    def test_service_request_with_task_not_locked_by_user(self, has_lock):
+        """Test with unlocked task"""
+
+        has_lock.return_value = False
+        url = "/api/task/1/services/test-service-name/1"
+
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        project = ProjectFactory.create(owner=admin)
+        task = TaskFactory.create(project=project)
+        payload = {'test': 'test'}
+
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+    @with_context
+    @patch('pybossa.api.has_lock')
+    def test_service_request_with_invalid_payload(self, has_lock):
+        """Test with invalid payload """
+
+        from flask import current_app
+        has_lock.return_value = True
+        current_app.config['PROXY_SERVICE_CONFIG'] = {
+            'uri': 'http://test-service.com:8080',
+            'services':
+                {
+                    'test-service-name': {
+                        'headers': {'CCRT-test': 'test'},
+                        'requests': ['queryTest'],
+                        'context': ['test_context'],
+                        'validators': ['is_valid_query', 'is_valid_context']
+                    }
+                }
+        }
+        user = UserFactory.create()
+        user.set_password('1234')
+        user_repo.save(user)
+        self.signin(email=user.email_addr, password='1234')
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+
+        # invalid payload
+        url = "/api/task/1/services/test-service-name/1"
+        payload = {'test': 'test'}
+        res = self.app_post_json(url,
+                            data=payload,
+                            follow_redirects=False,
+                            )
+
+        # invalid service_name in payload
+        url = "/api/task/1/services/invalid_service_name/1"
+        payload = {
+            'data': { 'queryTest':{
+                'context':"test_context",
+                'query': u"½.½ uuujfA 11109",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        # invalid requests in payload
+        url = "/api/task/1/services/test-service-name/1"
+        payload = {
+            'data': { 'invalid-queryTest':{
+                'context':"test_context",
+                'query': u"½.½ uuujfA 11109",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        # invalid context in payload
+        payload = {
+            'data': { 'queryTest':{
+                'context':"invalid-test_context",
+                'query': u"½.½ uuujfA 11109",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+        # invalid query in payload
+        payload = {
+            'data': { 'queryTest':{
+                'context':"test_context",
+                'query': u"½.½ @ invalid query",
+                'maxresults':10}}}
+        data = json.loads(res.data)
+        assert data.get('status_code') == 403, data
+
+
+    @with_context
+    @patch('pybossa.api.requests.post')
+    @patch('pybossa.api.has_lock')
+    def test_service_request_with_valid_payload(self, has_lock, post):
+        """Test with valid payload """
+        from flask import current_app, Response
+
+        has_lock.return_value = True
+        mock_response = {'test': 'test'}
+        post.return_value.json.return_value = mock_response
+
+        current_app.config['PROXY_SERVICE_CONFIG'] = {
+            'uri': 'http://test-service.com:8080',
+            'services':
+                {
+                    'test-service-name': {
+                        'headers': {'CCRT-test': 'test'},
+                        'requests': ['queryTest'],
+                        'context': ['test_context'],
+                        'validators': ['is_valid_query', 'is_valid_context']
+                    }
+                }
+        }
+
+        valid_request = {
+            'data': { 'queryTest':{
+                'context':"test_context",
+                'query': u"½.½ uuujfA 11109",
+                'maxresults':10}}}
+
+        url = "/api/task/1/services/test-service-name/1.37"
+        user = UserFactory.create()
+        user.set_password('1234')
+        user_repo.save(user)
+        self.signin(email=user.email_addr, password='1234')
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+
+        res = self.app_post_json(url,
+                            data=valid_request,
+                            follow_redirects=False,
+                            )
+
+        data = json.loads(res.data)
+        assert data == mock_response, data
+

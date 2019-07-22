@@ -33,7 +33,7 @@ import json
 import jwt
 from flask import Blueprint, request, abort, Response, make_response
 from flask import current_app
-from flask_login import current_user
+from flask_login import current_user, login_required
 from time import time
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
@@ -73,6 +73,9 @@ from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.data_access import data_access_levels
 from pybossa.task_creator_helper import set_gold_answers
 from pybossa.auth.task import TaskAuth
+from pybossa.service_validators import ServiceValidators
+import requests
+
 
 blueprint = Blueprint('api', __name__)
 
@@ -461,3 +464,53 @@ def task_gold(project_id=None):
     task_repo.update(task)
 
     return Response(json.dumps({'success': True}), 200, mimetype="application/json")
+
+
+@jsonpify
+@login_required
+@csrf.exempt
+@blueprint.route('/task/<task_id>/services/<service_name>/<service_version>', methods=['POST'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def get_service_request(task_id, service_name, service_version):
+    """Proxy service call"""
+    proxy_service_config = current_app.config.get('PROXY_SERVICE_CONFIG', None)
+    task = task_repo.get_task(task_id)
+    project = project_repo.get(task.project_id)
+
+    if not (task and proxy_service_config and service_name and service_version):
+        return abort(400)
+
+    timeout = project.info.get('timeout', ContributionsGuard.STAMP_TTL)
+    task_locked_by_user = has_lock(task.id, current_user.id, timeout)
+    payload = request.json if isinstance(request.json, dict) else None
+
+    if payload and task_locked_by_user:
+        service = _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config)
+        if isinstance(service, dict):
+            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service_name, service_version)
+            headers = service.get('headers')
+            ret = requests.post(url, headers=headers, json=payload['data'])
+            return Response(json.dumps(ret.json()), 200, mimetype="application/json")
+
+    current_app.logger.info(
+        'Task id {} with lock-status {} by user {} with this payload {} failed.'
+        .format(task_id, task_locked_by_user, current_user.id, payload))
+    return abort(403)
+
+
+def _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config):
+    service_data = payload.get('data', None)
+    service_request = service_data.keys()[0] if isinstance(service_data, dict) and \
+        len(service_data.keys()) == 1 else None
+    service = proxy_service_config['services'].get(service_name, None)
+
+    if service and service_request in service['requests'] and service_version:
+        service_validator = ServiceValidators(service)
+        if service_validator.run_validators(service_request, payload):
+            return service
+
+    current_app.logger.info(
+        'Task {} loaded for user {} failed calling {} service with version {} with payload {}'
+        .format(task_id, current_user.id, service_name, service_version, payload))
+
+    return abort(403, 'The request data failed validation')
