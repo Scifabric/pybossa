@@ -488,7 +488,7 @@ def get_service_request(task_id, service_name, service_version):
         service = _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config)
         if isinstance(service, dict):
             url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service_name, service_version)
-            headers = service['headers']
+            headers = service.get('headers')
             ret = requests.post(url, headers=headers, json=payload['data'])
             return Response(json.dumps(ret.json()), 200, mimetype="application/json")
 
