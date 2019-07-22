@@ -490,7 +490,7 @@ def get_service_request(task_id, service_name, service_version):
             url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service_name, service_version)
             headers = service.get('headers')
             ret = requests.post(url, headers=headers, json=payload['data'])
-            return Response(json.dumps(ret.json()), 200, mimetype="application/json")
+            return Response(ret.content, 200, mimetype="application/json")
 
     current_app.logger.info(
         'Task id {} with lock-status {} by user {} with this payload {} failed.'
