@@ -275,7 +275,8 @@ class Helper(Test):
                        password=new_password,
                        product=new_product,
                        subproduct=new_subproduct,
-                       kpi=new_kpi)
+                       kpi=new_kpi,
+                       provider='DEFAULT')
 
         if method == "POST":
             return self.app.post("/project/%s/update" % short_name,
