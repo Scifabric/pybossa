@@ -342,8 +342,11 @@ def get_user_pref_metadata(name):
     return upref_mdata
 
 
-def delete_user_pref_metadata(name):
-    delete_memoized(get_user_pref_metadata, name)
+def delete_user_pref_metadata(user):
+    delete_memoized(get_user_pref_metadata, user.name)
+    delete_memoized(get_user_preferences, user.id)
+    delete_memoized(get_user_by_id, user.id)
+    delete_memoized(get_user_access_levels_by_id, user.id)
 
 
 @memoize(timeout=ONE_DAY)
@@ -507,10 +510,6 @@ def get_user_access_levels_by_id(user_id):
         where id=:user_id''')
     row = session.execute(sql, dict(user_id=user_id)).fetchone()
     return row[0] or []
-
-
-def delete_user_access_levels_by_id(user_id):
-    delete_memoized(get_user_access_levels_by_id, user_id)
 
 
 def delete_published_projects(user_id):

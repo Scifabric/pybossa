@@ -60,7 +60,6 @@ from pybossa.forms.forms import UserPrefMetadataForm, RegisterFormWithUserPrefMe
 from pybossa.forms.account_view_forms import *
 from pybossa import otp
 import time
-from pybossa.cache.users import get_user_preferences
 from pybossa.sched import release_user_locks
 from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_from_form,
     copy_data_access_levels)
@@ -1125,9 +1124,7 @@ def add_metadata(name):
     ensure_data_access_assignment_from_form(user.info, form)
     user.user_pref = user_pref
     user_repo.update(user)
-    cached_users.delete_user_pref_metadata(user.name)
-    cached_users.delete_user_access_levels_by_id(user.id)
-    delete_memoized(get_user_preferences, user.id)
+    cached_users.delete_user_pref_metadata(user)
     flash("Input saved successfully", "info")
     return redirect(url_for('account.profile', name=name))
 
