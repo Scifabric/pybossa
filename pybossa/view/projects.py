@@ -1274,7 +1274,7 @@ def tasks_browse(short_name, page=1, records_per_page=10):
     if not can_know_task_is_gold:
         # This has to be a list and not a set because it is JSON stringified in the template
         # and sets are not stringifiable.
-        args['display_columns'] = list(set(args['display_columns']) - {'pcomplete', 'gold_task'})
+        args['display_columns'] = list(set(args['display_columns']) - {'gold_task'})
 
     def respond():
         if records_per_page in allowed_records_per_page:
