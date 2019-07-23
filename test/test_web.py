@@ -9479,9 +9479,13 @@ class TestServiceRequest(web.Helper):
         """Test with valid payload """
         from flask import current_app, Response
 
+        class MockResponse(object):
+            def __init__(self, content):
+                self.content = content
+
         has_lock.return_value = True
-        mock_response = {'test': 'test'}
-        post.return_value.json.return_value = mock_response
+        mock_response = MockResponse('{"test": "test"}')
+        post.return_value = mock_response
 
         current_app.config['PROXY_SERVICE_CONFIG'] = {
             'uri': 'http://test-service.com:8080',
@@ -9514,7 +9518,5 @@ class TestServiceRequest(web.Helper):
                             data=valid_request,
                             follow_redirects=False,
                             )
-
-        data = json.loads(res.data)
-        assert data == mock_response, data
+        assert res.data == mock_response.content, res.data
 
