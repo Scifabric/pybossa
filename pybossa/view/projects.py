@@ -634,16 +634,26 @@ def update(short_name):
         new_project.info['product'] = form.product.data
         new_project.info['subproduct'] = form.subproduct.data
         new_project.info['kpi'] = float(form.kpi.data)
-        annotation = new_project.info.setdefault('annotation', {})
-        annotation['dataset_description'] = form.dataset_description.data
-        annotation['provider'] = form.provider.data
-        annotation['restrictions_and_permissioning'] = form.restrictions_and_permissioning.data
-        annotation['store_pvf'] = form.store_pvf.data
-        annotation['sampling_method'] = form.sampling_method.data
-        annotation['sampling_script'] = form.sampling_script.data
-        annotation['label_aggregation_strategy'] = form.label_aggregation_strategy.data
-        annotation['task_input_schema'] = form.task_input_schema.data
-        annotation['task_output_schema'] = form.task_output_schema.data
+        annotation = {}
+        annotation_fields = [
+            'dataset_description',
+            'provider',
+            'restrictions_and_permissioning',
+            'store_pvf',
+            'sampling_method',
+            'sampling_script',
+            'label_aggregation_strategy',
+            'task_input_schema',
+            'task_output_schema'
+        ]
+        for field_name in annotation_fields:
+            value = getattr(form, field_name).data
+            if value:
+                annotation[field_name] = value
+        if annotation:
+            new_project.info['annotation'] = annotation
+        else:
+            new_project.info.pop('annotation', None)
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)

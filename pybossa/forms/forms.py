@@ -129,7 +129,11 @@ class ProjectUpdateForm(ProjectForm):
                         [pb_validator.Webhook()])
     sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))
     dataset_description = TextAreaField(lazy_gettext('Dataset Description'))
-    provider = SelectField(lazy_gettext('Annotation Provider'), choices=[(x,x) for x in ["DEFAULT","PERSONNEL","VENDOR","CONTINGENT_WORKER","FREELANCER","CROWDSOURCING_WORKER"]])
+    provider = SelectField(
+        lazy_gettext('Annotation Provider'),
+        choices=[(None, "NONE")] + [(x,x) for x in ["PERSONNEL","VENDOR","CONTINGENT_WORKER","FREELANCER","CROWDSOURCING_WORKER"]],
+        coerce=lambda x: None if x == "None" else x
+    )
     restrictions_and_permissioning = TextAreaField(lazy_gettext('Restrictions & Permissioning'))
     store_pvf = TextField(lazy_gettext('Annotation Store PVF'))
     sampling_method = TextField(lazy_gettext('Sampling Method'))
