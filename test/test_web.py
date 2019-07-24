@@ -3905,6 +3905,18 @@ class TestWeb(web.Helper):
         mock.assert_called_with(delete_account, user.id, admin.email_addr)
 
     @with_context
+    @patch('pybossa.view.account.super_queue.enqueue')
+    def test_delete_admin_account(self, mock):
+        """Test WEB JSON delete account works"""
+        from pybossa.jobs import delete_account
+        self.register()
+        self.signin()
+        admin = user_repo.get(1)
+        res = self.app_get_json('/account/%s/delete' % admin.name)
+        data = json.loads(res.data)
+        assert res.status_code == 403, (res.status_code, res.data)
+
+    @with_context
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
