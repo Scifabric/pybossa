@@ -18,7 +18,7 @@
 
 import time
 import re
-import json
+import json, ast
 import os
 import math
 import requests
@@ -850,19 +850,90 @@ def details(short_name):
     return handle_content_type(response)
 
 
+def update_data(body, project):
+    if "project" in body:
+        key = "project"
+        data = body.get(key) or {}
+        external_config = project.info.get('ext_config') or {}
+        if not external_config:
+            gigwork_poller = dict(target_bucket=data.get('target_bucket'))
+            external_config = dict(gigwork_poller=gigwork_poller)
+        elif not external_config.get('gigwork_poller'):
+            gigwork_poller = dict(target_bucket=data.get('target_bucket'))
+            external_config['gigwork_poller'] = gigwork_poller
+        else:
+            external_config['gigwork_poller']['target_bucket'] = data.get('target_bucket')
+        project.info['ext_config'] = external_config
+        project.info['data_access'] = data.get('data_access')
+        project.info['project_users'] = data.get('project_users')
+
+    elif "task" in body:
+        key = "task"
+        data = body.get(key) or {}
+        project.info['sched'] = data.get('sched')
+        project.info['timeout'] = int(data.get('timeout'))
+        project.info['sched_rand_within_priority'] = data.get('random')
+        # update current tasks redundancy
+        n_answers = data.get('default_redundancy')
+        if n_answers > task_repo.MAX_REDUNDANCY or n_answers < task_repo.MIN_REDUNDANCY:
+            flash(gettext('Task Redundancy out of range'), 'error')
+        project.set_default_n_answers(int(data.get('default_redundancy')))
+
+        n_answers = data.get('current_redundancy')
+        if n_answers:
+            if n_answers > task_repo.MAX_REDUNDANCY or n_answers < task_repo.MIN_REDUNDANCY:
+                flash(gettext('Task Redundancy out of range'), 'error')
+            tasks_not_updated = task_repo.update_tasks_redundancy(project, n_answers)
+            if tasks_not_updated:
+                notify_redundancy_updates(tasks_not_updated)
+                flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
+            else:
+                msg = gettext('Redundancy updated!')
+                flash(msg, 'success')
+            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
+                                    'N/A', form.n_answers.data)
+    elif "ownership" in body:
+        key = "ownership"
+        data = body.get(key) or {}
+        project['owners_id'] = data.get('coowners')
+    elif "quiz" in body:
+        key = "quiz"
+        data = body.get(key) or {}
+        project.set_quiz(data)
+    else:
+        answer_fields_key = 'answer_fields'
+        consensus_config_key = 'consensus_config'
+        if answer_fields_key in body:
+            key = answer_fields_key
+        else :
+            key = consensus_config_key
+        data = body.get(key) or {}
+        if answer_fields_key in body:
+            delete_stats_for_changed_fields(
+                project.id,
+                data,
+                project.info.get(answer_fields_key) or {}
+            )
+        project.info[key] = data
+    project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'project.' + key,
+    'N/A', data)
+
 @blueprint.route('/<short_name>/summary', methods=['GET', 'POST'])
 @login_required
 def summary(short_name):
+    # import pdb; pdb.set_trace()
     project, owner, ps = project_by_shortname(short_name)
-    coowners = project.owners_ids
     external_config = project.info.get('ext_config') or {}
-    data_access = project.info.get('data_access')
+    data_access = project.info.get('data_access') or []
+    # users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
+    users = cached_users.get_users_for_data_access(data_access)
+    data_access = ["L1", "L4"]
     scheduler = project.info.get('sched')
     timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
     default_task_redundancy = project.get_default_n_answers()
     answer_fields_config = project.info.get('answer_fields') or {}
     consensus_config = project.info.get('consensus_config') or {}
-    project_users = project.info.get('project_users') or []
     quiz_config = project.get_quiz()
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -870,56 +941,54 @@ def summary(short_name):
                                                                 current_user,
                                                                 ps)
     coowners = [cached_users.get_user_by_id(_id) for _id in project.owners_ids]
-    assign_user = [cached_users.get_user_by_id(_id) for id in project_users]
-
-    # all projects require password check
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
-
+    coowners = [{"id": user.id, "fullname": user.fullname} for user in coowners]
+    print(coowners)
+    assign_user = [cached_users.get_user_by_id(_id) for _id in project.get_project_users()]
+    assign_user = [{"id": user.id, "fullname": user.fullname} for user in assign_user]
     ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     template = '/projects/summary.html'
     pro = pro_features()
 
-    title = project_title(project, None)
-    form = TaskTimeoutForm()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
-                                                                current_user,
-                                                                ps)
     if request.method == 'POST':
 
-        return render_template(template,
-                               title=title,
-                               form=form,
-                               project=project_sanitized,
-                               owner=owner,
-                               pro_feature=pro_feature)
+        try:
+            import pdb; pdb.set_trace()
+            body = json.loads(request.data) or {}
+            update_data(body, project)
 
-    template_args = {"project": project_sanitized,
-                     "pro_features": pro,
-                     "overall_progress": ps.overall_progress,
-                     "owner": owner,
-                     "coowners": coowners,
-                     "default_task_redundancy": default_task_redundancy,
-                     "external_config": external_config,
-                     "data_access": data_access,
-                     "scheduler": scheduler,
-                     "timeout": int(timeout),
-                     "answer_fields": answer_fields_config,
-                     "consensus_config": consensus_config,
-                     "assign_user": assign_user,
-                     "quiz_config": quiz_config,
-                     "all_user_quizzes": all_user_quizzes,
-                     "form": form
-                     }
-    if current_app.config.get('CKAN_URL'):
-        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
-        template_args['ckan_url'] = current_app.config.get('CKAN_URL')
-        template_args['ckan_pkg_name'] = short_name
-    response = dict(template=template, **template_args)
-    return handle_content_type(response)
+        except Exception:
+            flash(gettext('An error occurred.'), 'error')
 
+    quiz_config['mode_choices'] = [
+            ('all_questions', 'Present all the quiz questions'),
+            ('short_circuit', 'End as soon as pass/fail status is known') ]
+    sched_config= dict(sched=scheduler,
+                       rand_within_priority=project.info.get('sched_rand_within_priority'),
+                       sched_variants=sched.sched_variants())
+    response = {
+                "project": project_sanitized,
+                "pro_features": pro,
+                "overall_progress": ps.overall_progress,
+                "external_config": json.dumps(external_config),
+                "assign_user": json.dumps(assign_user),
+                "users": json.dumps(users),
+                "data_access": json.dumps(data_access),
+                "owner": owner,
+                "owner_id": project.owner_id,
+                "coowners": json.dumps(coowners),
+                "default_task_redundancy": default_task_redundancy,
+                "sched_config": json.dumps(sched_config),
+                "timeout": int(timeout),
+                "answer_fields": json.dumps(answer_fields_config),
+                "consensus_config": json.dumps(consensus_config),
+                "quiz_config": json.dumps(quiz_config),
+                "all_user_quizzes": all_user_quizzes,
+                "private_instance": bool(data_access_levels),
+                "csrf": generate_csrf()
+                }
+
+    return render_template('/projects/summary.html', **response)
 
 @blueprint.route('/<short_name>/settings')
 @login_required
@@ -2752,6 +2821,52 @@ def coowners(short_name):
             response['found'] = found
 
     return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/summary/coowners', methods=['POST'])
+@login_required
+def coowners_summary(short_name):
+    """Manage coowners of a project."""
+    project = project_repo.get_by_shortname(short_name)
+    owners = user_repo.get_users(project.owners_ids)
+    pub_owners = [user.to_public_json() for user in owners]
+    for owner, p_owner in zip(owners, pub_owners):
+        if owner.id == project.owner_id:
+            p_owner['is_creator'] = True
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+
+    response = dict(
+        project=project.to_public_json(),
+        coowners=pub_owners,
+        found=[]
+    )
+
+    if  request.data:
+        data = json.loads(request.data) or {}
+        query = data.get('query')
+        filters = {'enabled': True}
+        users = user_repo.search_by_name(query, **filters)
+
+        if not users:
+            markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+            flash(markup.format(gettext("Ooops!"),
+                                gettext("We didn't find any enabled user matching your query:"),
+                                query))
+        else:
+            found = []
+            for user in users:
+                print(user)
+                public_user = user.to_public_json()
+                print(public_user)
+                public_user['is_coowner'] = user.id in project.owners_ids
+                public_user['is_creator'] = user.id == project.owner_id
+                public_user['id'] = user.id
+                found.append(public_user)
+            response['found'] = found
+
+    return Response(json.dumps(response), 200)
 
 
 @blueprint.route('/<short_name>/add_coowner/<user_name>')
