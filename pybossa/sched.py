@@ -67,11 +67,11 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
     disable_gold = not project.info.get('enable_gold', True)
 
     task_type = 'gold_last'
-    if disable_gold:
+    if gold_only:
+        task_type = 'gold'
+    elif disable_gold:
         # This is here for testing. It removes the random variable to make testing deterministic.
         task_type = 'no_gold'
-    elif gold_only:
-        task_type = 'gold'
     elif not random.randint(0, 10):
         task_type = 'gold_first'
 
