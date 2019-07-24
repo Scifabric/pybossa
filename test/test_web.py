@@ -9363,7 +9363,7 @@ class TestServiceRequest(web.Helper):
         from flask import current_app, Response
         current_app.config['PROXY_SERVICE_CONFIG'] = None
         has_lock.return_value = True
-        url = "/api/task/1/services/test-service-name/1"
+        url = "/api/task/1/services/test-service-name/1/31"
 
         admin = UserFactory.create()
         self.signin_user(admin)
@@ -9384,7 +9384,7 @@ class TestServiceRequest(web.Helper):
         """Test with unlocked task"""
 
         has_lock.return_value = False
-        url = "/api/task/1/services/test-service-name/1"
+        url = "/api/task/1/services/test-service-name/1/31"
 
         admin = UserFactory.create()
         self.signin_user(admin)
@@ -9426,7 +9426,7 @@ class TestServiceRequest(web.Helper):
         task = TaskFactory.create(project=project)
 
         # invalid payload
-        url = "/api/task/1/services/test-service-name/1"
+        url = "/api/task/1/services/test-service-name/1/31"
         payload = {'test': 'test'}
         res = self.app_post_json(url,
                             data=payload,
@@ -9434,7 +9434,7 @@ class TestServiceRequest(web.Helper):
                             )
 
         # invalid service_name in payload
-        url = "/api/task/1/services/invalid_service_name/1"
+        url = "/api/task/1/services/invalid_service_name/1/31"
         payload = {
             'data': { 'queryTest':{
                 'context':"test_context",
@@ -9444,7 +9444,7 @@ class TestServiceRequest(web.Helper):
         assert data.get('status_code') == 403, data
 
         # invalid requests in payload
-        url = "/api/task/1/services/test-service-name/1"
+        url = "/api/task/1/services/test-service-name/1/31"
         payload = {
             'data': { 'invalid-queryTest':{
                 'context':"test_context",
@@ -9479,9 +9479,13 @@ class TestServiceRequest(web.Helper):
         """Test with valid payload """
         from flask import current_app, Response
 
+        class MockResponse(object):
+            def __init__(self, content):
+                self.content = content
+
         has_lock.return_value = True
-        mock_response = {'test': 'test'}
-        post.return_value.json.return_value = mock_response
+        mock_response = MockResponse('{"test": "test"}')
+        post.return_value = mock_response
 
         current_app.config['PROXY_SERVICE_CONFIG'] = {
             'uri': 'http://test-service.com:8080',
@@ -9502,7 +9506,7 @@ class TestServiceRequest(web.Helper):
                 'query': u"½.½ uuujfA 11109",
                 'maxresults':10}}}
 
-        url = "/api/task/1/services/test-service-name/1.37"
+        url = "/api/task/1/services/test-service-name/1/37"
         user = UserFactory.create()
         user.set_password('1234')
         user_repo.save(user)
@@ -9514,7 +9518,5 @@ class TestServiceRequest(web.Helper):
                             data=valid_request,
                             follow_redirects=False,
                             )
-
-        data = json.loads(res.data)
-        assert data == mock_response, data
+        assert res.data == mock_response.content, res.data
 

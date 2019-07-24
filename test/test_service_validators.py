@@ -16,7 +16,7 @@ class ServiceValidatorTestHelper(Test):
         return {
             'data': {'queryTest': {
                 'context': "test_context",
-                'query': u"½.½ uuujfA 11109",
+                'query': u"½.½ a zjfA Z11109",
                 'maxresults': 10}}}
 
     def get_invalid_payload(self):

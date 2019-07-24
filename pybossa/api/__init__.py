@@ -469,15 +469,15 @@ def task_gold(project_id=None):
 @jsonpify
 @login_required
 @csrf.exempt
-@blueprint.route('/task/<task_id>/services/<service_name>/<service_version>', methods=['POST'])
+@blueprint.route('/task/<task_id>/services/<service_name>/<major_version>/<minor_version>', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def get_service_request(task_id, service_name, service_version):
+def get_service_request(task_id, service_name, major_version, minor_version):
     """Proxy service call"""
     proxy_service_config = current_app.config.get('PROXY_SERVICE_CONFIG', None)
     task = task_repo.get_task(task_id)
     project = project_repo.get(task.project_id)
 
-    if not (task and proxy_service_config and service_name and service_version):
+    if not (task and proxy_service_config and service_name and major_version and minor_version):
         return abort(400)
 
     timeout = project.info.get('timeout', ContributionsGuard.STAMP_TTL)
@@ -485,12 +485,12 @@ def get_service_request(task_id, service_name, service_version):
     payload = request.json if isinstance(request.json, dict) else None
 
     if payload and task_locked_by_user:
-        service = _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config)
+        service = _get_valid_service(task_id, service_name, payload, proxy_service_config)
         if isinstance(service, dict):
-            url = '{}/{}/1/{}'.format(proxy_service_config['uri'], service_name, service_version)
+            url = '{}/{}/{}/{}'.format(proxy_service_config['uri'], service_name, major_version, minor_version)
             headers = service.get('headers')
             ret = requests.post(url, headers=headers, json=payload['data'])
-            return Response(json.dumps(ret.json()), 200, mimetype="application/json")
+            return Response(ret.content, 200, mimetype="application/json")
 
     current_app.logger.info(
         'Task id {} with lock-status {} by user {} with this payload {} failed.'
@@ -498,19 +498,18 @@ def get_service_request(task_id, service_name, service_version):
     return abort(403)
 
 
-def _get_valid_service(task_id, service_name, service_version, payload, proxy_service_config):
+def _get_valid_service(task_id, service_name, payload, proxy_service_config):
     service_data = payload.get('data', None)
     service_request = service_data.keys()[0] if isinstance(service_data, dict) and \
         len(service_data.keys()) == 1 else None
     service = proxy_service_config['services'].get(service_name, None)
 
-    if service and service_request in service['requests'] and service_version:
+    if service and service_request in service['requests']:
         service_validator = ServiceValidators(service)
         if service_validator.run_validators(service_request, payload):
             return service
 
     current_app.logger.info(
-        'Task {} loaded for user {} failed calling {} service with version {} with payload {}'
-        .format(task_id, current_user.id, service_name, service_version, payload))
+        'Task {} loaded for user {} failed calling {} service with payload {}'.format(task_id, current_user.id, service_name, payload))
 
     return abort(403, 'The request data failed validation')
