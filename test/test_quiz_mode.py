@@ -22,7 +22,7 @@ class QuizTest(web.Helper):
         project = ProjectFactory.create(
             owner=admin,
             published=True,
-            info=dict(quiz=project_quiz))
+            info=dict(quiz=project_quiz, enable_gold=False))
         self.set_proj_passwd_cookie(project, user=user)
         self.signin_user(user)
         return project, user
