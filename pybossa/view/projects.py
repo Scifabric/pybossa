@@ -634,6 +634,26 @@ def update(short_name):
         new_project.info['product'] = form.product.data
         new_project.info['subproduct'] = form.subproduct.data
         new_project.info['kpi'] = float(form.kpi.data)
+        annotation = {}
+        annotation_fields = [
+            'dataset_description',
+            'provider',
+            'restrictions_and_permissioning',
+            'store_pvf',
+            'sampling_method',
+            'sampling_script',
+            'label_aggregation_strategy',
+            'task_input_schema',
+            'task_output_schema'
+        ]
+        for field_name in annotation_fields:
+            value = getattr(form, field_name).data
+            if value:
+                annotation[field_name] = value
+        if annotation:
+            new_project.info['annotation'] = annotation
+        else:
+            new_project.info.pop('annotation', None)
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
@@ -656,7 +676,8 @@ def update(short_name):
         project.product = project.info.get('product')
         project.subproduct = project.info.get('subproduct')
         project.kpi = project.info.get('kpi')
-
+        for k, v in six.iteritems(project.info.get('annotation', {})):
+            setattr(project, k, v)
         form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
                                     products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
 

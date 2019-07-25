@@ -128,7 +128,19 @@ class ProjectUpdateForm(ProjectForm):
     webhook = TextField(lazy_gettext('Webhook'),
                         [pb_validator.Webhook()])
     sync_enabled = BooleanField(lazy_gettext('Enable Project Syncing'))
-
+    dataset_description = TextAreaField(lazy_gettext('Dataset Description'))
+    provider = SelectField(
+        lazy_gettext('Annotation Provider'),
+        choices=[(None, "NONE")] + [(x,x) for x in ["PERSONNEL","VENDOR","CONTINGENT_WORKER","FREELANCER","CROWDSOURCING_WORKER"]],
+        coerce=lambda x: None if x == "None" else x
+    )
+    restrictions_and_permissioning = TextAreaField(lazy_gettext('Restrictions & Permissioning'))
+    store_pvf = TextField(lazy_gettext('Annotation Store PVF'))
+    sampling_method = TextField(lazy_gettext('Sampling Method'))
+    sampling_script = TextField(lazy_gettext('Sampling Script Link'))
+    label_aggregation_strategy = TextField(lazy_gettext('Label Aggregation Strategy'))
+    task_input_schema = TextAreaField(lazy_gettext('Task Input Schema'))
+    task_output_schema = TextAreaField(lazy_gettext('Task Output Schema'))
 
 class ProjectSyncForm(Form):
     target_key = TextField(lazy_gettext('API Key'))
