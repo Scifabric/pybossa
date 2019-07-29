@@ -857,6 +857,15 @@ def setup_assets(app):
                 'filters': 'jsmin',
                 'output': 'js/gen/pybossa.taskpresentereditor.min.js'
             }
+        },
+            {
+            'name': 'js_annotationguidelineeditor',
+            'args': [
+              'vendor/summernote/summernote.min.js'
+            ],
+            'kwargs': {
+                'output': 'js/gen/pybossa.js_annotationguidelineeditor.min.js'
+            }
         }, {
             'name': 'js_taskbrowse',
             'args': [
@@ -912,6 +921,7 @@ def setup_assets(app):
                 'output': 'css/gen/enrichment.min.css'
             }
         },
+
         {
             'name': 'css_taskbrowse',
             'args': [
