@@ -202,7 +202,7 @@ def allow_deny_project_info(project_short_name):
     """Return project info for user as admin, subadmin or project coowner."""
     result = project_by_shortname(project_short_name)
     project = result[0]
-    if (current_user.admin 
+    if (current_user.admin
         or subadmins_are_privileged(current_user)
         or current_user.id in project.owners_ids):
         return result
@@ -2604,7 +2604,8 @@ def transfer_ownership(short_name):
 def coowners(short_name):
     """Manage coowners of a project."""
     form = SearchForm(request.form)
-    project = project_repo.get_by_shortname(short_name)
+    project, owner, ps = project_by_shortname(short_name)
+    sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
     owners = user_repo.get_users(project.owners_ids)
     pub_owners = [user.to_public_json() for user in owners]
     for owner, p_owner in zip(owners, pub_owners):
@@ -2613,10 +2614,9 @@ def coowners(short_name):
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
-
     response = dict(
         template='/projects/coowners.html',
-        project=project.to_public_json(),
+        project=sanitize_project,
         coowners=pub_owners,
         title=gettext("Manage Co-owners"),
         form=form,
