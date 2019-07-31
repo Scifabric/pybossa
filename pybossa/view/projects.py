@@ -469,10 +469,8 @@ def task_presenter_editor(short_name):
             old_project = Project(**db_project.dictize())
             old_info = dict(db_project.info)
             if is_task_presenter_update:
-                import pdb; pdb.set_trace()
                 old_info['task_presenter'] = form.editor.data
             if is_task_guidelines_update:
-                import pdb; pdb.set_trace()
                 old_info['task_guidelines'] = form.guidelines.data
 
             # Remove GitHub info on save
@@ -492,7 +490,6 @@ def task_presenter_editor(short_name):
             msg_1 = gettext('Task presenter added!') if is_task_presenter_update else gettext('Task guidelines added!')
             markup = Markup('<i class="icon-ok"></i> {}')
             flash(markup.format(msg_1), 'success')
-            import pdb; pdb.set_trace()
 
             project_sanitized, owner_sanitized = sanitize_project_owner(db_project,
                                                                         owner,
@@ -501,7 +498,6 @@ def task_presenter_editor(short_name):
             if not project_sanitized['info']['task_presenter']:
                  wrap = lambda i: "projects/presenters/%s.html" % i
                  pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
-                 import pdb; pdb.set_trace()
                  response = dict(template='projects/task_presenter_options.html',
                             title=title,
                             project=project_sanitized,
@@ -517,7 +513,6 @@ def task_presenter_editor(short_name):
             else:
                 form.editor.data = project_sanitized['info']['task_presenter']
                 form.guidelines.data = project_sanitized['info'].get('task_guidelines')
-                import pdb; pdb.set_trace()
                 response = dict(template='projects/task_presenter_editor.html',
                         title=title,
                         form=form,
