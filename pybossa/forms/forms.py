@@ -186,6 +186,7 @@ class ProjectQuizForm(Form):
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('')
+    guidelines = TextAreaField('')
 
 
 class TaskDefaultRedundancyForm(Form):
