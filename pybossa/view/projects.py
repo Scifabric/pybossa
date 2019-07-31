@@ -469,8 +469,10 @@ def task_presenter_editor(short_name):
             old_project = Project(**db_project.dictize())
             old_info = dict(db_project.info)
             if is_task_presenter_update:
+                import pdb; pdb.set_trace()
                 old_info['task_presenter'] = form.editor.data
             if is_task_guidelines_update:
+                import pdb; pdb.set_trace()
                 old_info['task_guidelines'] = form.guidelines.data
 
             # Remove GitHub info on save
@@ -490,6 +492,8 @@ def task_presenter_editor(short_name):
             msg_1 = gettext('Task presenter added!') if is_task_presenter_update else gettext('Task guidelines added!')
             markup = Markup('<i class="icon-ok"></i> {}')
             flash(markup.format(msg_1), 'success')
+            import pdb; pdb.set_trace()
+
             project_sanitized, owner_sanitized = sanitize_project_owner(db_project,
                                                                         owner,
                                                                         current_user,
@@ -497,6 +501,7 @@ def task_presenter_editor(short_name):
             if not project_sanitized['info']['task_presenter']:
                  wrap = lambda i: "projects/presenters/%s.html" % i
                  pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
+                 import pdb; pdb.set_trace()
                  response = dict(template='projects/task_presenter_options.html',
                             title=title,
                             project=project_sanitized,
@@ -512,6 +517,7 @@ def task_presenter_editor(short_name):
             else:
                 form.editor.data = project_sanitized['info']['task_presenter']
                 form.guidelines.data = project_sanitized['info'].get('task_guidelines')
+                import pdb; pdb.set_trace()
                 response = dict(template='projects/task_presenter_editor.html',
                         title=title,
                         form=form,
@@ -585,9 +591,10 @@ def task_presenter_editor(short_name):
             tmpl_uri = 'projects/snippets/{}.html'.format(tmpl_name)
             tmpl = render_template(tmpl_uri, project=project)
 
-        form.editor.data = tmpl
-        project.info['task_presenter'] = tmpl
-        project_repo.update(project)
+        if not request.args.get('clear_template'):
+            project.info['task_presenter'] = tmpl
+            project_repo.update(project)
+
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
@@ -601,6 +608,8 @@ def task_presenter_editor(short_name):
     dict_project = add_custom_contrib_button_to(project_sanitized,
                                                 get_user_id_or_ip())
     form.guidelines.data = project.info.get('task_guidelines')
+    form.editor.data = project.info.get('task_presenter')
+
     response = dict(template='projects/task_presenter_editor.html',
                     title=title,
                     form=form,
