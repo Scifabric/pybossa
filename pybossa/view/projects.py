@@ -488,9 +488,10 @@ def task_presenter_editor(short_name):
             db_project.info = old_info
             auditlogger.add_log_entry(old_project, db_project, current_user)
             project_repo.update(db_project)
-            msg_1 = gettext('Task presenter added!') if is_task_presenter_update else gettext('Task guidelines added!')
+            msg_1 = gettext('Task presenter added!') if is_task_presenter_update else gettext('Task instructions added!')
             markup = Markup('<i class="icon-ok"></i> {}')
             flash(markup.format(msg_1), 'success')
+
 
             project_sanitized, owner_sanitized = sanitize_project_owner(db_project,
                                                                         owner,
@@ -514,10 +515,12 @@ def task_presenter_editor(short_name):
             else:
                 form.editor.data = project_sanitized['info']['task_presenter']
                 form.guidelines.data = project_sanitized['info'].get('task_guidelines')
+                dict_project = add_custom_contrib_button_to(project_sanitized,
+                                                get_user_id_or_ip())
                 response = dict(template='projects/task_presenter_editor.html',
                         title=title,
                         form=form,
-                        project=project_sanitized,
+                        project=dict_project,
                         owner=owner_sanitized,
                         overall_progress=ps.overall_progress,
                         n_tasks=ps.n_tasks,
@@ -555,7 +558,6 @@ def task_presenter_editor(short_name):
             wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
-            project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
             project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                         owner,
                                                                         current_user,
@@ -619,7 +621,7 @@ def task_presenter_editor(short_name):
                     n_volunteers=ps.n_volunteers,
                     errors=errors,
                     presenter_tab_on=is_task_presenter_update,
-                    guidelines_tab_on=is_task_presenter_update,
+                    guidelines_tab_on=is_task_guidelines_update,
                     pro_features=pro,
                     disable_editor=disable_editor or not is_admin_or_owner)
     return handle_content_type(response)
