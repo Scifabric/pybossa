@@ -855,7 +855,6 @@ def update_data(body, project):
         key = "project"
         data = body.get(key) or {}
         external_config = project.info.get('ext_config') or {}
-        print(project.info.get('ext_config'))
         target_bucket = data.get('target_bucket')
         if not external_config:
             gigwork_poller = dict(target_bucket=target_bucket)
@@ -867,8 +866,10 @@ def update_data(body, project):
             external_config['gigwork_poller']['target_bucket'] = target_bucket
 
         project.info['ext_config'] = external_config
-        project.info['data_access'] = data.get('data_access')
-        project.info['project_users'] = data.get('project_users')
+        if bool(data_access_levels):
+            # for private gigwork
+            project.info['data_access'] = data.get('data_access')
+            project.info['project_users'] = data.get('project_users')
 
     elif "task" in body:
         key = "task"
@@ -876,10 +877,10 @@ def update_data(body, project):
         project.info['sched'] = data.get('sched')
         project.info['timeout'] = int(data.get('timeout'))
         project.info['sched_rand_within_priority'] = data.get('random')
-        n_answers = data.get('default_redundancy')
-        if n_answers > task_repo.MAX_REDUNDANCY or n_answers < task_repo.MIN_REDUNDANCY:
+        default_n_answers = data.get('default_redundancy')
+        if default_n_answers > task_repo.MAX_REDUNDANCY or default_n_answers < task_repo.MIN_REDUNDANCY:
             flash(gettext('Task Redundancy out of range'), 'error')
-        project.set_default_n_answers(int(data.get('default_redundancy')))
+        project.set_default_n_answers(int(default_n_answers))
 
         n_answers = data.get('current_redundancy')
         if n_answers:
@@ -893,7 +894,7 @@ def update_data(body, project):
                 msg = gettext('Redundancy updated!')
                 flash(msg, 'success')
             auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
-                                    'N/A', form.n_answers.data)
+                                    'N/A', n_answers)
     elif "ownership" in body:
         key = "ownership"
         data = body.get(key) or {}
@@ -969,7 +970,7 @@ def summary(short_name):
             # import pdb; pdb.set_trace()
             body = json.loads(request.data) or {}
             update_data(body, project)
-
+            flash(gettext('Configuration updated succesfully.'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
 
