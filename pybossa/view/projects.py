@@ -49,7 +49,7 @@ from pybossa.model.project_stats import ProjectStats
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
-                          handle_content_type, redirect_content_type,
+                          handle_content_type, redirect_content_type, user_to_json,
                           get_avatar_url, admin_or_subadmin_required,
                           s3_get_file_contents, fuzzyboolean, is_own_url_or_else)
 from pybossa.auth import ensure_authorized_to
@@ -855,14 +855,17 @@ def update_data(body, project):
         key = "project"
         data = body.get(key) or {}
         external_config = project.info.get('ext_config') or {}
+        print(project.info.get('ext_config'))
+        target_bucket = data.get('target_bucket')
         if not external_config:
-            gigwork_poller = dict(target_bucket=data.get('target_bucket'))
+            gigwork_poller = dict(target_bucket=target_bucket)
             external_config = dict(gigwork_poller=gigwork_poller)
         elif not external_config.get('gigwork_poller'):
-            gigwork_poller = dict(target_bucket=data.get('target_bucket'))
+            gigwork_poller = dict(target_bucket=target_bucket)
             external_config['gigwork_poller'] = gigwork_poller
         else:
-            external_config['gigwork_poller']['target_bucket'] = data.get('target_bucket')
+            external_config['gigwork_poller']['target_bucket'] = target_bucket
+
         project.info['ext_config'] = external_config
         project.info['data_access'] = data.get('data_access')
         project.info['project_users'] = data.get('project_users')
@@ -873,7 +876,6 @@ def update_data(body, project):
         project.info['sched'] = data.get('sched')
         project.info['timeout'] = int(data.get('timeout'))
         project.info['sched_rand_within_priority'] = data.get('random')
-        # update current tasks redundancy
         n_answers = data.get('default_redundancy')
         if n_answers > task_repo.MAX_REDUNDANCY or n_answers < task_repo.MIN_REDUNDANCY:
             flash(gettext('Task Redundancy out of range'), 'error')
@@ -895,26 +897,39 @@ def update_data(body, project):
     elif "ownership" in body:
         key = "ownership"
         data = body.get(key) or {}
-        project['owners_id'] = data.get('coowners')
+        old_list = project.owners_ids or []
+        new_list = result2 = [str(x) for x in data.get('coowners') or []]
+
+        same_list = [value for value in old_list if value in new_list]
+        add = [value for value in new_list if value not in same_list]
+        delete = [value for value in old_list if value not in same_list]
+        for _id in delete:
+            project.owners_ids.remove(_id)
+        for _id in add:
+            project.owners_ids.append(_id)
     elif "quiz" in body:
         key = "quiz"
         data = body.get(key) or {}
-        project.set_quiz(data)
+        project.set_quiz(data.get('config'))
+        reset = data.get('reset') or []
+        for user_id in reset:
+            user = user_repo.get(user_id)
+            user.reset_quiz(project)
+            user_repo.update(user)
     else:
+        key = 'answer_fields_configutation'
+        data = body
         answer_fields_key = 'answer_fields'
         consensus_config_key = 'consensus_config'
-        if answer_fields_key in body:
-            key = answer_fields_key
-        else :
-            key = consensus_config_key
-        data = body.get(key) or {}
-        if answer_fields_key in body:
-            delete_stats_for_changed_fields(
-                project.id,
-                data,
-                project.info.get(answer_fields_key) or {}
-            )
-        project.info[key] = data
+        answer_fields = body.get(answer_fields_key) or {}
+        consensus_config = body.get(consensus_config_key) or {}
+        delete_stats_for_changed_fields(
+            project.id,
+            answer_fields,
+            project.info.get(answer_fields_key) or {}
+        )
+        project.info[answer_fields_key] = answer_fields
+        project.info[consensus_config_key] = consensus_config
     project_repo.save(project)
     auditlogger.log_event(project, current_user, 'update', 'project.' + key,
     'N/A', data)
@@ -922,13 +937,11 @@ def update_data(body, project):
 @blueprint.route('/<short_name>/summary', methods=['GET', 'POST'])
 @login_required
 def summary(short_name):
-    # import pdb; pdb.set_trace()
     project, owner, ps = project_by_shortname(short_name)
     external_config = project.info.get('ext_config') or {}
     data_access = project.info.get('data_access') or []
     # users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
-    users = cached_users.get_users_for_data_access(data_access)
-    data_access = ["L1", "L4"]
+    users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
     scheduler = project.info.get('sched')
     timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
     default_task_redundancy = project.get_default_n_answers()
@@ -936,13 +949,13 @@ def summary(short_name):
     consensus_config = project.info.get('consensus_config') or {}
     quiz_config = project.get_quiz()
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
+    all_user_quizzes = [dict(row) for row in all_user_quizzes]
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
                                                                 current_user,
                                                                 ps)
     coowners = [cached_users.get_user_by_id(_id) for _id in project.owners_ids]
     coowners = [{"id": user.id, "fullname": user.fullname} for user in coowners]
-    print(coowners)
     assign_user = [cached_users.get_user_by_id(_id) for _id in project.get_project_users()]
     assign_user = [{"id": user.id, "fullname": user.fullname} for user in assign_user]
     ensure_authorized_to('read', project)
@@ -953,7 +966,7 @@ def summary(short_name):
     if request.method == 'POST':
 
         try:
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             body = json.loads(request.data) or {}
             update_data(body, project)
 
@@ -974,8 +987,7 @@ def summary(short_name):
                 "assign_user": json.dumps(assign_user),
                 "users": json.dumps(users),
                 "data_access": json.dumps(data_access),
-                "owner": owner,
-                "owner_id": project.owner_id,
+                "owner": json.dumps(owner_sanitized),
                 "coowners": json.dumps(coowners),
                 "default_task_redundancy": default_task_redundancy,
                 "sched_config": json.dumps(sched_config),
@@ -983,7 +995,7 @@ def summary(short_name):
                 "answer_fields": json.dumps(answer_fields_config),
                 "consensus_config": json.dumps(consensus_config),
                 "quiz_config": json.dumps(quiz_config),
-                "all_user_quizzes": all_user_quizzes,
+                "all_user_quizzes": json.dumps(all_user_quizzes),
                 "private_instance": bool(data_access_levels),
                 "csrf": generate_csrf()
                 }
@@ -3264,6 +3276,7 @@ def process_quiz_mode_request(project):
 @login_required
 @admin_or_subadmin_required
 def quiz_mode(short_name):
+    # import pdb; pdb.set_trace()
     project, owner, ps = project_by_shortname(short_name)
 
     ensure_authorized_to('read', project)
@@ -3324,21 +3337,22 @@ def answerfieldsconfig(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            if answer_fields_key in body:
-                key = answer_fields_key
-            else :
-                key = consensus_config_key
-            data = body.get(key) or {}
-            if answer_fields_key in body:
-                delete_stats_for_changed_fields(
-                    project.id,
-                    data,
-                    project.info.get(answer_fields_key) or {}
-                )
-            project.info[key] = data
+            key = 'answer_fields_configutation'
+            data = body
+            answer_fields = body.get(answer_fields_key) or {}
+            consensus_config = body.get(consensus_config_key) or {}
+            delete_stats_for_changed_fields(
+                project.id,
+                answer_fields,
+                project.info.get(answer_fields_key) or {}
+            )
+            project.info[answer_fields_key] = answer_fields
+            project.info[consensus_config_key] = consensus_config
             project_repo.save(project)
-            auditlogger.log_event(project, current_user, 'update', 'project.' + key,
-              'N/A', project.info[key])
+            auditlogger.log_event(project, current_user, 'update', 'project.' + answer_fields_key,
+              'N/A', project.info[answer_fields_key])
+            auditlogger.log_event(project, current_user, 'update', 'project.' + consensus_config_key,
+              'N/A', project.info[consensus_config_key])
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
