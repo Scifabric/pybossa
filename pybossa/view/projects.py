@@ -439,6 +439,7 @@ def task_presenter_editor(short_name):
 
     form = TaskPresenterForm(request.body)
     form.id.data = project.id
+
     is_task_presenter_update = True if 'task-presenter' in request.body else False
     is_task_guidelines_update = True if 'task-guidelines' in request.body else False
 
@@ -495,7 +496,7 @@ def task_presenter_editor(short_name):
                                                                         owner,
                                                                         current_user,
                                                                         ps)
-            if not project_sanitized['info']['task_presenter']:
+            if not project_sanitized['info'].get('task_presenter'):
                  wrap = lambda i: "projects/presenters/%s.html" % i
                  pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
                  response = dict(template='projects/task_presenter_options.html',
@@ -586,8 +587,8 @@ def task_presenter_editor(short_name):
             tmpl_uri = 'projects/snippets/{}.html'.format(tmpl_name)
             tmpl = render_template(tmpl_uri, project=project)
 
+        project.info['task_presenter'] = tmpl
         if not request.args.get('clear_template'):
-            project.info['task_presenter'] = tmpl
             project_repo.update(project)
 
         msg = 'Your code will be <em>automagically</em> rendered in \

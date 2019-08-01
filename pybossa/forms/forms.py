@@ -188,7 +188,6 @@ class TaskPresenterForm(Form):
     editor = TextAreaField('')
     guidelines = TextAreaField('')
 
-
 class TaskDefaultRedundancyForm(Form):
     default_n_answers = IntegerField(lazy_gettext('Default Redundancy'),
                            [validators.Required(),

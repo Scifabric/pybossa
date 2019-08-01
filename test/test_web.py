@@ -4444,7 +4444,7 @@ class TestWeb(web.Helper):
         assert "Task Presenter" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
         res = self.app.post('/project/sampleapp/tasks/taskpresentereditor',
-                            data={'editor': 'Some HTML code!'},
+                            data={'editor': 'Some HTML code!', 'task-presenter': ''},
                             follow_redirects=True)
         assert "Sample Project" in res.data, "Does not return to project details"
         project = db.session.query(Project).first()
@@ -4481,7 +4481,7 @@ class TestWeb(web.Helper):
         assert data.get('presenters') is None, err_msg
         assert data['form']['csrf'] is not None, data
         assert data['form']['editor'] is not None, data
-        res = self.app_post_json(url, data={'editor': 'Some HTML code!'})
+        res = self.app_post_json(url, data={'editor': 'Some HTML code!', 'task-presenter': ''})
         data = json.loads(res.data)
         assert data['status'] == SUCCESS, data
         project = db.session.query(Project).first()
