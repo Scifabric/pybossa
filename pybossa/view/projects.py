@@ -497,7 +497,8 @@ def task_presenter_editor(short_name):
                                                                         owner,
                                                                         current_user,
                                                                         ps)
-            if not project_sanitized['info'].get('task_presenter'):
+
+            if not project_sanitized['info'].get('task_presenter') and not request.args.get('clear_template'):
                  wrap = lambda i: "projects/presenters/%s.html" % i
                  pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
                  response = dict(template='projects/task_presenter_options.html',
@@ -589,9 +590,8 @@ def task_presenter_editor(short_name):
             tmpl_uri = 'projects/snippets/{}.html'.format(tmpl_name)
             tmpl = render_template(tmpl_uri, project=project)
 
-        project.info['task_presenter'] = tmpl
-        if not request.args.get('clear_template'):
-            project_repo.update(project)
+        form.editor.data = tmpl
+        form.guidelines.data = project.info.get('task_guidelines')
 
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
@@ -605,9 +605,6 @@ def task_presenter_editor(short_name):
 
     dict_project = add_custom_contrib_button_to(project_sanitized,
                                                 get_user_id_or_ip())
-    form.guidelines.data = project.info.get('task_guidelines')
-    form.editor.data = project.info.get('task_presenter')
-
     response = dict(template='projects/task_presenter_editor.html',
                     title=title,
                     form=form,
