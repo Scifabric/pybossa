@@ -6,15 +6,6 @@ class Wizard(object):
         self.project = project
         self.wizard_steps = wizard_steps
         self.request = request
-        self.check_options = {
-            'project_exist': self.project_exist,
-            'not_project_exist': self.not_project_exist,
-            'ext_config': self.ext_config,
-            'tasks_amount': self.tasks_amount,
-            'task_presenter': self.task_presenter,
-            'project_publish': self.project_publish,
-            'not_project_publish': self.not_project_publish
-        }
 
     # Checks
     def project_exist(self):
@@ -69,6 +60,15 @@ class Wizard(object):
 
         return task_presenter
 
+    def task_guidelines(self):
+        if self.not_project_exist():
+            return False
+
+        task_guidelines = False
+        if 'task_guidelines' in self.project['info']:
+            task_guidelines = self.project['info']['task_guidelines'] != '' and self.project['info']['task_guidelines'] is not None
+        return task_guidelines
+
     def project_publish(self):
         if self.not_project_exist():
             return False
@@ -79,10 +79,6 @@ class Wizard(object):
             return False
         return not self.project['published']
 
-    def wizard_check_switch(self, check_name):
-        func = self.check_options.get(check_name, lambda: False)
-        return func()
-
     def run_checks(self, conditions):
         if 'always' in conditions:
             return conditions['always']
@@ -91,10 +87,10 @@ class Wizard(object):
         or_result = []
 
         for condition in conditions['and']:
-            and_result.append(self.wizard_check_switch(condition))
+            and_result.append(getattr(self, condition)())
 
         for condition in conditions['or']:
-            or_result.append(self.wizard_check_switch(condition))
+            or_result.append(getattr(self, condition)())
         return all(and_result) or any(or_result)
 
     def get_href(self, href_config, enable):
