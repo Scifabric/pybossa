@@ -78,12 +78,12 @@ class TestBulkTaskLocalCSVImport(Test):
     def test_priv_fields_import(self, mock_data_access, s3_get):
         mock_data_access = True
         expected_t1_priv_field = {u'Bar2': u'4', u'Bar': u'3'}
-        expected_t1_gold_ans = {u'ans2': u'5', u'ans': u'2'}
+        expected_t1_gold_ans = {u'ans2': u'5', u'ans': u'2', u'ans3': u'6'}
         expected_t2_priv_field = {u'Bar2': u'd', u'Bar': u'c'}
-        expected_t2_gold_ans = {u'ans2': u'e', u'ans': u'b'}
+        expected_t2_gold_ans = {u'ans2': u'e', u'ans': u'b', u'ans3': u'f'}
 
         with patch('pybossa.importers.csv.io.open', mock_open(
-            read_data=u'Foo,ans_gold,Bar_priv,Bar2_priv,ans2_gold\n1,2,3,4,5\na,b,c,d,e\n'), create=True):
+            read_data=u'Foo,ans_gold,Bar_priv,Bar2_priv,ans2_gold,ans3_priv_gold\n1,2,3,4,5,6\na,b,c,d,e,f\n'), create=True):
             [t1, t2] = self.importer.tasks()
             assert_equal(t1['private_fields'], expected_t1_priv_field), t1
             assert_equal(t1['gold_answers'], expected_t1_gold_ans), t1
