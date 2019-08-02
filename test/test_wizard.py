@@ -112,7 +112,8 @@ class TestWizard(WizardTestHelper):
     def test_wizard_run_checks_project(self):
         project = self.get_project()
         project['info']['task_presenter'] = ''
-        project['info']['task_guidelines'] = ''
+        # default value guidelines <p><br></p>
+        project['info']['task_guidelines'] = '<p><br></p>'
 
         project_wizard = Wizard(project, self.get_wizard_steps(), self.get_request())
         conditions = {'always': True,

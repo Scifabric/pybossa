@@ -63,10 +63,10 @@ class Wizard(object):
     def task_guidelines(self):
         if self.not_project_exist():
             return False
-
+        guideline_editor_default_value = '<p><br></p>'
         task_guidelines = False
         if 'task_guidelines' in self.project['info']:
-            task_guidelines = self.project['info']['task_guidelines'] != '' and self.project['info']['task_guidelines'] is not None
+            task_guidelines = self.project['info']['task_guidelines'] != guideline_editor_default_value and self.project['info']['task_guidelines'] is not None
         return task_guidelines
 
     def project_publish(self):
