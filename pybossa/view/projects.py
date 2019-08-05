@@ -472,7 +472,8 @@ def task_presenter_editor(short_name):
             if is_task_presenter_update:
                 old_info['task_presenter'] = form.editor.data
             if is_task_guidelines_update:
-                old_info['task_guidelines'] = form.guidelines.data
+                default_value_editor = '<p><br></p>'
+                old_info['task_guidelines'] = '' if form.guidelines.data == default_value_editor else form.guidelines.data
 
             # Remove GitHub info on save
             for field in ['pusher', 'ref', 'ref_url', 'timestamp']:
@@ -488,16 +489,14 @@ def task_presenter_editor(short_name):
             db_project.info = old_info
             auditlogger.add_log_entry(old_project, db_project, current_user)
             project_repo.update(db_project)
-            msg_1 = gettext('Task presenter added!') if is_task_presenter_update else gettext('Task instructions added!')
+            msg_1 = gettext('Task presenter updated!') if is_task_presenter_update else gettext('Task instructions updated!')
             markup = Markup('<i class="icon-ok"></i> {}')
             flash(markup.format(msg_1), 'success')
-
 
             project_sanitized, owner_sanitized = sanitize_project_owner(db_project,
                                                                         owner,
                                                                         current_user,
                                                                         ps)
-
             if not project_sanitized['info'].get('task_presenter') and not request.args.get('clear_template'):
                  wrap = lambda i: "projects/presenters/%s.html" % i
                  pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
@@ -518,23 +517,6 @@ def task_presenter_editor(short_name):
                 form.guidelines.data = project_sanitized['info'].get('task_guidelines')
                 dict_project = add_custom_contrib_button_to(project_sanitized,
                                                 get_user_id_or_ip())
-                response = dict(template='projects/task_presenter_editor.html',
-                        title=title,
-                        form=form,
-                        project=dict_project,
-                        owner=owner_sanitized,
-                        overall_progress=ps.overall_progress,
-                        n_tasks=ps.n_tasks,
-                        n_task_runs=ps.n_task_runs,
-                        last_activity=ps.last_activity,
-                        n_completed_tasks=ps.n_completed_tasks,
-                        n_volunteers=ps.n_volunteers,
-                        errors=errors,
-                        presenter_tab_on=is_task_presenter_update,
-                        guidelines_tab_on=is_task_guidelines_update,
-                        pro_features=pro,
-                        disable_editor=disable_editor or not is_admin_or_owner)
-            return handle_content_type(response)
 
         elif not form.validate():  # pragma: no cover
             flash(gettext('Please correct the errors'), 'error')
