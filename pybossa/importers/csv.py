@@ -55,32 +55,35 @@ class BulkTaskCSVImport(BulkTaskImport):
         task_data = {"info": {}}
         private_fields = dict()
         for idx, cell in enumerate(row):
+            header = self._headers[idx]
             if idx in self.field_header_index:
-                if self._headers[idx] == 'user_pref':
+                if header == 'user_pref':
                     if cell:
-                        task_data[self._headers[idx]] = json.loads(cell.lower())
+                        task_data[header] = json.loads(cell.lower())
                     else:
-                        task_data[self._headers[idx]] = {}
+                        task_data[header] = {}
                 else:
-                    task_data[self._headers[idx]] = cell
-            elif self._headers[idx].endswith('_gold'):
+                    task_data[header] = cell
+            elif header.endswith('_priv_gold'):
                 if cell:
-                    field_name = re.sub('_gold$', '', self._headers[idx])
-                    if 'gold_answers' not in task_data:
-                        task_data['gold_answers'] = {}
-                    task_data['gold_answers'][field_name] = cell
-            elif self._headers[idx].endswith('_priv'):
+                    field_name = re.sub('_priv_gold$', '', header)
+                    task_data.setdefault('gold_answers', {})[field_name] = cell
+            elif header.endswith('_gold'):
                 if cell:
-                    field_name = re.sub('_priv$', '', self._headers[idx])
+                    field_name = re.sub('_gold$', '', header)
+                    task_data.setdefault('gold_answers', {})[field_name] = cell
+            elif header.endswith('_priv'):
+                if cell:
+                    field_name = re.sub('_priv$', '', header)
                     if data_access_levels:
                         private_fields[field_name] = cell
                     else:
                         task_data["info"][field_name] = cell
-            elif self._headers[idx] == 'data_access' and data_access_levels:
+            elif header == 'data_access' and data_access_levels:
                 if cell:
-                    task_data["info"][self._headers[idx]] = json.loads(cell.upper())
+                    task_data["info"][header] = json.loads(cell.upper())
             else:
-                task_data["info"][self._headers[idx]] = cell
+                task_data["info"][header] = cell
         if private_fields:
             task_data['private_fields'] = private_fields
         return task_data
