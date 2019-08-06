@@ -4437,6 +4437,8 @@ class TestWeb(web.Helper):
         project = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
         assert not project.info.get('task_presenter'), err_msg
+        err_msg = "Task guidelines should be empty"
+        assert not project.info.get('task_guidelines'), err_msg
 
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor?template=basic',
                            follow_redirects=True)
@@ -4444,7 +4446,7 @@ class TestWeb(web.Helper):
         assert "Task Presenter" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
         res = self.app.post('/project/sampleapp/tasks/taskpresentereditor',
-                            data={'editor': 'Some HTML code!'},
+                            data={'editor': 'Some HTML code!', 'task-presenter': ''},
                             follow_redirects=True)
         assert "Sample Project" in res.data, "Does not return to project details"
         project = db.session.query(Project).first()
@@ -4461,6 +4463,19 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor?template=basic&clear_template=true',
                            follow_redirects=True)
         assert "Some HTML code" not in res.data, res.data
+
+        res = self.app.post('/project/sampleapp/tasks/taskpresentereditor',
+                            data={'guidelines': 'Some guidelines!', 'task-guidelines': ''},
+                            follow_redirects=True)
+        project = db.session.query(Project).first()
+        err_msg = "Task guidelines failed to update"
+        assert project.info['task_guidelines'] == 'Some guidelines!', err_msg
+
+        # Check it loads the previous posted code:
+        res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
+                           follow_redirects=True)
+
+        assert "Some guidelines" in res.data, res.data
 
 
     @with_context
@@ -4481,16 +4496,28 @@ class TestWeb(web.Helper):
         assert data.get('presenters') is None, err_msg
         assert data['form']['csrf'] is not None, data
         assert data['form']['editor'] is not None, data
-        res = self.app_post_json(url, data={'editor': 'Some HTML code!'})
+        assert data['form']['guidelines'] is None, data
+
+        res = self.app_post_json(url, data={'editor': 'Some HTML code!', 'task-presenter': ''})
         data = json.loads(res.data)
         assert data['status'] == SUCCESS, data
         project = db.session.query(Project).first()
+        err_msg = "Task presenter not updated"
         assert project.info['task_presenter'] == 'Some HTML code!', err_msg
+
+        res = self.app_post_json(url, data={'guidelines': 'Some guidelines!', 'task-guidelines': ''})
+        data = json.loads(res.data)
+        assert data['status'] == SUCCESS, data
+        project = db.session.query(Project).first()
+        err_msg = "Task guidelines not updated"
+        assert project.info.get('task_guidelines') == 'Some guidelines!', err_msg
 
         # Check it loads the previous posted code:
         res = self.app_get_json(url)
         data = json.loads(res.data)
         assert data['form']['editor'] == 'Some HTML code!', data
+        assert data['form']['guidelines'] == 'Some guidelines!', data
+
 
     @with_context
     @patch('pybossa.ckan.requests.get')

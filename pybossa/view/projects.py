@@ -440,6 +440,9 @@ def task_presenter_editor(short_name):
     form = TaskPresenterForm(request.body)
     form.id.data = project.id
 
+    is_task_presenter_update = True if 'task-presenter' in request.body else False
+    is_task_guidelines_update = True if 'task-guidelines' in request.body else False
+
     disable_editor = (not current_user.admin and
                       current_app.config.get(
                           'DISABLE_TASK_PRESENTER_EDITOR'))
@@ -466,7 +469,11 @@ def task_presenter_editor(short_name):
             db_project = project_repo.get(project.id)
             old_project = Project(**db_project.dictize())
             old_info = dict(db_project.info)
-            old_info['task_presenter'] = form.editor.data
+            if is_task_presenter_update:
+                old_info['task_presenter'] = form.editor.data
+            if is_task_guidelines_update:
+                default_value_editor = '<p><br></p>'
+                old_info['task_guidelines'] = '' if form.guidelines.data == default_value_editor else form.guidelines.data
 
             # Remove GitHub info on save
             for field in ['pusher', 'ref', 'ref_url', 'timestamp']:
@@ -482,17 +489,42 @@ def task_presenter_editor(short_name):
             db_project.info = old_info
             auditlogger.add_log_entry(old_project, db_project, current_user)
             project_repo.update(db_project)
-            msg_1 = gettext('Task presenter added!')
+            msg_1 = gettext('Task presenter updated!') if is_task_presenter_update else gettext('Task instructions updated!')
             markup = Markup('<i class="icon-ok"></i> {}')
             flash(markup.format(msg_1), 'success')
-            return redirect_content_type(url_for('.tasks',
-                                                 short_name=project.short_name))
+
+            project_sanitized, owner_sanitized = sanitize_project_owner(db_project,
+                                                                        owner,
+                                                                        current_user,
+                                                                        ps)
+            if not project_sanitized['info'].get('task_presenter') and not request.args.get('clear_template'):
+                 wrap = lambda i: "projects/presenters/%s.html" % i
+                 pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
+                 response = dict(template='projects/task_presenter_options.html',
+                            title=title,
+                            project=project_sanitized,
+                            owner=owner_sanitized,
+                            overall_progress=ps.overall_progress,
+                            n_tasks=ps.n_tasks,
+                            n_task_runs=ps.n_task_runs,
+                            last_activity=ps.last_activity,
+                            n_completed_tasks=ps.n_completed_tasks,
+                            n_volunteers=ps.n_volunteers,
+                            presenters=pres_tmpls,
+                            pro_features=pro)
+            else:
+                form.editor.data = project_sanitized['info']['task_presenter']
+                form.guidelines.data = project_sanitized['info'].get('task_guidelines')
+                dict_project = add_custom_contrib_button_to(project_sanitized,
+                                                get_user_id_or_ip())
+
         elif not form.validate():  # pragma: no cover
             flash(gettext('Please correct the errors'), 'error')
             errors = True
 
     if project.info.get('task_presenter') and not request.args.get('clear_template'):
         form.editor.data = project.info['task_presenter']
+        form.guidelines.data = project.info.get('task_guidelines')
     else:
         if not request.args.get('template'):
             msg_1 = gettext('<strong>Note</strong> You will need to upload the'
@@ -509,11 +541,11 @@ def task_presenter_editor(short_name):
             wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
-            project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
             project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                         owner,
                                                                         current_user,
                                                                         ps)
+
             response = dict(template='projects/task_presenter_options.html',
                             title=title,
                             project=project_sanitized,
@@ -541,10 +573,13 @@ def task_presenter_editor(short_name):
             tmpl = render_template(tmpl_uri, project=project)
 
         form.editor.data = tmpl
+        form.guidelines.data = project.info.get('task_guidelines')
+
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
         flash(Markup(gettext(msg)), 'info')
+
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
                                                                 current_user,
@@ -564,6 +599,8 @@ def task_presenter_editor(short_name):
                     n_completed_tasks=ps.n_completed_tasks,
                     n_volunteers=ps.n_volunteers,
                     errors=errors,
+                    presenter_tab_on=is_task_presenter_update,
+                    guidelines_tab_on=is_task_guidelines_update,
                     pro_features=pro,
                     disable_editor=disable_editor or not is_admin_or_owner)
     return handle_content_type(response)

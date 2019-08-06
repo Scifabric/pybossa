@@ -251,7 +251,7 @@ class TestAuditlogWEB(web.Helper):
                      'product': 'abc',
                      'subproduct': 'def',
                      'kpi': 0.5}
-        self.editor = {'editor': 'Some HTML code!'}
+        self.editor = {'editor': 'Some HTML code!', 'task-presenter': ''}
 
     @with_context
     def test_project_create(self):
@@ -531,6 +531,7 @@ class TestAuditlogWEB(web.Helper):
         self.app.post(url, data=self.editor, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
+
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == 'task_presenter', log.attribute
