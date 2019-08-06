@@ -73,15 +73,23 @@ class TestWizard(WizardTestHelper):
         assert project_wizard.ext_config() is False
         assert project_wizard.tasks_amount() is False
         assert project_wizard.project_publish() is False
+        assert project_wizard.task_guidelines() is False
+        assert project_wizard.task_presenter() is False
+
 
     @with_context
     def test_wizard_with_project(self):
-        project_wizard = Wizard(self.get_project(), self.get_wizard_steps(), self.get_request())
+        project = self.get_project()
+        project['info']['task_presenter'] = 'Content'
+        project['info']['task_guidelines'] = 'Content'
+        project_wizard = Wizard(project, self.get_wizard_steps(), self.get_request())
         assert project_wizard.project_exist() is True
         assert project_wizard.not_project_exist() is False
         assert project_wizard.ext_config() is True
         assert project_wizard.tasks_amount() is True
         assert project_wizard.project_publish() is True
+        assert project_wizard.task_guidelines() is True
+        assert project_wizard.task_presenter() is True
         assert project_wizard.not_project_publish() is False
 
     @with_context
@@ -104,6 +112,8 @@ class TestWizard(WizardTestHelper):
     def test_wizard_run_checks_project(self):
         project = self.get_project()
         project['info']['task_presenter'] = ''
+        project['info']['task_guidelines'] = ''
+
         project_wizard = Wizard(project, self.get_wizard_steps(), self.get_request())
         conditions = {'always': True,
                       'and': ['task_presenter', 'tasks_amount', 'ext_config'],
@@ -111,10 +121,10 @@ class TestWizard(WizardTestHelper):
         assert project_wizard.run_checks(conditions) is True
 
         conditions = {'and': ['tasks_amount'],
-                      'or': ['']}
+                      'or': []}
         assert project_wizard.run_checks(conditions) is True
 
-        conditions = {'and': [''],
+        conditions = {'and': [],
                       'or': ['tasks_amount']}
         assert project_wizard.run_checks(conditions) is True
 
@@ -137,6 +147,18 @@ class TestWizard(WizardTestHelper):
         conditions = {'and': ['task_presenter'],
                       'or': ['task_presenter']}
         assert project_wizard.run_checks(conditions) is False
+
+        conditions = {'and': ['task_guidelines'],
+                      'or': []}
+        assert project_wizard.run_checks(conditions) is False
+
+        project['info']['task_presenter'] = 'Content'
+        project['info']['task_guidelines'] = 'Content'
+        project_wizard = Wizard(project, self.get_wizard_steps(), self.get_request())
+
+        conditions = {'and': ['task_guidelines', 'task_guidelines'],
+                      'or': []}
+        assert project_wizard.run_checks(conditions) is True
 
     @with_context
     def test_wizard_get_nested_keys(self):
