@@ -106,3 +106,82 @@ class TestBulkTaskLocalCSVImport(Test):
         with patch.dict(self.flask_app.config, config):
             number_of_tasks = self.importer.count_tasks()
             assert number_of_tasks is 1, number_of_tasks
+
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
+    @patch('pybossa.importers.csv.data_access_levels')
+    def test_typed_fields_import(self, mock_data_access, s3_get):
+        mock_data_access = True
+        expected_t1_priv_field = {u'Bar2': u'4', u'Bar': u'3', u'ans12': [], u'ans13': 1.3, u'ans14': True, u'ans15': None}
+        expected_t1_gold_ans = {u'ans2': u'5', u'ans': u'2', u'ans3': u'6', u'ans8': False, u'ans9': -2, u'ans10': True, u'ans11': None, u'ans16': [], u'ans17': 1.3, u'ans18': True, u'ans19': None}
+        expected_t1_field = {u'Foo': u'1', u'ans4': {u'a':1} ,u'ans5': 1.5, u'ans6': True, u'ans7': None}
+        expected_t2_priv_field = {u'Bar2': u'd', u'Bar': u'c', u'ans12': None, u'ans13': 0, u'ans14': True, u'ans15': None}
+        expected_t2_gold_ans = {u'ans2': u'e', u'ans': u'b', u'ans3': u'f', u'ans8': None, u'ans9': 0, u'ans10': True, u'ans11': None, u'ans16': None, u'ans17': 0, u'ans18': True, u'ans19': None}
+        expected_t2_field = {u'Foo': u'a', u'ans4': [1,2] ,u'ans5': 3, u'ans6': False, u'ans7': None}
+        fields = {
+            'Foo': ['1', 'a', '7', 'g', '14', 'm'],
+            'ans_gold': ['2', 'b', '8', 'h', '15', 'n'],
+            'Bar_priv': ['3', 'c', '9', 'i', '16', 'o'],
+            'Bar2_priv': ['4', 'd', '10', 'j', '17', 'p'],
+            'ans2_gold': ['5', 'e', '11', 'k', '18', 'q'],
+            'ans3_priv_gold': ['6', 'f', '12', 'l', '19', 'r'],
+            'ans4_json': ['"{""a"":1}"', '"[1,2]"', '13', 'true', 'null', '"""a string in JSON"""'],
+            'ans5_number': ['1.5', '3', '7', '8', '9', '10'],
+            'ans6_bool': ['true', 'false', 'true', 'false', 'true', 'false'],
+            'ans7_null': ['null', 'null', 'null', 'null', 'null', 'null'],
+            'ans8_gold_json': ['false', 'null', '"[null, true, 1]"', '"""x"""', '8', '{}'],
+            'ans9_gold_number': ['-2', '0', '3.5', '1.77777777777777777', 'NaN', '7'],
+            'ans10_gold_bool': ['true', 'true', 'true', 'true', 'true', 'true'],
+            'ans11_gold_null': ['null', 'null', 'null', 'null', 'null', 'null'],
+            'ans12_priv_json': ['[]', 'null', 'true', '1', '2', '3'],
+            'ans13_priv_number': ['1.3', '0', '1', '2', '3', '4'],
+            'ans14_priv_bool': ['true', 'true', 'true', 'true', 'true', 'true'],
+            'ans15_priv_null': ['null', 'null', 'null', 'null', 'null', 'null'],
+            'ans16_priv_gold_json': ['[]', 'null', 'true', '1', '2', '3'],
+            'ans17_priv_gold_number': ['1.3', '0', '1', '2', '3', '4'],
+            'ans18_priv_gold_bool': ['true', 'true', 'true', 'true', 'true', 'true'],
+            'ans19_priv_gold_null': ['null', 'null', 'null', 'null', 'null', 'null']
+        }
+        rows = []
+        rows.append(','.join(fields.iterkeys()))
+        for i in range(6):
+            rows.append(','.join(map(lambda x: x[i], fields.itervalues())))
+        data = unicode('\n'.join(rows))
+        print data
+        with patch('pybossa.importers.csv.io.open', mock_open(read_data= data), create=True):
+            [t1, t2, t3, t4, t5, t6] = self.importer.tasks()
+            assert_equal(t1['private_fields'], expected_t1_priv_field), t1
+            assert_equal(t1['gold_answers'], expected_t1_gold_ans), t1
+            assert_equal(t1['info'], expected_t1_field), t1
+            assert_equal(t2['private_fields'], expected_t2_priv_field), t2
+            assert_equal(t2['gold_answers'], expected_t2_gold_ans), t2
+            assert_equal(t2['info'], expected_t2_field), t2
+
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
+    @patch('pybossa.importers.csv.data_access_levels')
+    def test_invalid_typed_fields_import(self, mock_data_access, s3_get):
+        invalid_fields = {
+            'ans1_json': 'not json',
+            'ans2_number': 'true',
+            'ans3_bool': '7',
+            'ans4_null': '6',
+            'ans5_gold_json': 'True',
+            'ans6_gold_number': 'null',
+            'ans7_gold_bool': '5',
+            'ans8_gold_null': 'false',
+            'ans9_priv_json': "''",
+            'ans10_priv_number': '[]',
+            'ans11_priv_bool': '{}',
+            'ans12_priv_null': '"""a string"""',
+            'ans13_priv_gold_json': '"{1,2}"',
+            'ans14_priv_gold_number': 'false',
+            'ans15_priv_gold_bool': 'null',
+            'ans16_priv_gold_null': '7'
+        }
+
+        for field, value in invalid_fields.iteritems():
+            data = u"{}\n{}".format(field, value)
+            with patch('pybossa.importers.csv.io.open', mock_open(read_data= data), create=True):
+                with assert_raises(BulkImportException):
+                    [t1] = self.importer.tasks()
