@@ -34,6 +34,7 @@ import re
 from pybossa.data_access import data_access_levels
 
 type_map = {
+    # Python considers booleans to be numbers so we need an extra check for that.
     'number': lambda x: isinstance(x, numbers.Real) and type(x) is not bool,
     'bool': lambda x: isinstance(x, bool),
     'null': lambda x: isinstance(x, types.NoneType)
