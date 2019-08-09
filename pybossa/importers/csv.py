@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import numbers
+import types
 import requests
 from StringIO import StringIO
 from flask_babel import gettext
@@ -30,6 +32,31 @@ from flask import current_app as app
 from pybossa.util import get_import_csv_file
 import re
 from pybossa.data_access import data_access_levels
+
+type_map = {
+    # Python considers booleans to be numbers so we need an extra check for that.
+    'number': lambda x: isinstance(x, numbers.Real) and type(x) is not bool,
+    'bool': lambda x: isinstance(x, bool),
+    'null': lambda x: isinstance(x, types.NoneType)
+}
+
+def get_value(header, value_string, data_type):
+    def error():
+        raise BulkImportException('Column {} contains a non-{} value {}'.format(header, data_type, value_string))
+
+    if not data_type:
+        return value_string
+
+    try:
+        value = json.loads(value_string)
+    except ValueError:
+        error()
+
+    python_type_checker = type_map.get(data_type)
+    if python_type_checker and not python_type_checker(value):
+        error()
+
+    return value
 
 class BulkTaskCSVImport(BulkTaskImport):
 
@@ -64,26 +91,37 @@ class BulkTaskCSVImport(BulkTaskImport):
                         task_data[header] = {}
                 else:
                     task_data[header] = cell
-            elif header.endswith('_priv_gold'):
+                continue
+
+            gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
+            if gold_match:
                 if cell:
-                    field_name = re.sub('_priv_gold$', '', header)
-                    task_data.setdefault('gold_answers', {})[field_name] = cell
-            elif header.endswith('_gold'):
+                    data_type = gold_match.group('type')
+                    field_name = gold_match.group('field')
+                    task_data.setdefault('gold_answers', {})[field_name] = get_value(header, cell, data_type)
+                continue
+
+            priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
+            if priv_match:
                 if cell:
-                    field_name = re.sub('_gold$', '', header)
-                    task_data.setdefault('gold_answers', {})[field_name] = cell
-            elif header.endswith('_priv'):
-                if cell:
-                    field_name = re.sub('_priv$', '', header)
-                    if data_access_levels:
-                        private_fields[field_name] = cell
+                    data_type = priv_match.group('type')
+                    field_name = priv_match.group('field')
+                    if data_access_levels: # This is how we check for private GIGwork.
+                        private_fields[field_name] = get_value(header, cell, data_type)
                     else:
-                        task_data["info"][field_name] = cell
-            elif header == 'data_access' and data_access_levels:
+                        task_data["info"][field_name] = get_value(header, cell, data_type)
+                continue
+
+            if header == 'data_access' and data_access_levels:
                 if cell:
                     task_data["info"][header] = json.loads(cell.upper())
-            else:
-                task_data["info"][header] = cell
+                continue
+
+            pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
+            if pub_match: # This must match since there are no other options left.
+                data_type = pub_match.group('type')
+                field_name = pub_match.group('field')
+                task_data["info"][field_name] = get_value(header, cell, data_type)
         if private_fields:
             task_data['private_fields'] = private_fields
         return task_data
