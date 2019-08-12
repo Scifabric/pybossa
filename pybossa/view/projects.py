@@ -2157,7 +2157,7 @@ def task_n_answers(short_name):
         return handle_content_type(response)
     elif request.method == 'POST':
         if not default_form.default_n_answers.data and not form.n_answers.data:
-            return None
+            return {}
         if default_form.default_n_answers.data and default_form.validate():
             project.set_default_n_answers(default_form.default_n_answers.data)
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
