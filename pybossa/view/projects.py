@@ -18,7 +18,7 @@
 
 import time
 import re
-import json, ast
+import json
 import os
 import math
 import requests
@@ -49,7 +49,7 @@ from pybossa.model.project_stats import ProjectStats
 from pybossa.model.webhook import Webhook
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
-                          handle_content_type, redirect_content_type, user_to_json,
+                          handle_content_type, redirect_content_type,
                           get_avatar_url, admin_or_subadmin_required,
                           s3_get_file_contents, fuzzyboolean, is_own_url_or_else)
 from pybossa.auth import ensure_authorized_to
@@ -850,60 +850,35 @@ def details(short_name):
     return handle_content_type(response)
 
 
-def update_data(body, project):
+def save_project_configuration(body, project, short_name):
+    # update each field on project summary page (eg: project, ownership, task, answer, quiz)
     if "project" in body:
         key = "project"
         data = body.get(key) or {}
-        external_config = project.info.get('ext_config') or {}
-        target_bucket = data.get('target_bucket')
-        if not external_config:
-            gigwork_poller = dict(target_bucket=target_bucket)
-            external_config = dict(gigwork_poller=gigwork_poller)
-        elif not external_config.get('gigwork_poller'):
-            gigwork_poller = dict(target_bucket=target_bucket)
-            external_config['gigwork_poller'] = gigwork_poller
-        else:
-            external_config['gigwork_poller']['target_bucket'] = target_bucket
+        project.info['ext_config'] = data.get('config')
 
-        project.info['ext_config'] = external_config
         if bool(data_access_levels):
             # for private gigwork
             project.info['data_access'] = data.get('data_access')
-            project.info['project_users'] = data.get('project_users')
+            assign_users(short_name)
 
     elif "task" in body:
         key = "task"
         data = body.get(key) or {}
-        project.info['sched'] = data.get('sched')
-        project.info['timeout'] = int(data.get('timeout'))
-        project.info['sched_rand_within_priority'] = data.get('random')
-        default_n_answers = data.get('default_redundancy')
-        if default_n_answers > task_repo.MAX_REDUNDANCY or default_n_answers < task_repo.MIN_REDUNDANCY:
-            flash(gettext('Task Redundancy out of range'), 'error')
-        project.set_default_n_answers(int(default_n_answers))
+        result = task_scheduler(short_name)
+        result = task_timeout(short_name)
+        task_n_answers(short_name)
 
-        n_answers = data.get('current_redundancy')
-        if n_answers:
-            if n_answers > task_repo.MAX_REDUNDANCY or n_answers < task_repo.MIN_REDUNDANCY:
-                flash(gettext('Task Redundancy out of range'), 'error')
-            tasks_not_updated = task_repo.update_tasks_redundancy(project, n_answers)
-            if tasks_not_updated:
-                notify_redundancy_updates(tasks_not_updated)
-                flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
-            else:
-                msg = gettext('Redundancy updated!')
-                flash(msg, 'success')
-            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
-                                    'N/A', n_answers)
     elif "ownership" in body:
         key = "ownership"
         data = body.get(key) or {}
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
         old_list = project.owners_ids or []
-        new_list = result2 = [str(x) for x in data.get('coowners') or []]
-
-        same_list = [value for value in old_list if value in new_list]
-        add = [value for value in new_list if value not in same_list]
-        delete = [value for value in old_list if value not in same_list]
+        new_list = [str(x) for x in data.get('coowners') or []]
+        overlap_list = [value for value in old_list if value in new_list]
+        add = [value for value in new_list if value not in overlap_list]
+        delete = [value for value in old_list if value not in overlap_list]
         for _id in delete:
             project.owners_ids.remove(_id)
         for _id in add:
@@ -911,12 +886,7 @@ def update_data(body, project):
     elif "quiz" in body:
         key = "quiz"
         data = body.get(key) or {}
-        project.set_quiz(data.get('config'))
-        reset = data.get('reset') or []
-        for user_id in reset:
-            user = user_repo.get(user_id)
-            user.reset_quiz(project)
-            user_repo.update(user)
+        result = process_quiz_mode_request(project)
     else:
         key = 'answer_fields_configutation'
         data = body
@@ -940,6 +910,7 @@ def update_data(body, project):
 def summary(short_name):
     project, owner, ps = project_by_shortname(short_name)
     external_config = project.info.get('ext_config') or {}
+    external_config_form = current_app.config.get('EXTERNAL_CONFIGURATIONS_VUE', {})
     data_access = project.info.get('data_access') or []
     users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
     scheduler = project.info.get('sched')
@@ -966,8 +937,7 @@ def summary(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            update_data(body, project)
-            flash(gettext('Configuration updated successfully'), 'success')
+            save_project_configuration(body, project, short_name)
         except Exception:
             flash(gettext('An error occurred.'), 'error')
 
@@ -982,9 +952,11 @@ def summary(short_name):
                 "pro_features": pro,
                 "overall_progress": ps.overall_progress,
                 "external_config": json.dumps(external_config),
+                "external_config_form": json.dumps(external_config_form),
                 "assign_user": json.dumps(assign_user),
                 "users": json.dumps(users),
                 "data_access": json.dumps(data_access),
+                "valid_access_levels": data_access_levels['valid_access_levels'],
                 "owner": json.dumps(owner_sanitized),
                 "coowners": json.dumps(coowners),
                 "default_task_redundancy": default_task_redundancy,
@@ -2143,10 +2115,21 @@ def task_settings(short_name):
 @login_required
 def task_n_answers(short_name):
     project, owner, ps = project_by_shortname(short_name)
-
     title = project_title(project, gettext('Redundancy'))
-    form = TaskRedundancyForm(request.body)
-    default_form = TaskDefaultRedundancyForm(request.body)
+    if request.data:
+        data = json.loads(request.data).get('task')
+        result = MultiDict()
+        for field_name, value in six.iteritems(data):
+            if not value:
+                continue
+            if not isinstance(value, list):
+                value = [value]
+            result.setlist(field_name, value)
+        form = TaskRedundancyForm(result)
+        default_form = TaskDefaultRedundancyForm(result)
+    else:
+        form = TaskRedundancyForm(request.body)
+        default_form = TaskDefaultRedundancyForm(request.body)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2165,13 +2148,13 @@ def task_n_answers(short_name):
                         pro_features=pro)
         return handle_content_type(response)
     elif request.method == 'POST':
-        if default_form.validate():
+        if default_form.default_n_answers.data and default_form.validate():
             project.set_default_n_answers(default_form.default_n_answers.data)
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
                       'N/A', default_form.default_n_answers.data)
             msg = gettext('Redundancy updated!')
             flash(msg, 'success')
-        elif form.validate():
+        if form.n_answers.data and form.validate():
             tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
             if tasks_not_updated:
                 notify_redundancy_updates(tasks_not_updated)
@@ -2207,7 +2190,18 @@ def task_scheduler(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, gettext('Task Scheduler'))
-    form = TaskSchedulerForm(request.body)
+    if request.data:
+        data = json.loads(request.data).get('task')
+        result = MultiDict()
+        for field_name, value in six.iteritems(data):
+            if not value:
+                continue
+            if not isinstance(value, list):
+                value = [value]
+            result.setlist(field_name, value)
+            form = TaskSchedulerForm(result)
+    else:
+        form = TaskSchedulerForm(request.body)
     pro = pro_features()
 
 
@@ -2321,7 +2315,18 @@ def task_timeout(short_name):
                                                                     current_user,
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
-    form = TaskTimeoutForm()
+    if request.data:
+        data = json.loads(request.data).get('task')
+        result = MultiDict()
+        for field_name, value in six.iteritems(data):
+            if not value:
+                continue
+            if not isinstance(value, list):
+                value = [value]
+            result.setlist(field_name, value)
+        form = TaskTimeoutForm(result)
+    else:
+        form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -3125,16 +3130,21 @@ def ext_config(short_name):
     ensure_authorized_to('update', project)
 
     forms = current_app.config.get('EXTERNAL_CONFIGURATIONS', {})
-
     form_classes = []
     for form_name, form_config in forms.iteritems():
         display = form_config['display']
         form = form_builder(form_name, form_config['fields'].iteritems())
         form_classes.append((form_name, display, form))
 
+    if request.data:
+        data = json.loads(request.data).get('project').get('config')
+    else:
+        data = request.body
+
     if request.method == 'POST':
         for form_name, display, form_class in form_classes:
-            if form_name in request.body:
+            if form_name in data:
+
                 form = form_class()
                 if not form.validate():
                     flash(gettext('Please correct the errors', 'error'))
@@ -3193,7 +3203,18 @@ def assign_users(short_name):
         flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
-    form = DataAccessForm(request.body)
+    if request.data:
+        data = json.loads(request.data).get('project')
+        result = MultiDict()
+        for field_name, value in six.iteritems(data):
+            if not isinstance(value, list):
+                value = [value]
+            result.setlist(field_name, value)
+        form = DataAccessForm(result)
+        project_users = data.get('select_users')
+    else:
+        form = DataAccessForm(request.body)
+        project_users = request.form.getlist('select_users')
 
     if request.method == 'GET':
         project_sanitized, owner_sanitized = sanitize_project_owner(
@@ -3212,7 +3233,6 @@ def assign_users(short_name):
         )
         return handle_content_type(response)
 
-    project_users = request.form.getlist('select_users')
     project_users = map(int, project_users)
     project.set_project_users(project_users)
     project_repo.save(project)
@@ -3235,8 +3255,18 @@ def process_quiz_mode_request(project):
     if request.method == 'GET':
         return ProjectQuizForm(**current_quiz_config)
 
-    form = ProjectQuizForm(request.form)
-
+    if request.data:
+        data = json.loads(request.data).get('quiz')
+        result = MultiDict()
+        for field_name, value in six.iteritems(data):
+            if not value:
+                continue
+            if not isinstance(value, list):
+                value = [value]
+            result.setlist(field_name, value)
+        form = ProjectQuizForm(result)
+    else:
+        form = ProjectQuizForm(request.form)
     if not form.validate():
         flash("Please fix the errors", 'message')
         return form
