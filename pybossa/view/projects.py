@@ -901,17 +901,18 @@ def save_project_configuration(body, project, short_name):
     else:
         key = 'answer_fields_configutation'
         data = body
-        answer_fields_key = 'answer_fields'
-        consensus_config_key = 'consensus_config'
-        answer_fields = body.get(answer_fields_key) or {}
-        consensus_config = body.get(consensus_config_key) or {}
-        delete_stats_for_changed_fields(
-            project.id,
-            answer_fields,
-            project.info.get(answer_fields_key) or {}
-        )
-        project.info[answer_fields_key] = answer_fields
-        project.info[consensus_config_key] = consensus_config
+        result = answerfieldsconfig(short_name)
+        # answer_fields_key = 'answer_fields'
+        # consensus_config_key = 'consensus_config'
+        # answer_fields = body.get(answer_fields_key) or {}
+        # consensus_config = body.get(consensus_config_key) or {}
+        # delete_stats_for_changed_fields(
+        #     project.id,
+        #     answer_fields,
+        #     project.info.get(answer_fields_key) or {}
+        # )
+        # project.info[answer_fields_key] = answer_fields
+        # project.info[consensus_config_key] = consensus_config
     project_repo.save(project)
     auditlogger.log_event(project, current_user, 'update', 'project.' + key,
     'N/A', data)
@@ -949,6 +950,8 @@ def summary(short_name):
         try:
             body = json.loads(request.data) or {}
             save_project_configuration(body, project, short_name)
+            msg = gettext("Cpnfiguration updated successfully")
+            flash(msg, 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
 
@@ -2153,6 +2156,8 @@ def task_n_answers(short_name):
                         pro_features=pro)
         return handle_content_type(response)
     elif request.method == 'POST':
+        if not default_form.default_n_answers.data and not form.n_answers.data:
+            return None
         if default_form.default_n_answers.data and default_form.validate():
             project.set_default_n_answers(default_form.default_n_answers.data)
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
@@ -2197,13 +2202,6 @@ def task_scheduler(short_name):
     title = project_title(project, gettext('Task Scheduler'))
     if request.headers.get('content-type') == 'application/json' and request.data:
         data = json.loads(request.data).get('task') or {}
-        # result = MultiDict()
-        # for field_name, value in six.iteritems(data):
-        #     if not value:
-        #         continue
-        #     if not isinstance(value, list):
-        #         value = [value]
-        #     result.setlist(field_name, value)
         form = TaskSchedulerForm(get_json_nultiDict(data))
     else:
         form = TaskSchedulerForm(request.body)
