@@ -921,7 +921,15 @@ def setup_assets(app):
                 'output': 'css/gen/enrichment.min.css'
             }
         },
-
+        {
+            'name': 'css_blpstrap3_style',
+            'args': [
+                "css/bootstrap.blpstrap3.css"
+                ],
+            'kwargs': {
+                'output': 'css/gen/bootstrap.blpstrap3.css'
+            }
+        },
         {
             'name': 'css_taskbrowse',
             'args': [
