@@ -8967,6 +8967,7 @@ class TestWeb(web.Helper):
         self.signin()
         self.new_project()
         project = db.session.query(Project).first()
+        print(project)
 
         project.info['data_access'] = ["L1"]
         user_access = dict(select_users=["L2"])

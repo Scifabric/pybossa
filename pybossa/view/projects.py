@@ -2156,8 +2156,6 @@ def task_n_answers(short_name):
                         pro_features=pro)
         return handle_content_type(response)
     elif request.method == 'POST':
-        if not default_form.default_n_answers.data and not form.n_answers.data:
-            return {}
         if default_form.default_n_answers.data and default_form.validate():
             project.set_default_n_answers(default_form.default_n_answers.data)
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
@@ -2178,7 +2176,8 @@ def task_n_answers(short_name):
         if default_form.validate() or form.validate():
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
         else:
-            flash(gettext('Please correct the errors'), 'error')
+            if default_form.default_n_answers.data or form.n_answers.data:
+                flash(gettext('Please correct the errors'), 'error')
             if not form.n_answers.data:
                 form = TaskRedundancyForm()
             if not default_form.default_n_answers.data:
@@ -3223,7 +3222,7 @@ def assign_users(short_name):
             pro_features=pro_features()
         )
         return handle_content_type(response)
-
+    print(type(project_users))
     project_users = map(int, project_users)
     project.set_project_users(project_users)
     project_repo.save(project)
