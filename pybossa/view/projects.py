@@ -950,7 +950,7 @@ def summary(short_name):
         try:
             body = json.loads(request.data) or {}
             save_project_configuration(body, project, short_name)
-            msg = gettext("Cpnfiguration updated successfully")
+            msg = gettext("Configuration updated successfully")
             flash(msg, 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
@@ -3199,14 +3199,9 @@ def assign_users(short_name):
         flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
-    if request.data:
-        data = json.loads(request.data).get('project')
-        result = MultiDict()
-        for field_name, value in six.iteritems(data):
-            if not isinstance(value, list):
-                value = [value]
-            result.setlist(field_name, value)
-        form = DataAccessForm(result)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        data = json.loads(request.data).get('project') or {}
+        form = DataAccessForm(get_json_nultiDict(data))
         project_users = data.get('select_users')
     else:
         form = DataAccessForm(request.body)
