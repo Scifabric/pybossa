@@ -31,6 +31,7 @@ from flask import Markup, jsonify
 from flask_login import login_required, current_user
 from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
+from flask_json_multidict import get_json_multidict
 from rq import Queue
 from werkzeug.datastructures import MultiDict
 
@@ -221,6 +222,16 @@ def pro_features(owner=None):
                                           current_user,
                                           owner)
     return pro
+
+def get_json_nultiDict(data):
+    result = MultiDict()
+    for field_name, value in six.iteritems(data):
+        if value is None:
+            continue
+        if not isinstance(value, list):
+            value = [value]
+        result.setlist(field_name, value)
+    return result
 
 
 @blueprint.route('/search/', defaults={'page': 1})
@@ -956,7 +967,7 @@ def summary(short_name):
                 "assign_user": json.dumps(assign_user),
                 "users": json.dumps(users),
                 "data_access": json.dumps(data_access),
-                "valid_access_levels": data_access_levels['valid_access_levels'],
+                "valid_access_levels": data_access_levels.get('valid_access_levels') or [],
                 "owner": json.dumps(owner_sanitized),
                 "coowners": json.dumps(coowners),
                 "default_task_redundancy": default_task_redundancy,
@@ -2116,15 +2127,9 @@ def task_settings(short_name):
 def task_n_answers(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, gettext('Redundancy'))
-    if request.data:
-        data = json.loads(request.data).get('task')
-        result = MultiDict()
-        for field_name, value in six.iteritems(data):
-            if not value:
-                continue
-            if not isinstance(value, list):
-                value = [value]
-            result.setlist(field_name, value)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        data = json.loads(request.data).get('task') or {}
+        result = get_json_nultiDict(data)
         form = TaskRedundancyForm(result)
         default_form = TaskDefaultRedundancyForm(result)
     else:
@@ -2190,16 +2195,16 @@ def task_scheduler(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, gettext('Task Scheduler'))
-    if request.data:
-        data = json.loads(request.data).get('task')
-        result = MultiDict()
-        for field_name, value in six.iteritems(data):
-            if not value:
-                continue
-            if not isinstance(value, list):
-                value = [value]
-            result.setlist(field_name, value)
-            form = TaskSchedulerForm(result)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        data = json.loads(request.data).get('task') or {}
+        # result = MultiDict()
+        # for field_name, value in six.iteritems(data):
+        #     if not value:
+        #         continue
+        #     if not isinstance(value, list):
+        #         value = [value]
+        #     result.setlist(field_name, value)
+        form = TaskSchedulerForm(get_json_nultiDict(data))
     else:
         form = TaskSchedulerForm(request.body)
     pro = pro_features()
@@ -2315,16 +2320,9 @@ def task_timeout(short_name):
                                                                     current_user,
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
-    if request.data:
-        data = json.loads(request.data).get('task')
-        result = MultiDict()
-        for field_name, value in six.iteritems(data):
-            if not value:
-                continue
-            if not isinstance(value, list):
-                value = [value]
-            result.setlist(field_name, value)
-        form = TaskTimeoutForm(result)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        data = json.loads(request.data).get('task') or {}
+        form = TaskTimeoutForm(get_json_nultiDict(data))
     else:
         form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
@@ -3255,16 +3253,9 @@ def process_quiz_mode_request(project):
     if request.method == 'GET':
         return ProjectQuizForm(**current_quiz_config)
 
-    if request.data:
-        data = json.loads(request.data).get('quiz')
-        result = MultiDict()
-        for field_name, value in six.iteritems(data):
-            if not value:
-                continue
-            if not isinstance(value, list):
-                value = [value]
-            result.setlist(field_name, value)
-        form = ProjectQuizForm(result)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        data = json.loads(request.data).get('quiz') or {}
+        form = ProjectQuizForm(get_json_nultiDict(data))
     else:
         form = ProjectQuizForm(request.form)
     if not form.validate():
