@@ -941,7 +941,6 @@ def summary(short_name):
     project, owner, ps = project_by_shortname(short_name)
     external_config = project.info.get('ext_config') or {}
     data_access = project.info.get('data_access') or []
-    # users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
     users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
     scheduler = project.info.get('sched')
     timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
@@ -965,12 +964,10 @@ def summary(short_name):
     pro = pro_features()
 
     if request.method == 'POST':
-
         try:
-            # import pdb; pdb.set_trace()
             body = json.loads(request.data) or {}
             update_data(body, project)
-            flash(gettext('Configuration updated succesfully.'), 'success')
+            flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
 
@@ -980,7 +977,7 @@ def summary(short_name):
     sched_config= dict(sched=scheduler,
                        rand_within_priority=project.info.get('sched_rand_within_priority'),
                        sched_variants=sched.sched_variants())
-    response = {
+    response = {"template": '/projects/summary.html',
                 "project": project_sanitized,
                 "pro_features": pro,
                 "overall_progress": ps.overall_progress,
@@ -1001,7 +998,7 @@ def summary(short_name):
                 "csrf": generate_csrf()
                 }
 
-    return render_template('/projects/summary.html', **response)
+    return handle_content_type(response)
 
 @blueprint.route('/<short_name>/settings')
 @login_required
@@ -2870,9 +2867,7 @@ def coowners_summary(short_name):
         else:
             found = []
             for user in users:
-                print(user)
                 public_user = user.to_public_json()
-                print(public_user)
                 public_user['is_coowner'] = user.id in project.owners_ids
                 public_user['is_creator'] = user.id == project.owner_id
                 public_user['id'] = user.id
@@ -3277,9 +3272,8 @@ def process_quiz_mode_request(project):
 @login_required
 @admin_or_subadmin_required
 def quiz_mode(short_name):
-    # import pdb; pdb.set_trace()
-    project, owner, ps = project_by_shortname(short_name)
 
+    project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
