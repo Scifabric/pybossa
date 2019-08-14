@@ -131,7 +131,7 @@ class ProjectSyncer(Syncer):
         for owner_id in owners_ids:
             res = self.get_target_user(owner_id)
             if res.ok:
-                data = json.loads(res.content)
+                data = res.json()
                 owner_emails.append(data.get('email_addr'))
 
         return owner_emails

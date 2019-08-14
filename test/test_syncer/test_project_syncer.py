@@ -46,7 +46,6 @@ def create_target():
         'owners_ids': [1, 2, 3],
         'id': 1}
 
-
 class TestProjectSyncer(Test):
 
     target_url = 'http://test.com'
@@ -137,6 +136,6 @@ class TestProjectSyncer(Test):
 
         mock_get.return_value = create_target()
         project = ProjectFactory.build(short_name=self.target_id)
-        project_syncer.get_target_owners(project)
+        project_syncer.get_target_owners(project, True)
         mock_get_user_email.assert_called()
 
