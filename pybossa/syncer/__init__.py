@@ -126,6 +126,14 @@ class Syncer(object):
             url, json=payload, headers=headers, auth=http_signer)
         return res
 
+    def get_target_user(self, user_id, api_key):
+        url = '{}/api/user/{}'.format(
+            self.target_url, user_id)
+        headers = {'Authorization': api_key}
+        res = requests.get(
+            url, headers=headers)
+        return res
+
     def cache_target(self, target, target_id):
         """Cache target.
 
