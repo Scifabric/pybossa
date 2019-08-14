@@ -43,11 +43,10 @@ class ProjectSyncer(Syncer):
     def sync(self, project):
         target = self.get_target(short_name=project.short_name)
         payload = self._build_payload(project, target)
-        is_new_project = False
+        is_new_project = not target
 
-        if not target:
-            is_new_project = True
-            return self._create(payload, self.target_key)
+        if is_new_project:
+            return is_new_project, self._create(payload, self.target_key)
         elif self.is_sync_enabled(target):
             target_id = target['id']
             self.cache_target(target, project.short_name)
@@ -129,7 +128,7 @@ class ProjectSyncer(Syncer):
     def get_target_emails(self, owners_ids):
         owner_emails = []
         for owner_id in owners_ids:
-            res = self.get_target_user(owner_id)
+            res = self.get_target_user(owner_id, self.target_key)
             if res.ok:
                 data = res.json()
                 owner_emails.append(data.get('email_addr'))
