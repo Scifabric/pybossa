@@ -7427,7 +7427,7 @@ class TestWeb(web.Helper):
             data = json.loads(res.data)
             err_msg = "Task Redundancy should be a value between 1 and 1000"
             assert data['status'] == 'error', data
-            assert 'between 1 and 1,000' in data['form']['errors']['n_answers'][0], data
+            assert 'between 1 and 1,000' in data['form']['errors']['n_answers'][0], err_msg
 
             res = self.app_post_json(new_url, data=dict(n_answers=10000000000))
             data = json.loads(res.data)

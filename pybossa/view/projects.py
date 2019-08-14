@@ -902,17 +902,6 @@ def save_project_configuration(body, project, short_name):
         key = 'answer_fields_configutation'
         data = body
         result = answerfieldsconfig(short_name)
-        # answer_fields_key = 'answer_fields'
-        # consensus_config_key = 'consensus_config'
-        # answer_fields = body.get(answer_fields_key) or {}
-        # consensus_config = body.get(consensus_config_key) or {}
-        # delete_stats_for_changed_fields(
-        #     project.id,
-        #     answer_fields,
-        #     project.info.get(answer_fields_key) or {}
-        # )
-        # project.info[answer_fields_key] = answer_fields
-        # project.info[consensus_config_key] = consensus_config
     project_repo.save(project)
     auditlogger.log_event(project, current_user, 'update', 'project.' + key,
     'N/A', data)
@@ -2156,28 +2145,34 @@ def task_n_answers(short_name):
                         pro_features=pro)
         return handle_content_type(response)
     elif request.method == 'POST':
-        if default_form.default_n_answers.data is not None and default_form.validate():
-            project.set_default_n_answers(default_form.default_n_answers.data)
-            auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
-                      'N/A', default_form.default_n_answers.data)
-            msg = gettext('Redundancy updated!')
-            flash(msg, 'success')
-        if form.n_answers.data is not None and form.validate():
-            tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
-            if tasks_not_updated:
-                notify_redundancy_updates(tasks_not_updated)
-                flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
-            else:
+        exist_error = False
+        if default_form.default_n_answers.data is not None:
+            if default_form.validate():
+                project.set_default_n_answers(default_form.default_n_answers.data)
+                auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
+                        'N/A', default_form.default_n_answers.data)
                 msg = gettext('Redundancy updated!')
                 flash(msg, 'success')
-            # Log it
-            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
-                                  'N/A', form.n_answers.data)
-        if default_form.validate() or form.validate():
+            else:
+                exist_error = True
+        if form.n_answers.data is not None:
+            if form.validate():
+                tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
+                if tasks_not_updated:
+                    notify_redundancy_updates(tasks_not_updated)
+                    flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
+                else:
+                    msg = gettext('Redundancy updated!')
+                    flash(msg, 'success')
+                # Log it
+                auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
+                                    'N/A', form.n_answers.data)
+            else:
+                exist_error = True
+        if not exist_error:
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
         else:
-            if default_form.default_n_answers.data or form.n_answers.data:
-                flash(gettext('Please correct the errors'), 'error')
+            flash(gettext('Please correct the errors'), 'error')
             if not form.n_answers.data:
                 form = TaskRedundancyForm()
             if not default_form.default_n_answers.data:
