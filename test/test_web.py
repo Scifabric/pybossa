@@ -8152,7 +8152,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
-           return_value=FakeResponse(ok=True))
+           return_value=[True, FakeResponse(ok=True)])
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
@@ -8190,7 +8190,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
-           return_value=FakeResponse(ok=True))
+           return_value=[True, FakeResponse(ok=True)])
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',
@@ -8231,7 +8231,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.sync',
-           return_value=FakeResponse(ok=True))
+           return_value=[True, FakeResponse(ok=True)])
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target',
            return_value=None)
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_owners',

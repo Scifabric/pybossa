@@ -2832,13 +2832,14 @@ def sync_project(short_name):
                 url_for('.publish', short_name=short_name, published=project.published))
 
         # Perform sync
+        is_new_project = False
         project_syncer = ProjectSyncer(
             default_sync_target, target_key)
         synced_url = '{}/project/{}'.format(
             project_syncer.target_url, project.short_name)
         if request.body.get('btn') == 'sync':
             action = 'sync'
-            res = project_syncer.sync(project)
+            is_new_project, res = project_syncer.sync(project)
         elif request.body.get('btn') == 'undo':
             action = 'unsync'
             res = project_syncer.undo_sync(project)
@@ -2865,7 +2866,7 @@ def sync_project(short_name):
                 short_name=project.short_name,
                 source_url=source_url,
                 syncer=current_user.email_addr)
-            owners = project_syncer.get_target_owners(project)
+            owners = project_syncer.get_target_owners(project, is_new_project)
             email = dict(recipients=owners,
                          subject=subject,
                          body=body)

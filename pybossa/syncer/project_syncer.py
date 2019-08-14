@@ -43,8 +43,10 @@ class ProjectSyncer(Syncer):
     def sync(self, project):
         target = self.get_target(short_name=project.short_name)
         payload = self._build_payload(project, target)
+        is_new_project = False
 
         if not target:
+            is_new_project = True
             return self._create(payload, self.target_key)
         elif self.is_sync_enabled(target):
             target_id = target['id']
@@ -55,7 +57,7 @@ class ProjectSyncer(Syncer):
         else:
             raise NotEnabled
 
-        return res
+        return is_new_project, res
 
     def undo_sync(self, project):
         target = self.get_target_cache(project.short_name)
@@ -124,7 +126,17 @@ class ProjectSyncer(Syncer):
 
         return payload
 
-    def get_target_owners(self, project):
+    def get_target_emails(self, owners_ids):
+        owner_emails = []
+        for owner_id in owners_ids:
+            res = self.get_target_user(owner_id)
+            if res.ok:
+                data = res.json()
+                owner_emails.append(data.get('email_addr'))
+
+        return owner_emails
+
+    def get_target_owners(self, project, is_new_project):
         """Get the email addresses of all owners and
         coowners for the target project.
 
@@ -133,8 +145,12 @@ class ProjectSyncer(Syncer):
         """
         target = self.get_target(short_name=project.short_name)
 
-        owner_emails = [cached_users.get_user_email(owner_id)
-                        for owner_id in target['owners_ids']]
+        if is_new_project:
+            owner_emails = [cached_users.get_user_email(owner_id)
+                        for owner_id in project.owners_ids]
+
+        else:
+            owner_emails = self.get_target_emails(target['owners_ids'])
 
         return [owner_email for owner_email in owner_emails
                 if owner_email is not None]
