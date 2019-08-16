@@ -468,4 +468,6 @@ class TestApiCommon(TestAPI):
             err_msg = 'app access should be allowed with SECURE_APP_ACCESS disabled'
             assert not "Sign in" in res.data, err_msg
             assert "Statistics" in res.data
-            assert "100% completed" in res.data
+            assert 'id="percent-completed"' in res.data
+            assert "<div>100%</div>" in res.data
+

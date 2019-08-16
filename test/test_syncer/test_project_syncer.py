@@ -130,7 +130,7 @@ class TestProjectSyncer(Test):
     @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target')
     @patch('pybossa.cache.users.get_user_email')
     @patch('pybossa.syncer.requests')
-    def test_get_target_owners(self, fake_requests, mock_get_user_email, mock_get):
+    def test_get_target_owners_if_project_not_exist_prod(self, fake_requests, mock_get_user_email, mock_get):
         user = UserFactory.create(admin=True, email_addr=u'user@test.com')
         project_syncer = ProjectSyncer(self.target_url, self.target_key)
 
@@ -138,4 +138,19 @@ class TestProjectSyncer(Test):
         project = ProjectFactory.build(short_name=self.target_id)
         project_syncer.get_target_owners(project, True)
         mock_get_user_email.assert_called()
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target_user')
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target')
+    @patch('pybossa.syncer.requests')
+    def test_get_target_owners_if_project_exist_prod(self, fake_requests, mock_get, mock_get_target_user):
+        user = UserFactory.create(admin=True, email_addr=u'user@test.com')
+        project_syncer = ProjectSyncer(self.target_url, self.target_key)
+        mock_get_target_user.return_value = create_response(True, 200, json.dumps({'email_addr': 'user-prod@test.com'}))
+        mock_get.return_value = create_target()
+        project = ProjectFactory.build(short_name=self.target_id)
+        emails = project_syncer.get_target_owners(project, False)
+        assert len(emails) == 3
+        assert 'user-prod@test.com' in emails
+        mock_get_target_user.assert_called()
 
