@@ -8513,9 +8513,6 @@ class TestWeb(web.Helper):
         new_url = url + '?api_key={}'.format(admin.api_key)
         self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
         task = TaskFactory.create(project=project)
-        # url = '/project/{}/tasks/timeout'.format(project.short_name)
-        # new_url = url + '?api_key={}'.format(admin.api_key)
-        # self.app_post_json(new_url, data=dict(timeout='99'))
 
         self.app.get('/api/project/{}/newtask'.format(project.id),
                      follow_redirects=True)
@@ -8530,11 +8527,8 @@ class TestWeb(web.Helper):
         project2 = ProjectFactory.create(owner=admin, short_name='test2')
         url = '/project/{}/tasks/scheduler'.format(project2.short_name)
         new_url = url + '?api_key={}'.format(admin.api_key)
-        self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
+        self.app_post_json(new_url, data=dict(sched='user_pref_scheduler'))
         task = TaskFactory.create(project=project2)
-        # url = '/project/{}/tasks/timeout'.format(project2.short_name)
-        # new_url = url + '?api_key={}'.format(admin.api_key)
-        # self.app_post_json(new_url, data=dict(timeout='99'))
 
         self.app.get('/api/project/{}/newtask'.format(project2.id),
                      follow_redirects=True)

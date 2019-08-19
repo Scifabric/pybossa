@@ -31,7 +31,6 @@ from flask import Markup, jsonify
 from flask_login import login_required, current_user
 from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
-from flask_json_multidict import get_json_multidict
 from rq import Queue
 from werkzeug.datastructures import MultiDict
 
@@ -1422,7 +1421,7 @@ def tasks(short_name):
                     n_completed_tasks=ps.n_completed_tasks,
                     n_volunteers=ps.n_volunteers,
                     pro_features=pro)
-    print(".tasks", response)
+
     return handle_content_type(response)
 
 
@@ -2172,7 +2171,6 @@ def task_n_answers(short_name):
             else:
                 exist_error = True
         if not exist_error:
-            print('-------------here')
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
         else:
             flash(gettext('Please correct the errors'), 'error')
@@ -2188,7 +2186,6 @@ def task_n_answers(short_name):
                             project=project_sanitized,
                             owner=owner_sanitized,
                             pro_features=pro)
-            print(response)
             return handle_content_type(response)
 
 
@@ -2831,7 +2828,9 @@ def coowners(short_name):
                 public_user['id'] = user.id
                 found.append(public_user)
             response['found'] = found
+
     return handle_content_type(response)
+
 
 @blueprint.route('/<short_name>/add_coowner/<user_name>')
 @login_required
@@ -3081,21 +3080,16 @@ def ext_config(short_name):
     ensure_authorized_to('update', project)
 
     forms = current_app.config.get('EXTERNAL_CONFIGURATIONS', {})
+
     form_classes = []
     for form_name, form_config in forms.iteritems():
         display = form_config['display']
         form = form_builder(form_name, form_config['fields'].iteritems())
         form_classes.append((form_name, display, form))
 
-    if request.data:
-        data = json.loads(request.data).get('project').get('config')
-    else:
-        data = request.body
-
     if request.method == 'POST':
         for form_name, display, form_class in form_classes:
-            if form_name in data:
-
+            if form_name in request.body:
                 form = form_class()
                 if not form.validate():
                     flash(gettext('Please correct the errors', 'error'))
