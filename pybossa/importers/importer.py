@@ -129,7 +129,7 @@ class Importer(object):
             return
         file_name = 'task_private_data.json'
         urls = upload_files_priv(task, project_id, private_fields, file_name)
-        task['info']['private_json__upload_url'] = urls if use_file_url else use_file_url['externalUrl']
+        task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""

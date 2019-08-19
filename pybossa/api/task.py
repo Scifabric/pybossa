@@ -50,7 +50,7 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
-    reserved_keys = set(['id', 'created', 'state', 'fav_user_ids',
+    reserved_keys = set(['id', 'created', 'fav_user_ids',
         'calibration'])
 
     immutable_keys = set(['project_id'])
