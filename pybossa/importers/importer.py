@@ -123,12 +123,13 @@ class Importer(object):
         self._importers['youtube'] = BulkTaskYoutubeImport
         self._importer_constructor_params['youtube'] = youtube_params
 
-    def upload_private_data(self, task, project_id):
+    def upload_private_data(self, task, project_id, use_file_url=False):
         private_fields = task.pop('private_fields', None)
         if not private_fields:
             return
         file_name = 'task_private_data.json'
-        task['info']['private_json__upload_url'] = upload_files_priv(task, project_id, private_fields, file_name)
+        urls = upload_files_priv(task, project_id, private_fields, file_name)
+        task['info']['private_json__upload_url'] = urls if use_file_url else use_file_url['externalUrl']
 
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
@@ -167,9 +168,11 @@ class Importer(object):
         validator = TaskImportValidator()
         n_answers = project.get_default_n_answers()
         try:
+            task_state, use_file_url = ('enrich', True) if project.info.get('enrichments') else ('ongoing', False)
             for task_data in tasks:
-                self.upload_private_data(task_data, project.id)
-                task = Task(project_id=project.id, n_answers=n_answers)
+                self.upload_private_data(task_data, project.id, use_file_url=use_file_url)
+                
+                task = Task(project_id=project.id, n_answers=n_answers, state=task_state)
                 [setattr(task, k, v) for k, v in task_data.iteritems()]
 
                 gold_answers = task_data.pop('gold_answers', None)

@@ -129,7 +129,8 @@ def get_breadth_first_task(project_id, user_id=None, user_ip=None,
                            desc=False, **kwargs):
     """Get a new task which have the least number of task runs."""
     project_query = session.query(Task.id).filter(Task.project_id==project_id,
-                                                  Task.state!='completed')
+                                                  Task.state!='completed',
+                                                  Task.state!='enrich')
     if user_id and not user_ip and not external_uid:
         subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id,
                                                             user_id=user_id)
@@ -219,15 +220,23 @@ def get_candidate_task_ids(project_id, user_id=None, user_ip=None,
         else:
             subquery = session.query(TaskRun.task_id).filter_by(project_id=project_id, external_uid=external_uid)
 
-    query = session.query(Task)\
-                   .filter(and_(~Task.id.in_(subquery.subquery()),
-                                            Task.project_id == project_id,
-                                            Task.state != 'completed'))\
-                   .filter(or_(Task.expiration == None, Task.expiration > datetime.utcnow()))
+    query = (
+        session.query(Task)
+        .filter(and_(~Task.id.in_(subquery.subquery()),
+                    Task.project_id == project_id,
+                    Task.state != 'completed',
+                    Task.state != 'enrich'))
+        .filter(or_(Task.expiration == None, Task.expiration > datetime.utcnow()))
 
-    if completed is False:
-        query = session.query(Task).filter(and_(~Task.id.in_(subquery.subquery()),
-                                                Task.project_id == project_id))
+        if completed else # completed means filter out completed
+
+        session.query(Task)
+        .filter(and_(
+            ~Task.id.in_(subquery.subquery()),
+            Task.project_id == project_id,
+            Task.state != 'enrich'
+        ))
+    )
 
     query = _set_orderby_desc(query, orderby, desc)
     data = query.limit(limit).offset(offset).all()
@@ -325,6 +334,7 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
            AND task.project_id=:project_id
            AND ((task.expiration IS NULL) OR (task.expiration > (now() at time zone 'utc')::timestamp))
            AND task.state !='completed'
+           AND task.state !='enrich'
            {}
            group by task.id
            ORDER BY {}

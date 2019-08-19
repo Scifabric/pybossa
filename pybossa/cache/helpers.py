@@ -39,6 +39,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     if user_id and not user_ip:
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
+                        AND state !='enrich'
                         AND id NOT IN
                         (SELECT task_id FROM task_run WHERE
                         project_id=:project_id AND user_id=:user_id);''')
@@ -49,6 +50,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
             user_ip = '127.0.0.1'
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
+                        AND state !='enrich'
                         AND id NOT IN
                         (SELECT task_id FROM task_run WHERE
                         project_id=:project_id AND user_ip=:user_ip);''')
@@ -67,6 +69,7 @@ def oldest_available_task(project_id, user_id, user_ip=None):
     if user_id and not user_ip:
         query = text('''SELECT created FROM task
                         WHERE project_id=:project_id AND state !='completed'
+                        AND state !='enrich'
                         AND id NOT IN
                         (SELECT task_id FROM task_run WHERE
                         project_id=:project_id AND user_id=:user_id)
@@ -79,6 +82,7 @@ def oldest_available_task(project_id, user_id, user_ip=None):
             user_ip = '127.0.0.1'
         query = text('''SELECT created FROM task
                         WHERE project_id=:project_id AND state !='completed'
+                        AND state !='enrich'
                         AND id NOT IN
                         (SELECT task_id FROM task_run WHERE
                         project_id=:project_id AND user_ip=:user_ip)
@@ -182,6 +186,7 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
         sql = '''
                SELECT COUNT(*) AS n_tasks FROM task
                WHERE project_id=:project_id AND state !='completed'
+               AND state !='enrich'
                AND id NOT IN
                (SELECT task_id FROM task_run WHERE
                project_id=:project_id AND user_id=:user_id) {}
@@ -191,6 +196,7 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
         sql = '''
                SELECT COUNT(*) AS n_tasks FROM task
                WHERE project_id=:project_id AND state !='completed'
+               AND state !='enrich'
                AND id NOT IN
                (SELECT task_id FROM task_run WHERE
                project_id=:project_id AND user_id=:user_id)
