@@ -934,7 +934,6 @@ def summary(short_name):
     ensure_authorized_to('update', project)
     template = '/projects/summary.html'
     pro = pro_features()
-
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
@@ -969,7 +968,6 @@ def summary(short_name):
                 "consensus_config": json.dumps(consensus_config),
                 "quiz_config": json.dumps(quiz_config),
                 "all_user_quizzes": json.dumps(all_user_quizzes),
-                "private_instance": bool(data_access_levels),
                 "csrf": generate_csrf()
                 }
 
@@ -2119,7 +2117,6 @@ def task_settings(short_name):
 def task_n_answers(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, gettext('Redundancy'))
-
     if request.headers.get('content-type') == 'application/json' and request.data:
         body = json.loads(request.data)
         data = body['task'] if body.get('task') else body
@@ -2130,6 +2127,8 @@ def task_n_answers(short_name):
         form = TaskRedundancyForm(request.body)
         default_form = TaskDefaultRedundancyForm(request.body)
 
+    # form = TaskRedundancyForm(request.body)
+    # default_form = TaskDefaultRedundancyForm(request.body)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2792,11 +2791,7 @@ def transfer_ownership(short_name):
 @login_required
 def coowners(short_name):
     """Manage coowners of a project."""
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        data = json.loads(request.data).get('task') or {}
-        form = SearchForm(get_json_multiDict(data))
-    else:
-        form = SearchForm(request.form)
+    form = SearchForm(request.body)
     project, owner, ps = project_by_shortname(short_name)
     sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
     owners = user_repo.get_users(project.owners_ids)
@@ -2833,57 +2828,10 @@ def coowners(short_name):
                 public_user = user.to_public_json()
                 public_user['is_coowner'] = user.id in project.owners_ids
                 public_user['is_creator'] = user.id == project.owner_id
-                found.append(public_user)
-            response['found'] = found
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        return Response(json.dumps(response), 200)
-    else:
-        return handle_content_type(response)
-
-
-@blueprint.route('/<short_name>/summary/coowners', methods=['POST'])
-@login_required
-def coowners_summary(short_name):
-    """Manage coowners of a project."""
-    project = project_repo.get_by_shortname(short_name)
-    owners = user_repo.get_users(project.owners_ids)
-    pub_owners = [user.to_public_json() for user in owners]
-    for owner, p_owner in zip(owners, pub_owners):
-        if owner.id == project.owner_id:
-            p_owner['is_creator'] = True
-
-    ensure_authorized_to('read', project)
-    ensure_authorized_to('update', project)
-
-    response = dict(
-        project=project.to_public_json(),
-        coowners=pub_owners,
-        found=[]
-    )
-
-    if  request.data:
-        data = json.loads(request.data) or {}
-        query = data.get('query')
-        filters = {'enabled': True}
-        users = user_repo.search_by_name(query, **filters)
-
-        if not users:
-            markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
-            flash(markup.format(gettext("Ooops!"),
-                                gettext("We didn't find any enabled user matching your query:"),
-                                query))
-        else:
-            found = []
-            for user in users:
-                public_user = user.to_public_json()
-                public_user['is_coowner'] = user.id in project.owners_ids
-                public_user['is_creator'] = user.id == project.owner_id
                 public_user['id'] = user.id
                 found.append(public_user)
             response['found'] = found
-
-    return Response(json.dumps(response), 200)
-
+    return handle_content_type(response)
 
 @blueprint.route('/<short_name>/add_coowner/<user_name>')
 @login_required
@@ -3208,7 +3156,7 @@ def assign_users(short_name):
 
     if request.headers.get('content-type') == 'application/json' and request.data:
         body = json.loads(request.data)
-        data = body['project'] if body.get('task') else body
+        data = body['project'] if body.get('project') else body
         form = DataAccessForm(get_json_multiDict(data))
         project_users = data.get('select_users')
     else:
@@ -3231,7 +3179,6 @@ def assign_users(short_name):
             pro_features=pro_features()
         )
         return handle_content_type(response)
-    print(type(project_users))
     project_users = map(int, project_users)
     project.set_project_users(project_users)
     project_repo.save(project)
@@ -3256,7 +3203,7 @@ def process_quiz_mode_request(project):
 
     if request.headers.get('content-type') == 'application/json' and request.data:
         body = json.loads(request.data)
-        data = body['quiz'] if body.get('task') else body
+        data = body['quiz'] if body.get('quiz') else body
         form = ProjectQuizForm(get_json_multiDict(data))
     else:
         form = ProjectQuizForm(request.form)

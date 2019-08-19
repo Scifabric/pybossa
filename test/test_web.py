@@ -8969,7 +8969,6 @@ class TestWeb(web.Helper):
         self.signin()
         self.new_project()
         project = db.session.query(Project).first()
-        print(project)
 
         project.info['data_access'] = ["L1"]
         user_access = dict(select_users=["1", "2"])
@@ -8984,7 +8983,7 @@ class TestWeb(web.Helper):
 
         user = User.query.first()
         user.info['data_access'] = ["L1"]
-        user_access = dict(select_users=["1"])
+        user_access = dict(select_users=[])
         with patch.dict(data_access_levels, self.patch_data_access_levels):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
                  data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
