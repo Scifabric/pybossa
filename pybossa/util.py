@@ -116,6 +116,9 @@ def handle_content_type(data):
                 data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'users' or item == 'projects' or item == 'tasks' or item == 'locs') and type(data[item]) == str:
                 data[item] = json.loads(data[item])
+            if (item == 'found') and isinstance(data[item], list) :
+                if len(data[item]) and not isinstance(data[item][0], dict):
+                    data[item] = [user_to_json(user) for user in data[item]]
             if (item == 'category'):
                 data[item] = data[item].to_public_json()
         if 'code' in data.keys():
