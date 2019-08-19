@@ -897,10 +897,13 @@ def save_project_configuration(body, project, short_name):
         key = "quiz"
         data = body.get(key) or {}
         result = process_quiz_mode_request(project)
-    else:
+    elif "answer_fields" in body or "consensus_config" in body:
         key = 'answer_fields_configutation'
         data = body
         result = answerfieldsconfig(short_name)
+    else:
+        raise ValueError('Empty data in post request from /summary.')
+
     project_repo.save(project)
     auditlogger.log_event(project, current_user, 'update', 'project.' + key,
     'N/A', data)
@@ -3245,6 +3248,7 @@ def quiz_mode(short_name):
     if not isinstance(form, ProjectQuizForm):
         return form
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
+    all_user_quizzes = [dict(row) for row in all_user_quizzes]
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',

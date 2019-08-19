@@ -32,9 +32,9 @@ class TestSummary(web.Helper):
         data = json.loads(res.data)
         csrf = data['csrf']
         fields = {'project': {
-            'target_bucket': "bucket",
+            'config': {},
             'data_access': ['L1'],
-            'project_users': []
+            'select_users': ['1111']
         }}
         res = self.app.post(url, content_type='application/json',
                             data=json.dumps(fields),
@@ -49,10 +49,8 @@ class TestSummary(web.Helper):
         res = self.app_get_json(url)
         data = json.loads(res.data)
         csrf = data['csrf']
-        fields = {'project': {
-            'target_bucket': "bucket",
-            'data_access': ['L1'],
-            'project_users': []
+        fields = {'ownership': {
+            'coowners': ['1111']
         }}
         res = self.app.post(url, content_type='application/json',
                             data=json.dumps(fields),
@@ -67,14 +65,19 @@ class TestSummary(web.Helper):
         res = self.app_get_json(url)
         data = json.loads(res.data)
         csrf = data['csrf']
-        fields = {'ownership': {
-            'coowners': []
+        fields = {'task': {
+            'sched': 'locked_scheduler',
+            'minutes': 1,
+            'seconds': 30,
+            'default_n_answers': 1,
+            'n_answers': 2,
+            'rand_within_priority': False
         }}
         res = self.app.post(url, content_type='application/json',
                             data=json.dumps(fields),
                             headers={'X-CSRFToken': csrf})
         data = json.loads(res.data)
-        assert data['flash'] == 'Configuration updated successfully'
+        assert data['status'] == 'success'
 
     @with_context
     def test_post_answer_fields_setting(self):
@@ -122,3 +125,20 @@ class TestSummary(web.Helper):
                             headers={'X-CSRFToken': csrf})
         data = json.loads(res.data)
         assert data['flash'] == 'Configuration updated successfully'
+
+    @with_context
+    def test_invalid_post(self):
+        project = ProjectFactory.create(published=True)
+        url = '/project/%s/summary?api_key=%s' % (project.short_name, project.owner.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        csrf = data['csrf']
+        fields = {}
+        res = self.app.post(url, content_type='application/json',
+                            data=json.dumps(fields),
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        assert data['flash'] == 'An error occurred.', data['flash']
+        assert data['status'] == 'error'
+
+
