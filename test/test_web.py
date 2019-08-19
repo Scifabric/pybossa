@@ -7305,7 +7305,7 @@ class TestWeb(web.Helper):
             res = self.app_post_json(new_url, data=dict(sched=sched))
             data = json.loads(res.data)
             project = db.session.query(Project).get(1)
-            assert project.info['sched'] == sched, err_msg
+            assert project.info['sched'] == sched
             assert data['status'] == SUCCESS, data
 
         # As an authenticated user
@@ -7416,9 +7416,11 @@ class TestWeb(web.Helper):
             assert data['form']['csrf'] is not None, data
             assert 'n_answers' in data['form'].keys(), data
 
-            res = self.app_post_json(new_url, data=dict(n_answers=n_answers))
+            res = self.app_post_json(new_url, data=dict(n_answers=n_answers), follow_redirects=True)
             data = json.loads(res.data)
-            assert data['status'] == SUCCESS, data
+            print(res.status_code)
+            print(SUCCESS)
+            assert data.get('status') == SUCCESS, data
             project = db.session.query(Project).get(1)
             for t in project.tasks:
                 assert t.n_answers == n_answers, err_msg
@@ -8511,16 +8513,16 @@ class TestWeb(web.Helper):
         new_url = url + '?api_key={}'.format(admin.api_key)
         self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
         task = TaskFactory.create(project=project)
-        url = '/project/{}/tasks/timeout'.format(project.short_name)
-        new_url = url + '?api_key={}'.format(admin.api_key)
-        self.app_post_json(new_url, data=dict(timeout='99'))
+        # url = '/project/{}/tasks/timeout'.format(project.short_name)
+        # new_url = url + '?api_key={}'.format(admin.api_key)
+        # self.app_post_json(new_url, data=dict(timeout='99'))
 
         self.app.get('/api/project/{}/newtask'.format(project.id),
                      follow_redirects=True)
         res = self.app_get_json('/api/task/{}/lock'.format(task.id))
         data = json.loads(res.data)
 
-        assert res.status_code == 200
+        assert res.status_code == 200, res.status_code
         assert isinstance(data['expires'], float)
         assert data['success'] == True
 
@@ -8528,18 +8530,18 @@ class TestWeb(web.Helper):
         project2 = ProjectFactory.create(owner=admin, short_name='test2')
         url = '/project/{}/tasks/scheduler'.format(project2.short_name)
         new_url = url + '?api_key={}'.format(admin.api_key)
-        self.app_post_json(new_url, data=dict(sched='user_pref_scheduler'))
+        self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
         task = TaskFactory.create(project=project2)
-        url = '/project/{}/tasks/timeout'.format(project2.short_name)
-        new_url = url + '?api_key={}'.format(admin.api_key)
-        self.app_post_json(new_url, data=dict(timeout='99'))
+        # url = '/project/{}/tasks/timeout'.format(project2.short_name)
+        # new_url = url + '?api_key={}'.format(admin.api_key)
+        # self.app_post_json(new_url, data=dict(timeout='99'))
 
         self.app.get('/api/project/{}/newtask'.format(project2.id),
                      follow_redirects=True)
         res = self.app_get_json('/api/task/{}/lock'.format(task.id))
         data = json.loads(res.data)
 
-        assert res.status_code == 200
+        assert res.status_code == 200, res.status_code
         assert isinstance(data['expires'], float)
         assert data['success'] == True
 
@@ -8970,7 +8972,7 @@ class TestWeb(web.Helper):
         print(project)
 
         project.info['data_access'] = ["L1"]
-        user_access = dict(select_users=["L2"])
+        user_access = dict(select_users=["1", "2"])
 
         with patch.dict(data_access_levels, self.patch_data_access_levels):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
@@ -8982,10 +8984,10 @@ class TestWeb(web.Helper):
 
         user = User.query.first()
         user.info['data_access'] = ["L1"]
-        user_access = dict(select_users=["L1"])
+        user_access = dict(select_users=["1"])
         with patch.dict(data_access_levels, self.patch_data_access_levels):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
-                 data=json.dumps(dict(project=user_access)), content_type='application/json', follow_redirects=True)
+                 data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
             data = json.loads(res.data)
             assert data.get('status') == 'success', data
             assert "Users unassigned or no user assigned to project" in data.get('flash'), data

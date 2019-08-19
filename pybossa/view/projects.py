@@ -223,7 +223,7 @@ def pro_features(owner=None):
                                           owner)
     return pro
 
-def get_json_nultiDict(data):
+def get_json_multiDict(data):
     result = MultiDict()
     for field_name, value in six.iteritems(data):
         if value is None:
@@ -1424,7 +1424,7 @@ def tasks(short_name):
                     n_completed_tasks=ps.n_completed_tasks,
                     n_volunteers=ps.n_volunteers,
                     pro_features=pro)
-
+    print(".tasks", response)
     return handle_content_type(response)
 
 
@@ -2119,14 +2119,17 @@ def task_settings(short_name):
 def task_n_answers(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, gettext('Redundancy'))
+
     if request.headers.get('content-type') == 'application/json' and request.data:
-        data = json.loads(request.data).get('task') or {}
-        result = get_json_nultiDict(data)
+        body = json.loads(request.data)
+        data = body['task'] if body.get('task') else body
+        result = get_json_multiDict(data)
         form = TaskRedundancyForm(result)
         default_form = TaskDefaultRedundancyForm(result)
     else:
         form = TaskRedundancyForm(request.body)
         default_form = TaskDefaultRedundancyForm(request.body)
+
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2170,6 +2173,7 @@ def task_n_answers(short_name):
             else:
                 exist_error = True
         if not exist_error:
+            print('-------------here')
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
         else:
             flash(gettext('Please correct the errors'), 'error')
@@ -2185,6 +2189,7 @@ def task_n_answers(short_name):
                             project=project_sanitized,
                             owner=owner_sanitized,
                             pro_features=pro)
+            print(response)
             return handle_content_type(response)
 
 
@@ -2195,8 +2200,9 @@ def task_scheduler(short_name):
 
     title = project_title(project, gettext('Task Scheduler'))
     if request.headers.get('content-type') == 'application/json' and request.data:
-        data = json.loads(request.data).get('task') or {}
-        form = TaskSchedulerForm(get_json_nultiDict(data))
+        body = json.loads(request.data)
+        data = body['task'] if body.get('task') else body
+        form = TaskSchedulerForm(get_json_multiDict(data))
     else:
         form = TaskSchedulerForm(request.body)
     pro = pro_features()
@@ -2313,15 +2319,9 @@ def task_timeout(short_name):
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
     if request.headers.get('content-type') == 'application/json' and request.data:
-        # import pdb; pdb.set_trace()
-        # try:
-        #     request.body = get_json_multidict(request)
-        # except TypeError:
-        #     abort(404)
-        # print(request.body)
-        # form = TaskTimeoutForm(request.body)
-        data = json.loads(request.data).get('task') or {}
-        form = TaskTimeoutForm(get_json_nultiDict(data))
+        body = json.loads(request.data)
+        data = body['task'] if body.get('task') else body
+        form = TaskTimeoutForm(get_json_multiDict(data))
     else:
         form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
@@ -2792,7 +2792,11 @@ def transfer_ownership(short_name):
 @login_required
 def coowners(short_name):
     """Manage coowners of a project."""
-    form = SearchForm(request.form)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        data = json.loads(request.data).get('task') or {}
+        form = SearchForm(get_json_multiDict(data))
+    else:
+        form = SearchForm(request.form)
     project, owner, ps = project_by_shortname(short_name)
     sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
     owners = user_repo.get_users(project.owners_ids)
@@ -2831,8 +2835,10 @@ def coowners(short_name):
                 public_user['is_creator'] = user.id == project.owner_id
                 found.append(public_user)
             response['found'] = found
-
-    return handle_content_type(response)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        return Response(json.dumps(response), 200)
+    else:
+        return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/summary/coowners', methods=['POST'])
@@ -3201,8 +3207,9 @@ def assign_users(short_name):
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
     if request.headers.get('content-type') == 'application/json' and request.data:
-        data = json.loads(request.data).get('project') or {}
-        form = DataAccessForm(get_json_nultiDict(data))
+        body = json.loads(request.data)
+        data = body['project'] if body.get('task') else body
+        form = DataAccessForm(get_json_multiDict(data))
         project_users = data.get('select_users')
     else:
         form = DataAccessForm(request.body)
@@ -3248,8 +3255,9 @@ def process_quiz_mode_request(project):
         return ProjectQuizForm(**current_quiz_config)
 
     if request.headers.get('content-type') == 'application/json' and request.data:
-        data = json.loads(request.data).get('quiz') or {}
-        form = ProjectQuizForm(get_json_nultiDict(data))
+        body = json.loads(request.data)
+        data = body['quiz'] if body.get('task') else body
+        form = ProjectQuizForm(get_json_multiDict(data))
     else:
         form = ProjectQuizForm(request.form)
     if not form.validate():
