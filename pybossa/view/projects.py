@@ -808,7 +808,7 @@ def update(short_name):
     return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/', )
+@blueprint.route('/<short_name>/')
 @login_required
 def details(short_name):
 
@@ -2156,13 +2156,13 @@ def task_n_answers(short_name):
                         pro_features=pro)
         return handle_content_type(response)
     elif request.method == 'POST':
-        if default_form.default_n_answers.data and default_form.validate():
+        if default_form.default_n_answers.data is not None and default_form.validate():
             project.set_default_n_answers(default_form.default_n_answers.data)
             auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
                       'N/A', default_form.default_n_answers.data)
             msg = gettext('Redundancy updated!')
             flash(msg, 'success')
-        if form.n_answers.data and form.validate():
+        if form.n_answers.data is not None and form.validate():
             tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
             if tasks_not_updated:
                 notify_redundancy_updates(tasks_not_updated)
@@ -2318,6 +2318,13 @@ def task_timeout(short_name):
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
     if request.headers.get('content-type') == 'application/json' and request.data:
+        # import pdb; pdb.set_trace()
+        # try:
+        #     request.body = get_json_multidict(request)
+        # except TypeError:
+        #     abort(404)
+        # print(request.body)
+        # form = TaskTimeoutForm(request.body)
         data = json.loads(request.data).get('task') or {}
         form = TaskTimeoutForm(get_json_nultiDict(data))
     else:

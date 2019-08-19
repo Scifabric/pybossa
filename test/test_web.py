@@ -8985,7 +8985,7 @@ class TestWeb(web.Helper):
         user_access = dict(select_users=["L1"])
         with patch.dict(data_access_levels, self.patch_data_access_levels):
             res = self.app.post(u'/project/{}/assign-users'.format(project.short_name),
-                 data=json.dumps(user_access), content_type='application/json', follow_redirects=True)
+                 data=json.dumps(dict(project=user_access)), content_type='application/json', follow_redirects=True)
             data = json.loads(res.data)
             assert data.get('status') == 'success', data
             assert "Users unassigned or no user assigned to project" in data.get('flash'), data
