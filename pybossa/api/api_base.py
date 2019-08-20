@@ -39,7 +39,7 @@ from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-from pybossa.core import project_repo, user_repo, task_repo, result_repo
+from pybossa.core import project_repo, user_repo, task_repo, result_repo, auditlog_repo
 from pybossa.core import announcement_repo, blog_repo, helping_repo, performance_stats_repo
 from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
@@ -76,6 +76,8 @@ repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by',
                              'get': 'get', 'update': 'update',
                              'save': 'save', 'delete': 'delete'},
          'PerformanceStats': {'repo': performance_stats_repo, 'filter': 'filter_by',
+                              'get': 'get'},
+         'Auditlog': {'repo': auditlog_repo, 'filter': 'filter_by',
                               'get': 'get'}
         }
 
@@ -254,13 +256,14 @@ class APIBase(MethodView):
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
                          'participated', 'full', 'stats',
-                         'from_finish_time', 'to_finish_time']:
+                         'from_finish_time', 'to_finish_time', 'created_from', 'created_to']:
                 # Raise an error if the k arg is not a column
                 if self.__class__ == Task and k == 'external_uid':
                     pass
                 else:
                     getattr(self.__class__, k)
                 filters[k] = request.args[k]
+
         repo = repo_info['repo']
         filters = self.api_context(all_arg=request.args.get('all'), **filters)
         query_func = repo_info['filter']
@@ -271,6 +274,13 @@ class APIBase(MethodView):
         fulltextsearch = request.args.get('fulltextsearch')
         desc = request.args.get('desc') if request.args.get('desc') else False
         desc = fuzzyboolean(desc)
+
+        if request.args.get('created_from'):
+            filters['created_from'] = request.args.get('created_from')
+
+        if request.args.get('created_to'):
+            filters['created_to'] = request.args.get('created_to')
+
         if last_id:
             results = getattr(repo, query_func)(limit=limit, last_id=last_id,
                                                 fulltextsearch=fulltextsearch,

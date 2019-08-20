@@ -49,6 +49,7 @@ from global_stats import GlobalStatsAPI
 from task import TaskAPI
 from task_run import TaskRunAPI, preprocess_task_run
 from project import ProjectAPI
+from auditlog import AuditlogAPI
 from announcement import AnnouncementAPI
 from blogpost import BlogpostAPI
 from category import CategoryAPI
@@ -120,6 +121,7 @@ register_api(ProjectAPI, 'api_project', '/project', pk='oid', pk_type='int')
 register_api(ProjectStatsAPI, 'api_projectstats', '/projectstats', pk='oid', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
+register_api(AuditlogAPI, 'api_auditlog', '/auditlog', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(ResultAPI, 'api_result', '/result', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')

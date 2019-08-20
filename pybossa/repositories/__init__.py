@@ -61,7 +61,8 @@ class Repository(object):
         clauses = [_entity_descriptor(model, key) == value
                        for key, value in kwargs.items()
                        if (key != 'info' and key != 'fav_user_ids'
-                            and key != 'created' and key != 'project_id')]
+                            and key != 'created' and key != 'project_id'
+                            and key != 'created_from' and key != 'created_to')]
         queries = []
         headlines = []
         order_by_ranks = []
@@ -76,6 +77,12 @@ class Repository(object):
             like_query = kwargs['created'] + '%'
             clauses.append(_entity_descriptor(model,'created').like(like_query))
 
+        if 'created_from' in kwargs.keys():
+            clauses.append(_entity_descriptor(model,'created') > kwargs['created_from'])
+
+        if 'created_to' in kwargs.keys():
+            clauses.append(_entity_descriptor(model,'created') <= kwargs['created_to'])
+
         if 'project_id' in kwargs.keys():
             tmp = "%s" % kwargs['project_id']
             project_ids = re.findall(r'\d+', tmp)
@@ -83,6 +90,7 @@ class Repository(object):
                 or_clauses.append((_entity_descriptor(model, 'project_id') ==
                                    project_id))
         all_clauses = and_(and_(*clauses), or_(*or_clauses))
+
         return (all_clauses,), queries, headlines, order_by_ranks
 
 
