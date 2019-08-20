@@ -44,7 +44,8 @@ def set_gold_answers(task, gold_answers):
     task.gold_answers = gold_answers
     task.calibration = 1
     task.exported = True
-    task.state = 'ongoing'
+    if task.state == u'completed':
+        task.state = u'ongoing'
 
 def upload_files_priv(task, project_id, data, file_name):
     bucket = bucket_name()
