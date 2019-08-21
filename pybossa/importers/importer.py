@@ -123,12 +123,13 @@ class Importer(object):
         self._importers['youtube'] = BulkTaskYoutubeImport
         self._importer_constructor_params['youtube'] = youtube_params
 
-    def upload_private_data(self, task, project_id, use_file_url=False):
+    def upload_private_data(self, task, project_id):
         private_fields = task.pop('private_fields', None)
         if not private_fields:
             return
         file_name = 'task_private_data.json'
         urls = upload_files_priv(task, project_id, private_fields, file_name)
+        use_file_url = (task.get('state') == 'enrich')        
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
     def create_tasks(self, task_repo, project, **form_data):
@@ -169,8 +170,8 @@ class Importer(object):
         n_answers = project.get_default_n_answers()
         try:
             for task_data in tasks:
-                use_file_url = (task_data.get('state') == 'enrich')
-                self.upload_private_data(task_data, project.id, use_file_url=use_file_url)
+                
+                self.upload_private_data(task_data, project.id)
                 
                 task = Task(project_id=project.id, n_answers=n_answers)
                 [setattr(task, k, v) for k, v in task_data.iteritems()]
