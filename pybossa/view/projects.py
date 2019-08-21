@@ -2123,14 +2123,11 @@ def task_n_answers(short_name):
         body = json.loads(request.data)
         data = body['task'] if body.get('task') else body
         result = get_json_multiDict(data)
-        form = TaskRedundancyForm(result)
-        default_form = TaskDefaultRedundancyForm(result)
     else:
-        form = TaskRedundancyForm(request.body)
-        default_form = TaskDefaultRedundancyForm(request.body)
+        result = request.body
 
-    # form = TaskRedundancyForm(request.body)
-    # default_form = TaskDefaultRedundancyForm(request.body)
+    form = TaskRedundancyForm(result)
+    default_form = TaskDefaultRedundancyForm(result)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2175,21 +2172,21 @@ def task_n_answers(short_name):
                 exist_error = True
         if not exist_error:
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
-        else:
-            flash(gettext('Please correct the errors'), 'error')
-            if not form.n_answers.data:
-                form = TaskRedundancyForm()
-            if not default_form.default_n_answers.data:
-                default_form = TaskDefaultRedundancyForm()
-            response = dict(template='/projects/task_n_answers.html',
-                            title=title,
-                            form=form,
-                            default_task_redundancy=project.get_default_n_answers(),
-                            default_form=default_form,
-                            project=project_sanitized,
-                            owner=owner_sanitized,
-                            pro_features=pro)
-            return handle_content_type(response)
+
+        flash(gettext('Please correct the errors'), 'error')
+        if not form.n_answers.data:
+            form = TaskRedundancyForm()
+        if not default_form.default_n_answers.data:
+            default_form = TaskDefaultRedundancyForm()
+        response = dict(template='/projects/task_n_answers.html',
+                        title=title,
+                        form=form,
+                        default_task_redundancy=project.get_default_n_answers(),
+                        default_form=default_form,
+                        project=project_sanitized,
+                        owner=owner_sanitized,
+                        pro_features=pro)
+        return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
@@ -2201,9 +2198,11 @@ def task_scheduler(short_name):
     if request.headers.get('content-type') == 'application/json' and request.data:
         body = json.loads(request.data)
         data = body['task'] if body.get('task') else body
-        form = TaskSchedulerForm(get_json_multiDict(data))
+        result = get_json_multiDict(data)
     else:
-        form = TaskSchedulerForm(request.body)
+        result = request.body
+
+    form = TaskSchedulerForm(result)
     pro = pro_features()
 
 
