@@ -797,7 +797,7 @@ def update(short_name):
     return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/')
+@blueprint.route('/<short_name>/', )
 @login_required
 def details(short_name):
 
@@ -841,6 +841,77 @@ def details(short_name):
                      "oldest_available_task": oldest_task,
                      "n_available_tasks_for_user": num_available_tasks_for_user,
                      "latest_submitted_task": latest_submission_date
+                     }
+    if current_app.config.get('CKAN_URL'):
+        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
+        template_args['ckan_url'] = current_app.config.get('CKAN_URL')
+        template_args['ckan_pkg_name'] = short_name
+    response = dict(template=template, **template_args)
+    return handle_content_type(response)
+
+
+@blueprint.route('/<short_name>/summary', methods=['GET', 'POST'])
+@login_required
+def summary(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    coowners = project.owners_ids
+    external_config = project.info.get('ext_config') or {}
+    data_access = project.info.get('data_access')
+    scheduler = project.info.get('sched')
+    timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
+    default_task_redundancy = project.get_default_n_answers()
+    answer_fields_config = project.info.get('answer_fields') or {}
+    consensus_config = project.info.get('consensus_config') or {}
+    project_users = project.info.get('project_users') or []
+    quiz_config = project.get_quiz()
+    all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
+    coowners = [cached_users.get_user_by_id(_id) for _id in project.owners_ids]
+    assign_user = [cached_users.get_user_by_id(_id) for id in project_users]
+
+    # all projects require password check
+    redirect_to_password = _check_if_redirect_to_password(project)
+    if redirect_to_password:
+        return redirect_to_password
+
+    ensure_authorized_to('read', project)
+    template = '/projects/summary.html'
+    pro = pro_features()
+
+    title = project_title(project, None)
+    form = TaskTimeoutForm()
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
+                                                                current_user,
+                                                                ps)
+    if request.method == 'POST':
+
+        return render_template(template,
+                               title=title,
+                               form=form,
+                               project=project_sanitized,
+                               owner=owner,
+                               pro_feature=pro_feature)
+
+    template_args = {"project": project_sanitized,
+                     "pro_features": pro,
+                     "overall_progress": ps.overall_progress,
+                     "owner": owner,
+                     "coowners": coowners,
+                     "default_task_redundancy": default_task_redundancy,
+                     "external_config": external_config,
+                     "data_access": data_access,
+                     "scheduler": scheduler,
+                     "timeout": int(timeout),
+                     "answer_fields": answer_fields_config,
+                     "consensus_config": consensus_config,
+                     "assign_user": assign_user,
+                     "quiz_config": quiz_config,
+                     "all_user_quizzes": all_user_quizzes,
+                     "form": form
                      }
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
@@ -3132,6 +3203,7 @@ def answerfieldsconfig(short_name):
     project, owner, ps = project_by_shortname(short_name)
     pro = pro_features()
     ensure_authorized_to('update', project)
+    print(project)
 
     answer_fields_key = 'answer_fields'
     consensus_config_key = 'consensus_config'
