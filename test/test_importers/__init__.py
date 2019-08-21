@@ -235,11 +235,11 @@ class TestImporterPublicMethods(Test):
     ):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
-            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True}]
+            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enrich'}]
 
         importer_factory.return_value = mock_importer
         # enrichments needs to be a truthy value to trigger enrichment.
-        project = ProjectFactory.create(info={'enrichments':True})
+        project = ProjectFactory.create()
         form_data = dict(type='localCSV', csv_filename='fakefile.csv')
 
         with patch.dict(

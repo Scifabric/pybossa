@@ -168,11 +168,11 @@ class Importer(object):
         validator = TaskImportValidator()
         n_answers = project.get_default_n_answers()
         try:
-            task_state, use_file_url = (u'enrich', True) if project.info.get('enrichments') else (u'ongoing', False)
             for task_data in tasks:
+                use_file_url = (task_data.get('state') == 'enrich')
                 self.upload_private_data(task_data, project.id, use_file_url=use_file_url)
                 
-                task = Task(project_id=project.id, n_answers=n_answers, state=task_state)
+                task = Task(project_id=project.id, n_answers=n_answers)
                 [setattr(task, k, v) for k, v in task_data.iteritems()]
 
                 gold_answers = task_data.pop('gold_answers', None)
