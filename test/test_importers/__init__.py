@@ -223,3 +223,62 @@ class TestImporterPublicMethods(Test):
             assert filename == 'task_private_gold_answer.json', filename
             assert task.calibration and task.exported
             assert task.state == 'ongoing', task.state
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_create_tasks_creates_private_regular_and_gold_fields_with_enrichment(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
+            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enrich'}]
+
+        importer_factory.return_value = mock_importer
+        # enrichments needs to be a truthy value to trigger enrichment.
+        project = ProjectFactory.create()
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            result = self.importer.create_tasks(task_repo, project, **form_data)
+            importer_factory.assert_called_with(**form_data)
+            upload_from_string.assert_called()
+            assert result.message == '1 new task was imported successfully ', result
+
+            # validate task created has private fields url, gold_answers url
+            # calibration and exported flag set
+            tasks = task_repo.filter_tasks_by(project_id=project.id)
+            assert len(tasks) == 1, len(tasks)
+            task = tasks[0]
+            private_json_file_url = task.info['private_json__upload_url']
+            private_json_url = private_json_file_url['externalUrl']
+            localhost, fileproxy, encrypted, env, bucket, project_id, hash_key, filename = private_json_url.split('/', 2)[2].split('/')
+            assert localhost == 'localhost', localhost
+            assert fileproxy == 'fileproxy', fileproxy
+            assert encrypted == 'encrypted', encrypted
+            assert env == 'dev', env
+            assert bucket == 'mybucket', bucket
+            assert project_id == '1', project_id
+            assert filename == 'task_private_data.json', filename
+
+            gold_ans__upload_url = task.gold_answers['gold_ans__upload_url']
+            localhost, fileproxy, encrypted, env, bucket, project_id, hash_key, filename = gold_ans__upload_url.split('/', 2)[2].split('/')
+            assert localhost == 'localhost', localhost
+            assert fileproxy == 'fileproxy', fileproxy
+            assert encrypted == 'encrypted', encrypted
+            assert env == 'dev', env
+            assert bucket == 'mybucket', bucket
+            assert project_id == '1', project_id
+            assert filename == 'task_private_gold_answer.json', filename
+            assert task.calibration and task.exported
+            assert task.state == 'enrich', task.state

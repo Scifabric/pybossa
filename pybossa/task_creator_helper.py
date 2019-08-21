@@ -38,13 +38,14 @@ def set_gold_answers(task, gold_answers):
     if not gold_answers:
         return
     if encrypted():
-        url = upload_files_priv(task, task.project_id, gold_answers, TASK_PRIVATE_GOLD_ANSWER_FILE_NAME)
+        url = upload_files_priv(task, task.project_id, gold_answers, TASK_PRIVATE_GOLD_ANSWER_FILE_NAME)['externalUrl']
         gold_answers = dict([(TASK_GOLD_ANSWER_URL_KEY, url)])
 
     task.gold_answers = gold_answers
     task.calibration = 1
     task.exported = True
-    task.state = 'ongoing'
+    if task.state == u'completed':
+        task.state = u'ongoing'
 
 def upload_files_priv(task, project_id, data, file_name):
     bucket = bucket_name()
@@ -57,7 +58,7 @@ def upload_files_priv(task, project_id, data, file_name):
         path='{}/{}'.format(task_hash, file_name)
     )
     file_url = url_for('fileproxy.encrypted_file', **values)
-    upload_json_data(
+    internal_url = upload_json_data(
         bucket=bucket,
         json_data=data,
         upload_path=path,
@@ -65,7 +66,7 @@ def upload_files_priv(task, project_id, data, file_name):
         encryption=True,
         conn_name='S3_TASK_REQUEST'
     )
-    return file_url
+    return { 'externalUrl': file_url, 'internalUrl': internal_url }
 
 def get_gold_answers(task):
     gold_answers = task.gold_answers

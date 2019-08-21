@@ -128,7 +128,9 @@ class Importer(object):
         if not private_fields:
             return
         file_name = 'task_private_data.json'
-        task['info']['private_json__upload_url'] = upload_files_priv(task, project_id, private_fields, file_name)
+        urls = upload_files_priv(task, project_id, private_fields, file_name)
+        use_file_url = (task.get('state') == 'enrich')        
+        task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
@@ -168,7 +170,9 @@ class Importer(object):
         n_answers = project.get_default_n_answers()
         try:
             for task_data in tasks:
+                
                 self.upload_private_data(task_data, project.id)
+                
                 task = Task(project_id=project.id, n_answers=n_answers)
                 [setattr(task, k, v) for k, v in task_data.iteritems()]
 
