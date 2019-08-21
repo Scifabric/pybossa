@@ -222,6 +222,16 @@ def pro_features(owner=None):
                                           owner)
     return pro
 
+def get_json_multiDict(data):
+    result = MultiDict()
+    for field_name, value in six.iteritems(data):
+        if value is None:
+            continue
+        if not isinstance(value, list):
+            value = [value]
+        result.setlist(field_name, value)
+    return result
+
 
 @blueprint.route('/search/', defaults={'page': 1})
 @blueprint.route('/search/page/<int:page>/')
@@ -849,6 +859,121 @@ def details(short_name):
     response = dict(template=template, **template_args)
     return handle_content_type(response)
 
+
+def save_project_configuration(body, project, short_name):
+    # update each field on project summary page (eg: project, ownership, task, answer, quiz)
+    if "project" in body:
+        key = "project"
+        data = body.get(key) or {}
+        project.info['ext_config'] = data.get('config')
+
+        if bool(data_access_levels):
+            # for private gigwork
+            project.info['data_access'] = data.get('data_access')
+            assign_users(short_name)
+
+    elif "task" in body:
+        key = "task"
+        data = body.get(key) or {}
+        result = task_scheduler(short_name)
+        result = task_timeout(short_name)
+        task_n_answers(short_name)
+
+    elif "ownership" in body:
+        key = "ownership"
+        data = body.get(key) or {}
+        ensure_authorized_to('read', project)
+        ensure_authorized_to('update', project)
+        old_list = project.owners_ids or []
+        new_list = [str(x) for x in data.get('coowners') or []]
+        overlap_list = [value for value in old_list if value in new_list]
+        add = [value for value in new_list if value not in overlap_list]
+        delete = [value for value in old_list if value not in overlap_list]
+        for _id in delete:
+            project.owners_ids.remove(_id)
+        for _id in add:
+            project.owners_ids.append(_id)
+    elif "quiz" in body:
+        key = "quiz"
+        data = body.get(key) or {}
+        result = process_quiz_mode_request(project)
+    elif "answer_fields" in body or "consensus_config" in body:
+        key = 'answer_fields_configutation'
+        data = body
+        result = answerfieldsconfig(short_name)
+    else:
+        raise ValueError('Empty data in post request from /summary.')
+
+    project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'project.' + key,
+    'N/A', data)
+
+@blueprint.route('/<short_name>/summary', methods=['GET', 'POST'])
+@login_required
+def summary(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    external_config = project.info.get('ext_config') or {}
+    external_config_form = current_app.config.get('EXTERNAL_CONFIGURATIONS_VUE', {})
+    data_access = project.info.get('data_access') or []
+    users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
+    scheduler = project.info.get('sched')
+    timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
+    default_task_redundancy = project.get_default_n_answers()
+    answer_fields_config = project.info.get('answer_fields') or {}
+    consensus_config = project.info.get('consensus_config') or {}
+    quiz_config = project.get_quiz()
+    all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
+    all_user_quizzes = [dict(row) for row in all_user_quizzes]
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
+    coowners = [cached_users.get_user_by_id(_id) for _id in project.owners_ids]
+    coowners = [{"id": user.id, "fullname": user.fullname} for user in coowners]
+    assign_user = [cached_users.get_user_by_id(_id) for _id in project.get_project_users()]
+    assign_user = [{"id": user.id, "fullname": user.fullname} for user in assign_user]
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    template = '/projects/summary.html'
+    pro = pro_features()
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.data) or {}
+            save_project_configuration(body, project, short_name)
+            msg = gettext("Configuration updated successfully")
+            flash(msg, 'success')
+        except Exception:
+            flash(gettext('An error occurred.'), 'error')
+
+    quiz_config['mode_choices'] = [
+            ('all_questions', 'Present all the quiz questions'),
+            ('short_circuit', 'End as soon as pass/fail status is known') ]
+    sched_config= dict(sched=scheduler,
+                       rand_within_priority=project.info.get('sched_rand_within_priority'),
+                       sched_variants=sched.sched_variants())
+    response = {"template": '/projects/summary.html',
+                "project": project_sanitized,
+                "pro_features": pro,
+                "overall_progress": ps.overall_progress,
+                "external_config": json.dumps(external_config),
+                "external_config_form": json.dumps(external_config_form),
+                "assign_user": json.dumps(assign_user),
+                "users": json.dumps(users),
+                "data_access": json.dumps(data_access),
+                "valid_access_levels": data_access_levels.get('valid_access_levels') or [],
+                "owner": json.dumps(owner_sanitized),
+                "coowners": json.dumps(coowners),
+                "default_task_redundancy": default_task_redundancy,
+                "sched_config": json.dumps(sched_config),
+                "timeout": int(timeout),
+                "answer_fields": json.dumps(answer_fields_config),
+                "consensus_config": json.dumps(consensus_config),
+                "quiz_config": json.dumps(quiz_config),
+                "all_user_quizzes": json.dumps(all_user_quizzes),
+                "csrf": generate_csrf()
+                }
+
+    return handle_content_type(response)
 
 @blueprint.route('/<short_name>/settings')
 @login_required
@@ -1993,10 +2118,16 @@ def task_settings(short_name):
 @login_required
 def task_n_answers(short_name):
     project, owner, ps = project_by_shortname(short_name)
-
     title = project_title(project, gettext('Redundancy'))
-    form = TaskRedundancyForm(request.body)
-    default_form = TaskDefaultRedundancyForm(request.body)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        body = json.loads(request.data)
+        data = body['task'] if body.get('task') else body
+        result = get_json_multiDict(data)
+    else:
+        result = request.body
+
+    form = TaskRedundancyForm(result)
+    default_form = TaskDefaultRedundancyForm(result)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2015,40 +2146,47 @@ def task_n_answers(short_name):
                         pro_features=pro)
         return handle_content_type(response)
     elif request.method == 'POST':
-        if default_form.validate():
-            project.set_default_n_answers(default_form.default_n_answers.data)
-            auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
-                      'N/A', default_form.default_n_answers.data)
-            msg = gettext('Redundancy updated!')
-            flash(msg, 'success')
-        elif form.validate():
-            tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
-            if tasks_not_updated:
-                notify_redundancy_updates(tasks_not_updated)
-                flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
-            else:
+        exist_error = False
+        if default_form.default_n_answers.data is not None:
+            if default_form.validate():
+                project.set_default_n_answers(default_form.default_n_answers.data)
+                auditlogger.log_event(project, current_user, 'update', 'project.default_n_answers',
+                        'N/A', default_form.default_n_answers.data)
                 msg = gettext('Redundancy updated!')
                 flash(msg, 'success')
-            # Log it
-            auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
-                                  'N/A', form.n_answers.data)
-        if default_form.validate() or form.validate():
+            else:
+                exist_error = True
+        if form.n_answers.data is not None:
+            if form.validate():
+                tasks_not_updated = task_repo.update_tasks_redundancy(project, form.n_answers.data)
+                if tasks_not_updated:
+                    notify_redundancy_updates(tasks_not_updated)
+                    flash('Redundancy of some of the tasks could not be updated. An email has been sent with details')
+                else:
+                    msg = gettext('Redundancy updated!')
+                    flash(msg, 'success')
+                # Log it
+                auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
+                                    'N/A', form.n_answers.data)
+            else:
+                exist_error = True
+        if not exist_error:
             return redirect_content_type(url_for('.tasks', short_name=project.short_name))
-        else:
-            flash(gettext('Please correct the errors'), 'error')
-            if not form.n_answers.data:
-                form = TaskRedundancyForm()
-            if not default_form.default_n_answers.data:
-                default_form = TaskDefaultRedundancyForm()
-            response = dict(template='/projects/task_n_answers.html',
-                            title=title,
-                            form=form,
-                            default_task_redundancy=project.get_default_n_answers(),
-                            default_form=default_form,
-                            project=project_sanitized,
-                            owner=owner_sanitized,
-                            pro_features=pro)
-            return handle_content_type(response)
+
+        flash(gettext('Please correct the errors'), 'error')
+        if not form.n_answers.data:
+            form = TaskRedundancyForm()
+        if not default_form.default_n_answers.data:
+            default_form = TaskDefaultRedundancyForm()
+        response = dict(template='/projects/task_n_answers.html',
+                        title=title,
+                        form=form,
+                        default_task_redundancy=project.get_default_n_answers(),
+                        default_form=default_form,
+                        project=project_sanitized,
+                        owner=owner_sanitized,
+                        pro_features=pro)
+        return handle_content_type(response)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
@@ -2057,7 +2195,14 @@ def task_scheduler(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, gettext('Task Scheduler'))
-    form = TaskSchedulerForm(request.body)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        body = json.loads(request.data)
+        data = body['task'] if body.get('task') else body
+        result = get_json_multiDict(data)
+    else:
+        result = request.body
+
+    form = TaskSchedulerForm(result)
     pro = pro_features()
 
 
@@ -2171,7 +2316,12 @@ def task_timeout(short_name):
                                                                     current_user,
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
-    form = TaskTimeoutForm()
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        body = json.loads(request.data)
+        data = body['task'] if body.get('task') else body
+        form = TaskTimeoutForm(get_json_multiDict(data))
+    else:
+        form = TaskTimeoutForm()
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2640,7 +2790,7 @@ def transfer_ownership(short_name):
 @login_required
 def coowners(short_name):
     """Manage coowners of a project."""
-    form = SearchForm(request.form)
+    form = SearchForm(request.body)
     project, owner, ps = project_by_shortname(short_name)
     sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
     owners = user_repo.get_users(project.owners_ids)
@@ -2677,6 +2827,7 @@ def coowners(short_name):
                 public_user = user.to_public_json()
                 public_user['is_coowner'] = user.id in project.owners_ids
                 public_user['is_creator'] = user.id == project.owner_id
+                public_user['id'] = user.id
                 found.append(public_user)
             response['found'] = found
 
@@ -2999,7 +3150,14 @@ def assign_users(short_name):
         flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
-    form = DataAccessForm(request.body)
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        body = json.loads(request.data)
+        data = body['project'] if body.get('project') else body
+        form = DataAccessForm(get_json_multiDict(data))
+        project_users = data.get('select_users')
+    else:
+        form = DataAccessForm(request.body)
+        project_users = request.form.getlist('select_users')
 
     if request.method == 'GET':
         project_sanitized, owner_sanitized = sanitize_project_owner(
@@ -3017,8 +3175,6 @@ def assign_users(short_name):
             pro_features=pro_features()
         )
         return handle_content_type(response)
-
-    project_users = request.form.getlist('select_users')
     project_users = map(int, project_users)
     project.set_project_users(project_users)
     project_repo.save(project)
@@ -3041,8 +3197,12 @@ def process_quiz_mode_request(project):
     if request.method == 'GET':
         return ProjectQuizForm(**current_quiz_config)
 
-    form = ProjectQuizForm(request.form)
-
+    if request.headers.get('content-type') == 'application/json' and request.data:
+        body = json.loads(request.data)
+        data = body['quiz'] if body.get('quiz') else body
+        form = ProjectQuizForm(get_json_multiDict(data))
+    else:
+        form = ProjectQuizForm(request.form)
     if not form.validate():
         flash("Please fix the errors", 'message')
         return form
@@ -3078,8 +3238,8 @@ def process_quiz_mode_request(project):
 @login_required
 @admin_or_subadmin_required
 def quiz_mode(short_name):
-    project, owner, ps = project_by_shortname(short_name)
 
+    project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
 
@@ -3087,6 +3247,7 @@ def quiz_mode(short_name):
     if not isinstance(form, ProjectQuizForm):
         return form
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
+    all_user_quizzes = [dict(row) for row in all_user_quizzes]
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',
@@ -3138,21 +3299,22 @@ def answerfieldsconfig(short_name):
     if request.method == 'POST':
         try:
             body = json.loads(request.data) or {}
-            if answer_fields_key in body:
-                key = answer_fields_key
-            else :
-                key = consensus_config_key
-            data = body.get(key) or {}
-            if answer_fields_key in body:
-                delete_stats_for_changed_fields(
-                    project.id,
-                    data,
-                    project.info.get(answer_fields_key) or {}
-                )
-            project.info[key] = data
+            key = 'answer_fields_configutation'
+            data = body
+            answer_fields = body.get(answer_fields_key) or {}
+            consensus_config = body.get(consensus_config_key) or {}
+            delete_stats_for_changed_fields(
+                project.id,
+                answer_fields,
+                project.info.get(answer_fields_key) or {}
+            )
+            project.info[answer_fields_key] = answer_fields
+            project.info[consensus_config_key] = consensus_config
             project_repo.save(project)
-            auditlogger.log_event(project, current_user, 'update', 'project.' + key,
-              'N/A', project.info[key])
+            auditlogger.log_event(project, current_user, 'update', 'project.' + answer_fields_key,
+              'N/A', project.info[answer_fields_key])
+            auditlogger.log_event(project, current_user, 'update', 'project.' + consensus_config_key,
+              'N/A', project.info[consensus_config_key])
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception:
             flash(gettext('An error occurred.'), 'error')
