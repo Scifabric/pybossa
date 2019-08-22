@@ -2310,6 +2310,7 @@ def task_scheduler(short_name):
         response = dict(template='/projects/task_scheduler.html',
                         title=title,
                         form=form,
+                        sched_variants=sched.sched_variants(),
                         project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro,
@@ -2886,10 +2887,12 @@ def transfer_ownership(short_name):
 @login_required
 def coowners(short_name):
     """Manage coowners of a project."""
+    # import pdb; pdb.set_trace()
     form = SearchForm(request.body)
     project, owner, ps = project_by_shortname(short_name)
-    sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
+    sanitize_project, owner_sanitized = sanitize_project_owner(project, owner, current_user, ps)
     owners = user_repo.get_users(project.owners_ids)
+    coowners = [{"id": user.id, "fullname": user.fullname} for user in owners]
     pub_owners = [user.to_public_json() for user in owners]
     for owner, p_owner in zip(owners, pub_owners):
         if owner.id == project.owner_id:
@@ -2901,31 +2904,50 @@ def coowners(short_name):
         template='/projects/coowners.html',
         project=sanitize_project,
         coowners=pub_owners,
+        coowners_dict=coowners,
+        owner=owner_sanitized,
         title=gettext("Manage Co-owners"),
         form=form,
-        pro_features=pro_features()
+        pro_features=pro_features(),
+        csrf=generate_csrf()
     )
 
-    if request.method == 'POST' and form.user.data:
-        query = form.user.data
+    if request.method == 'POST':
+        # update coowners
+        old_list = project.owners_ids or []
+        old_list = [1, 3]
+        new_list = [int(x) for x in json.loads(request.data).get('coowners') or []]
+        overlap_list = [value for value in old_list if value in new_list]
+        # delete ids that don't exist anymore
+        delete = [value for value in old_list if value not in overlap_list]
+        for _id in delete:
+            project.owners_ids.remove(_id)
+        # add ids that weren't there
+        add = [value for value in new_list if value not in overlap_list]
+        for _id in add:
+            project.owners_ids.append(_id)
+        project_repo.save(project)
 
-        filters = {'enabled': True}
-        users = user_repo.search_by_name(query, **filters)
+        if form.user.data:
+            query = form.user.data
 
-        if not users:
-            markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
-            flash(markup.format(gettext("Ooops!"),
-                                gettext("We didn't find any enabled user matching your query:"),
-                                form.user.data))
-        else:
-            found = []
-            for user in users:
-                public_user = user.to_public_json()
-                public_user['is_coowner'] = user.id in project.owners_ids
-                public_user['is_creator'] = user.id == project.owner_id
-                public_user['id'] = user.id
-                found.append(public_user)
-            response['found'] = found
+            filters = {'enabled': True}
+            users = user_repo.search_by_name(query, **filters)
+
+            if not users:
+                markup = Markup('<strong>{}</strong> {} <strong>{}</strong>')
+                flash(markup.format(gettext("Ooops!"),
+                                    gettext("We didn't find any enabled user matching your query:"),
+                                    form.user.data))
+            else:
+                found = []
+                for user in users:
+                    public_user = user.to_public_json()
+                    public_user['is_coowner'] = user.id in project.owners_ids
+                    public_user['is_creator'] = user.id == project.owner_id
+                    public_user['id'] = user.id
+                    found.append(public_user)
+                response['found'] = found
 
     return handle_content_type(response)
 
@@ -3161,12 +3183,91 @@ def sync_project(short_name):
     return redirect_content_type(
         url_for('.publish', short_name=short_name, published=project.published))
 
+@blueprint.route('/<short_name>/project-config', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def project_config(short_name):
+    ''' external config and data access config'''
+    project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                            owner,
+                                                            current_user,
+                                                            ps)
+    forms = current_app.config.get('EXTERNAL_CONFIGURATIONS_VUE', {})
+
+    def generate_input_forms_and_external_config_dict():
+        '''
+        external configuration form is a tree-like distionary structure
+        extract input fields from form
+        '''
+        '''
+        generate a flat key-value dict of ext_config
+        '''
+        input_forms = []
+        ext_config_field_name = []
+        # print(forms)
+        for _, content in six.iteritems(forms):
+            input_forms.append(content)
+            for field in content.get('fields', []):
+                ext_config_field_name.append(field['name'])
+        ext_config_dict = {name: None for name in ext_config_field_name}
+        update_ext_config_dict(ext_config_dict)
+        return input_forms, ext_config_dict
+
+    def update_ext_config_dict(config):
+        '''
+        update dict with values from project.info.ext_config
+        '''
+        for _, fields in six.iteritems(ext_config):
+            for key, value in six.iteritems(fields):
+                config[key] = value
+
+    def integrate_ext_config(config_dict):
+        '''
+        take flat key-value pair and integrate to new ext_config objects
+        '''
+        new_config = {}
+        for fieldname, content in six.iteritems(forms):
+            cf = {}
+            for field in content.get('fields') or {}:
+                name = field['name']
+                if config_dict[name]:
+                    cf[name] = config_dict[name]
+            if cf:
+                new_config[fieldname] = cf
+        return new_config
+
+    if request.method == 'POST':
+        data = json.loads(request.data)
+        project.info['ext_config'] = integrate_ext_config(data.get('config'))
+        if bool(data_access_levels):
+            # for private gigwork
+            project.info['data_access'] = data.get('data_access')
+
+    ext_config = project.info.get('ext_config', {})
+    input_forms, ext_config_dict = generate_input_forms_and_external_config_dict()
+    data_access = project.info.get('data_access') or []
+
+    response = dict(template='/projects/summary.html',
+                    external_config_form=json.dumps(forms),
+                    external_config=json.dumps(ext_config),
+                    external_config_dict=json.dumps(ext_config_dict),
+                    forms=input_forms,
+                    data_access=json.dumps(data_access),
+                    valid_access_levels=data_access_levels.get('valid_access_levels') or [],
+                    csrf=generate_csrf()
+                    )
+
+    return handle_content_type(response)
 
 @blueprint.route('/<short_name>/ext-config', methods=['GET', 'POST'])
 @login_required
 @admin_or_subadmin_required
 def ext_config(short_name):
     """Manage configuration of external services."""
+    import pdb;pdb.set_trace()
     from pybossa.forms.dynamic_forms import form_builder
 
     project, owner, ps = project_by_shortname(short_name)
@@ -3240,20 +3341,17 @@ def assign_users(short_name):
             url_for('.settings', short_name=project.short_name))
 
     users = cached_users.get_users_for_data_access(access_levels)
+    # users = [{"id": user.id, "fullname": user.fullname} for user in users]
     if not users:
         current_app.logger.info(
             'Project id {} no user matching data access level {} for this project.'.format(project.id, access_levels))
         flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
+    import pdb; pdb.set_trace()
 
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        body = json.loads(request.data)
-        data = body['project'] if body.get('project') else body
-        form = DataAccessForm(get_json_multiDict(data))
-        project_users = data.get('select_users')
-    else:
-        form = DataAccessForm(request.body)
-        project_users = request.form.getlist('select_users')
+    form = DataAccessForm(request.body)
+    project_users = request.body.get('select_users')
+    print(project_users)
 
     if request.method == 'GET':
         project_sanitized, owner_sanitized = sanitize_project_owner(
@@ -3266,8 +3364,7 @@ def assign_users(short_name):
             project=project_sanitized,
             title=gettext("Assign Users to Project"),
             project_users=project_users,
-            users=users,
-            form=form,
+            users=json.dumps(users),
             pro_features=pro_features()
         )
         return handle_content_type(response)
@@ -3293,12 +3390,7 @@ def process_quiz_mode_request(project):
     if request.method == 'GET':
         return ProjectQuizForm(**current_quiz_config)
 
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        body = json.loads(request.data)
-        data = body['quiz'] if body.get('quiz') else body
-        form = ProjectQuizForm(get_json_multiDict(data))
-    else:
-        form = ProjectQuizForm(request.form)
+    form = ProjectQuizForm(request.body)
     if not form.validate():
         flash("Please fix the errors", 'message')
         return form
@@ -3334,7 +3426,6 @@ def process_quiz_mode_request(project):
 @login_required
 @admin_or_subadmin_required
 def quiz_mode(short_name):
-
     project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
@@ -3344,6 +3435,12 @@ def quiz_mode(short_name):
         return form
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
     all_user_quizzes = [dict(row) for row in all_user_quizzes]
+<<<<<<< HEAD
+=======
+    quiz_mode_choices = [
+            ('all_questions', 'Present all the quiz questions'),
+            ('short_circuit', 'End as soon as pass/fail status is known') ]
+>>>>>>> e1ce347d... commit work before checkout another branch
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',
@@ -3351,7 +3448,9 @@ def quiz_mode(short_name):
         project=project_sanitized,
         pro_features=pro_features(),
         form=form,
-        all_user_quizzes=all_user_quizzes
+        all_user_quizzes=all_user_quizzes,
+        quiz_mode_choices=quiz_mode_choices,
+        csrf=generate_csrf()
     ))
 
 
