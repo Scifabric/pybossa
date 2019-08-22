@@ -861,7 +861,6 @@ def details(short_name):
     return handle_content_type(response)
 
 
-<<<<<<< HEAD
 def save_project_configuration(body, project, short_name):
     # update each field on project summary page (eg: project, ownership, task, answer, quiz)
     if "project" in body:
@@ -910,42 +909,27 @@ def save_project_configuration(body, project, short_name):
     auditlogger.log_event(project, current_user, 'update', 'project.' + key,
     'N/A', data)
 
-=======
->>>>>>> cce19e3a... create summary page
 @blueprint.route('/<short_name>/summary', methods=['GET', 'POST'])
 @login_required
 def summary(short_name):
     project, owner, ps = project_by_shortname(short_name)
-<<<<<<< HEAD
     external_config = project.info.get('ext_config') or {}
     external_config_form = current_app.config.get('EXTERNAL_CONFIGURATIONS_VUE', {})
     data_access = project.info.get('data_access') or []
     users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
-=======
-    coowners = project.owners_ids
-    external_config = project.info.get('ext_config') or {}
-    data_access = project.info.get('data_access')
->>>>>>> cce19e3a... create summary page
     scheduler = project.info.get('sched')
     timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
     default_task_redundancy = project.get_default_n_answers()
     answer_fields_config = project.info.get('answer_fields') or {}
     consensus_config = project.info.get('consensus_config') or {}
-<<<<<<< HEAD
     quiz_config = project.get_quiz()
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
     all_user_quizzes = [dict(row) for row in all_user_quizzes]
-=======
-    project_users = project.info.get('project_users') or []
-    quiz_config = project.get_quiz()
-    all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
->>>>>>> cce19e3a... create summary page
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
                                                                 current_user,
                                                                 ps)
     coowners = [cached_users.get_user_by_id(_id) for _id in project.owners_ids]
-<<<<<<< HEAD
     coowners = [{"id": user.id, "fullname": user.fullname} for user in coowners]
     assign_user = [cached_users.get_user_by_id(_id) for _id in project.get_project_users()]
     assign_user = [{"id": user.id, "fullname": user.fullname} for user in assign_user]
@@ -992,59 +976,6 @@ def summary(short_name):
 
     return handle_content_type(response)
 
-=======
-    assign_user = [cached_users.get_user_by_id(_id) for id in project_users]
-
-    # all projects require password check
-    redirect_to_password = _check_if_redirect_to_password(project)
-    if redirect_to_password:
-        return redirect_to_password
-
-    ensure_authorized_to('read', project)
-    template = '/projects/summary.html'
-    pro = pro_features()
-
-    title = project_title(project, None)
-    form = TaskTimeoutForm()
-    project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-    project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
-                                                                current_user,
-                                                                ps)
-    if request.method == 'POST':
-
-        return render_template(template,
-                               title=title,
-                               form=form,
-                               project=project_sanitized,
-                               owner=owner,
-                               pro_feature=pro_feature)
-
-    template_args = {"project": project_sanitized,
-                     "pro_features": pro,
-                     "overall_progress": ps.overall_progress,
-                     "owner": owner,
-                     "coowners": coowners,
-                     "default_task_redundancy": default_task_redundancy,
-                     "external_config": external_config,
-                     "data_access": data_access,
-                     "scheduler": scheduler,
-                     "timeout": int(timeout),
-                     "answer_fields": answer_fields_config,
-                     "consensus_config": consensus_config,
-                     "assign_user": assign_user,
-                     "quiz_config": quiz_config,
-                     "all_user_quizzes": all_user_quizzes,
-                     "form": form
-                     }
-    if current_app.config.get('CKAN_URL'):
-        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
-        template_args['ckan_url'] = current_app.config.get('CKAN_URL')
-        template_args['ckan_pkg_name'] = short_name
-    response = dict(template=template, **template_args)
-    return handle_content_type(response)
-
-
->>>>>>> cce19e3a... create summary page
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
@@ -2215,15 +2146,9 @@ def task_settings(short_name):
 def task_n_answers(short_name):
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, gettext('Redundancy'))
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        body = json.loads(request.data)
-        data = body['task'] if body.get('task') else body
-        result = get_json_multiDict(data)
-    else:
-        result = request.body
 
-    form = TaskRedundancyForm(result)
-    default_form = TaskDefaultRedundancyForm(result)
+    form = TaskRedundancyForm(request.body)
+    default_form = TaskDefaultRedundancyForm(request.body)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2425,12 +2350,12 @@ def task_timeout(short_name):
     if request.method == 'GET':
         timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
         form.minutes.data, form.seconds.data = divmod(timeout, 60)
-        return render_template('/projects/task_timeout.html',
+        return handle_content_type(dict(template='/projects/task_timeout.html',
                                title=title,
                                form=form,
                                project=project_sanitized,
-                               owner=owner,
-                               pro_features=pro)
+                               owner=owner_sanitized,
+                               pro_features=pro))
     if form.validate() and form.in_range():
         project = project_repo.get_by_shortname(short_name=project.short_name)
         if project.info.get('timeout'):
@@ -3435,12 +3360,9 @@ def quiz_mode(short_name):
         return form
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
     all_user_quizzes = [dict(row) for row in all_user_quizzes]
-<<<<<<< HEAD
-=======
     quiz_mode_choices = [
             ('all_questions', 'Present all the quiz questions'),
             ('short_circuit', 'End as soon as pass/fail status is known') ]
->>>>>>> e1ce347d... commit work before checkout another branch
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
     return handle_content_type(dict(
         template='/projects/quiz_mode.html',
