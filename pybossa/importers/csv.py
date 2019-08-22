@@ -89,7 +89,7 @@ class BulkTaskCSVImport(BulkTaskImport):
                         task_data[header] = json.loads(cell.lower())
                     else:
                         task_data[header] = {}
-                else:
+                elif cell:
                     task_data[header] = cell
                 continue
 
