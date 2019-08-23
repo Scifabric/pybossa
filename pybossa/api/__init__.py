@@ -438,34 +438,41 @@ def fetch_lock(task_id):
 
 @jsonpify
 @csrf.exempt
-@blueprint.route('/project/<int:project_id>/taskgold', methods=['POST'])
+@blueprint.route('/project/<int:project_id>/taskgold', methods=['GET', 'POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def task_gold(project_id=None):
     """Make task gold"""
-    if not current_user.is_authenticated:
-        return abort(401)
+    try:
+        if not current_user.is_authenticated:
+            return abort(401)
 
-    project = project_repo.get(project_id)
+        project = project_repo.get(project_id)
 
-    # Allow project owner, sub-admin co-owners, and admins to update Gold tasks.
-    is_gold_access = (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
-    if project is None or not is_gold_access:
-        raise Forbidden
+        # Allow project owner, sub-admin co-owners, and admins to update Gold tasks.
+        is_gold_access = (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
+        if project is None or not is_gold_access:
+            raise Forbidden
 
-    task_data = request.json
-    task_id = task_data['task_id']
-    task = task_repo.get_task(task_id)
-    if task.project_id != project_id:
-        raise Forbidden
+        if request.method == 'POST':
+            task_data = request.json
+            task_id = task_data['task_id']
+            task = task_repo.get_task(task_id)
+            if task.project_id != project_id:
+                raise Forbidden
 
-    preprocess_task_run(project_id, task_id, task_data)
+            preprocess_task_run(project_id, task_id, task_data)
 
-    info = task_data['info']
-    set_gold_answers(task, info)
+            info = task_data['info']
+            set_gold_answers(task, info)
+            task_repo.update(task)
 
-    task_repo.update(task)
-
-    return Response(json.dumps({'success': True}), 200, mimetype="application/json")
+            response_body = json.dumps({'success': True})
+        else:
+            task = sched.select_task_for_gold_mode(project, current_user.id)
+            response_body = json.dumps(task.dictize())
+        return Response(response_body, 200, mimetype="application/json")
+    except Exception as e:
+        return error.format_exception(e, target='taskgold', action=request.method)
 
 
 @jsonpify

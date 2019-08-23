@@ -86,6 +86,7 @@ from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_co
 from pybossa.cache.helpers import n_available_tasks_for_user, latest_submission_task_date
 from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
+from pybossa.sched import select_task_for_gold_mode
 from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
@@ -1181,6 +1182,23 @@ def password_required(short_name):
                             pro_features=pro_features())
 
 
+@blueprint.route('/<short_name>/make-random-gold')
+@login_required
+def make_random_task_gold(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    ensure_authorized_to('update', project)
+    task = select_task_for_gold_mode(project, current_user.id)
+    return redirect_content_type(
+        url_for(
+            '.task_presenter',
+            short_name=short_name,
+            task_id=task.id,
+            mode='gold',
+            bulk=True
+        )
+    )
+
+
 @blueprint.route('/<short_name>/task/<int:task_id>')
 @login_required
 def task_presenter(short_name, task_id):
@@ -1225,7 +1243,13 @@ def task_presenter(short_name, task_id):
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
                                                                 ps)
-    template_args = {"project": project_sanitized, "title": title, "owner": owner_sanitized, "mode": mode}
+    template_args = {
+        "project": project_sanitized,
+        "title": title,
+        "owner": owner_sanitized,
+        "mode": mode,
+        "bulk": request.args.get('bulk', False)
+    }
 
     def respond(tmpl):
         response = dict(template = tmpl, **template_args)
