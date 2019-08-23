@@ -193,8 +193,10 @@ class BulkTaskCSVImport(BulkTaskImport):
                 if not enrichments:
                     raise BulkImportException('No enrichment settings configured. Task state of "enrich" not allowed.')
                 enrichment_fields_in_import = [
-                    enrichment.get('out_field_name') for enrichment in enrichments
-                    if enrichment.get('out_field_name') in self._headers
+                    out_field_name
+                    for enrichment in enrichments
+                    for out_field_name in [enrichment.get('out_field_name')]
+                    if out_field_name in task_data['info']
                 ]
                 if enrichment_fields_in_import:
                     raise BulkImportException('Enrichment output field is in import: {}'.format(', '.join(enrichment_fields_in_import)))
