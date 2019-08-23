@@ -73,10 +73,9 @@ class BulkTaskCSVImport(BulkTaskImport):
         'expiration'
     ])
 
-    def __init__(self, csv_url, last_import_meta=None, project=None):
+    def __init__(self, csv_url, last_import_meta=None):
         self.url = csv_url
         self.last_import_meta = last_import_meta
-        self.project = project
         self._fields = None
 
     def tasks(self):

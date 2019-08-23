@@ -193,7 +193,7 @@ class Importer(object):
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
         n = 0
-        importer = self._create_importer_for(project=project, **form_data)
+        importer = self._create_importer_for(**form_data)
         tasks = importer.tasks()
         msg = ''
         validator = TaskImportValidator(project)
