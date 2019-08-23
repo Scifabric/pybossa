@@ -1071,7 +1071,10 @@ def import_task(short_name):
 
 def _import_tasks(project, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
-    if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
+    header_report = importer.validate_headers(project, **form_data):
+    if header_report:
+        flash(header_report.message)
+    elif number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
         report = importer.create_tasks(task_repo, project, **form_data)
         flash(report.message)
         if report.total > 0:

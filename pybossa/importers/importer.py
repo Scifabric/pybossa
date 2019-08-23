@@ -132,6 +132,43 @@ class Importer(object):
         use_file_url = (task.get('state') == 'enrich')        
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
+    def validate_headers(self, project, **form_data):
+        validate_against_task_presenter = form_data.pop('validate_tp', True)
+        importer = self._create_importer_for(**form_data)
+        import_headers = importer.headers()
+
+        def get_error_message():
+            if not import_headers:
+                return
+
+            if not project:
+                return gettext('Could not load project info')
+
+            if validate_against_task_presenter:
+                task_presenter_fields = project.get_presenter_headers()
+                # Check that all task fields used in task presenter are also in import.
+                # We need to map the import header name to actual field names for this to work right.
+                # We have suffixes on headers that aren't part of field name, such as:
+                # _priv, _json, _null, _number, _bool.
+                fields_not_in_import = [field for field in task_presenter_fields
+                                    if field not in import_headers]
+
+                if not fields_not_in_import:
+                    return
+
+                msg = 'Task presenter code uses fields not in import. '
+                additional_msg = 'Fields missing from import: {}'.format((', '.join(fields_not_in_import))[:80])
+                current_app.logger.error(msg)
+                current_app.logger.error(', '.join(fields_not_in_import))
+                return msg + additional_msg
+
+        msg = get_error_message()
+
+        if msg:
+            # Failed validation
+            current_app.logger.error(msg)
+            return ImportReport(message=msg, metadata=None, total=0)
+
     def create_tasks(self, task_repo, project, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
@@ -140,32 +177,9 @@ class Importer(object):
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
         n = 0
-        importer = self._create_importer_for(**form_data)
+        importer = self._create_importer_for(**form_data, project=project)
         tasks = importer.tasks()
-        import_headers = importer.headers()
-        mismatch_headers = []
-
         msg = ''
-        if import_headers:
-            if not project:
-                msg = gettext('Could not load project info')
-            else:
-                task_presenter_headers = project.get_presenter_headers()
-                mismatch_headers = [header for header in task_presenter_headers
-                                    if header not in import_headers]
-
-            if mismatch_headers:
-                msg = 'Imported columns do not match task presenter code. '
-                additional_msg = 'Mismatched columns: {}'.format((', '.join(mismatch_headers))[:80])
-                current_app.logger.error(msg)
-                current_app.logger.error(', '.join(mismatch_headers))
-                msg += additional_msg
-
-            if msg:
-                # Failed validation
-                current_app.logger.error(msg)
-                return ImportReport(message=msg, metadata=None, total=0)
-
         validator = TaskImportValidator()
         n_answers = project.get_default_n_answers()
         try:

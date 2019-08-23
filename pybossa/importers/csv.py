@@ -63,16 +63,48 @@ class BulkTaskCSVImport(BulkTaskImport):
     """Class to import CSV tasks in bulk."""
 
     importer_id = "csv"
+    reserved_fields = set([
+        'state',
+        'quorum',
+        'calibration',
+        'priority_0',
+        'n_answers',
+        'user_pref',
+        'expiration'
+    ])
 
-    def __init__(self, csv_url, last_import_meta=None):
+    def __init__(self, csv_url, last_import_meta=None, project=None):
         self.url = csv_url
         self.last_import_meta = last_import_meta
+        self.project = project
 
     def tasks(self):
         """Get tasks from a given URL."""
         dataurl = self._get_data_url()
         r = requests.get(dataurl)
         return self._get_csv_data_from_request(r)
+
+    def headers(self, csvreader=None):
+        if self._headers is not None:
+            return self._headers
+        if not csvreader:
+            dataurl = self._get_data_url()
+            r = requests.get(dataurl)
+            csvreader = self._get_csv_reader_from_request(r)
+        self._headers = []
+        for row in csvreader:
+            self._headers = row
+            break
+        self._check_no_duplicated_headers()
+        self._check_no_empty_headers()
+        self._check_required_headers()
+
+        reserved_field_headers = set(self._headers) & reserved_fields
+        self.reserved_field_header_index = [
+            self._headers.index(field) for field in reserved_field_headers
+        ]
+
+        return self._headers
 
     def _get_data_url(self):
         """Get data from URL."""
@@ -83,7 +115,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         private_fields = dict()
         for idx, cell in enumerate(row):
             header = self._headers[idx]
-            if idx in self.field_header_index:
+            if idx in self.reserved_field_header_index:
                 if header == 'user_pref':
                     if cell:
                         task_data[header] = json.loads(cell.lower())
@@ -128,34 +160,37 @@ class BulkTaskCSVImport(BulkTaskImport):
 
     def _import_csv_tasks(self, csvreader):
         """Import CSV tasks."""
-        fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                      'n_answers', 'user_pref', 'expiration'])
-        self._headers = []
-        self.field_header_index = []
+        csviterator = iter(csvreader)
+        self.headers(csvreader=csviterator)
         row_number = 0
-        for row in csvreader:
-            if not self._headers:
-                self._headers = row
-                self._check_no_duplicated_headers()
-                self._check_no_empty_headers()
-                self._check_required_headers()
-                field_headers = set(self._headers) & fields
-                for field in field_headers:
-                    self.field_header_index.append(self._headers.index(field))
-            else:
-                row_number += 1
-                self._check_valid_row_length(row, row_number)
+        for row in csviterator:
+            row_number += 1
+            self._check_valid_row_length(row, row_number)
 
-                # check required fields
-                fvals = {self._headers[idx]: cell for idx, cell in enumerate(row)}
-                invalid_fields = validate_required_fields(fvals)
-                if invalid_fields:
-                    msg = gettext('The file you uploaded has incorrect/missing '
-                                  'values for required header(s): {0}'
-                                  .format(','.join(invalid_fields)))
-                    raise BulkImportException(msg)
-                task_data = self._convert_row_to_task_data(row, row_number)
-                yield task_data
+            # check required fields
+            fvals = {self._headers[idx]: cell for idx, cell in enumerate(row)}
+            invalid_fields = validate_required_fields(fvals)
+            if invalid_fields:
+                msg = gettext('The file you uploaded has incorrect/missing '
+                                'values for required header(s): {0}'
+                                .format(','.join(invalid_fields)))
+                raise BulkImportException(msg)
+            task_data = self._convert_row_to_task_data(row, row_number)
+            task_state = task_data.get('state')
+            if task_state not in ['enrich', 'ongoing', None]:
+                raise BulkImportException('Invalid task state: {}'.format(task_state))
+
+            if self.project and task_state == 'enrich':
+                enrichments = project.info.get('enrichments')
+                if not enrichments:
+                    raise BulkImportException('No enrichment settings configured. Task state of "enrich" not allowed.')
+                enrichment_fields_in_import = [
+                    enrichment.get('out_field_name') for enrichment in enrichments
+                    if enrichment.get('out_field_name') in self._headers
+                ]
+                if enrichment_fields_in_import:
+                    raise BulkImportException('Enrichment output field is in import: {}'.format(', '.join(enrichment_fields_in_import)))
+            yield task_data
 
     def _check_no_duplicated_headers(self):
         if len(self._headers) != len(set(self._headers)):
@@ -185,7 +220,7 @@ class BulkTaskCSVImport(BulkTaskImport):
                           'required header(s): {0}'.format(','.join(missing_headers)))
             raise BulkImportException(msg)
 
-    def _get_csv_data_from_request(self, r):
+    def _get_csv_reader_from_request(self, r):
         """Get CSV data from a request."""
         if r.status_code == 403:
             msg = ("Oops! It looks like you don't have permission to access"
@@ -198,8 +233,10 @@ class BulkTaskCSVImport(BulkTaskImport):
 
         r.encoding = 'utf-8'
         csvcontent = StringIO(r.text)
-        csvreader = unicode_csv_reader(csvcontent)
-        return self._import_csv_tasks(csvreader)
+        return unicode_csv_reader(csvcontent)
+
+    def _get_csv_data_from_request(self, r):
+        return self._import_csv_tasks(self._get_csv_reader_from_request(r))
 
 class BulkTaskGDImport(BulkTaskCSVImport):
 
