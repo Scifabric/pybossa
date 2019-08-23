@@ -77,6 +77,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         self.url = csv_url
         self.last_import_meta = last_import_meta
         self.project = project
+        self._fields = None
 
     def tasks(self):
         """Get tasks from a given URL."""
@@ -105,6 +106,28 @@ class BulkTaskCSVImport(BulkTaskImport):
         ]
 
         return self._headers
+
+    def fields(self):
+        def get_fields():
+            for idx, header in enumerate(self.headers()):
+                if idx in self.reserved_field_header_index:
+                    yield header
+                gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
+                if gold_match:
+                    continue
+                priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
+                if priv_match:
+                    yield priv_match.group('field')
+                if header == 'data_access' and data_access_levels:
+                    yield header
+                pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
+                if pub_match: # This must match since there are no other options left.
+                    yield pub_match.group('field')
+
+        if self._fields is None:      
+            self._fields = list(get_fields())
+
+        return self._fields
 
     def _get_data_url(self):
         """Get data from URL."""

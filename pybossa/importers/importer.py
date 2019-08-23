@@ -135,32 +135,29 @@ class Importer(object):
     def validate_headers(self, project, **form_data):
         validate_against_task_presenter = form_data.pop('validate_tp', True)
         importer = self._create_importer_for(**form_data)
-        import_headers = importer.headers()
+        import_fields = importer.fields()
 
         def get_error_message():
-            if not import_headers:
+            if not validate_against_task_presenter:
                 return
-
+            if not import_fields:
+                return
             if not project:
                 return gettext('Could not load project info')
 
-            if validate_against_task_presenter:
-                task_presenter_fields = project.get_presenter_headers()
-                # Check that all task fields used in task presenter are also in import.
-                # We need to map the import header name to actual field names for this to work right.
-                # We have suffixes on headers that aren't part of field name, such as:
-                # _priv, _json, _null, _number, _bool.
-                fields_not_in_import = [field for field in task_presenter_fields
-                                    if field not in import_headers]
+            task_presenter_fields = project.get_presenter_headers()
+            # Check that all task fields used in task presenter are also in import.
+            fields_not_in_import = [field for field in task_presenter_fields
+                                if field not in import_fields]
 
-                if not fields_not_in_import:
-                    return
+            if not fields_not_in_import:
+                return
 
-                msg = 'Task presenter code uses fields not in import. '
-                additional_msg = 'Fields missing from import: {}'.format((', '.join(fields_not_in_import))[:80])
-                current_app.logger.error(msg)
-                current_app.logger.error(', '.join(fields_not_in_import))
-                return msg + additional_msg
+            msg = 'Task presenter code uses fields not in import. '
+            additional_msg = 'Fields missing from import: {}'.format((', '.join(fields_not_in_import))[:80])
+            current_app.logger.error(msg)
+            current_app.logger.error(', '.join(fields_not_in_import))
+            return msg + additional_msg
 
         msg = get_error_message()
 
