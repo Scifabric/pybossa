@@ -207,22 +207,23 @@ class BulkTaskCSVImport(BulkTaskImport):
                                 .format(','.join(invalid_fields)))
                 raise BulkImportException(msg)
             task_data = self._convert_row_to_task_data(row, row_number)
-            task_state = task_data.get('state')
-            if task_state not in ['enrich', 'ongoing', None]:
-                raise BulkImportException('Invalid task state: {}'.format(task_state))
+            # task_state = task_data.get('state')
+            # print 'task_state', task_state
+            # if task_state not in ['enrich', 'ongoing', None]:
+            #     raise BulkImportException('Invalid task state: {}'.format(task_state))
 
-            if self.project and task_state == 'enrich':
-                enrichments = project.info.get('enrichments')
-                if not enrichments:
-                    raise BulkImportException('No enrichment settings configured. Task state of "enrich" not allowed.')
-                enrichment_fields_in_import = [
-                    out_field_name
-                    for enrichment in enrichments
-                    for out_field_name in [enrichment.get('out_field_name')]
-                    if out_field_name in task_data['info']
-                ]
-                if enrichment_fields_in_import:
-                    raise BulkImportException('Enrichment output field is in import: {}'.format(', '.join(enrichment_fields_in_import)))
+            # if self.project and task_state == 'enrich':
+            #     enrichments = project.info.get('enrichments')
+            #     if not enrichments:
+            #         raise BulkImportException('No enrichment settings configured. Task state of "enrich" not allowed.')
+            #     enrichment_fields_in_import = [
+            #         out_field_name
+            #         for enrichment in enrichments
+            #         for out_field_name in [enrichment.get('out_field_name')]
+            #         if out_field_name in task_data['info']
+            #     ]
+            #     if enrichment_fields_in_import:
+            #         raise BulkImportException('Enrichment output field is in import: {}'.format(', '.join(enrichment_fields_in_import)))
             yield task_data
 
     def _check_no_duplicated_headers(self):

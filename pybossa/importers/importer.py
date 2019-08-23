@@ -41,14 +41,14 @@ from flask import url_for
 from pybossa.task_creator_helper import set_gold_answers, upload_files_priv
 
 
-def validate_s3_bucket(task):
+def validate_s3_bucket(task, *args):
     valid = valid_or_no_s3_bucket(task.info)
     if not valid:
         current_app.logger.error('Invalid S3 bucket. project id: {}, task info: {}'.format(task.project_id, task.info))
     return valid
 
 
-def validate_priority(task):
+def validate_priority(task, *args):
     if task.priority_0 is None:
         return True
     try:
@@ -58,28 +58,47 @@ def validate_priority(task):
         return False
 
 
-def validate_n_answers(task):
+def validate_n_answers(task, *args):
     try:
         int(task.n_answers)
         return True
     except Exception:
         return False
 
+def validate_state(task, *args):
+    return task.state in ['enrich', 'ongoing', None]
+
+def validate_can_enrich(task, project, *args):
+    return task.state != 'enrich' or project.info.get('enrichments')
+
+def validate_no_enrichment_output_field(task, project, *args):
+    enrichments = project.info.get('enrichments', [])    
+    enrichment_fields_in_import = [
+        out_field_name
+        for enrichment in enrichments
+        for out_field_name in [enrichment.get('out_field_name')]
+        if out_field_name in task.info
+    ]
+    return not enrichment_fields_in_import
 
 class TaskImportValidator(object):
 
     validations = {
         'invalid priority': validate_priority,
         'invalid s3 bucket': validate_s3_bucket,
-        'invalid n_answers': validate_n_answers
+        'invalid n_answers': validate_n_answers,
+        'invalid state': validate_state,
+        'no enrichment config': validate_can_enrich,
+        'ernichment output in import': validate_no_enrichment_output_field
     }
 
-    def __init__(self):
+    def __init__(self, project):
         self.errors = defaultdict(int)
+        self._project = project
 
     def validate(self, task):
         for error, validator in self.validations.items():
-            if not validator(task):
+            if not validator(task, self._project):
                 self.errors[error] += 1
                 return False
         return True
@@ -177,7 +196,7 @@ class Importer(object):
         importer = self._create_importer_for(project=project, **form_data)
         tasks = importer.tasks()
         msg = ''
-        validator = TaskImportValidator()
+        validator = TaskImportValidator(project)
         n_answers = project.get_default_n_answers()
         try:
             for task_data in tasks:
