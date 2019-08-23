@@ -184,7 +184,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         private_fields = dict()
 
         for idx, cell in enumerate(row):
-            self.process_cell(idx, cell, task_data, private_fields)
+            self._process_cell(idx, cell, task_data, private_fields)
         if private_fields:
             task_data['private_fields'] = private_fields
         return task_data
