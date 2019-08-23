@@ -469,7 +469,9 @@ def task_gold(project_id=None):
             response_body = json.dumps({'success': True})
         else:
             task = sched.select_task_for_gold_mode(project, current_user.id)
-            response_body = json.dumps(task.dictize())
+            if task:
+                task = task.dictize()
+            response_body = json.dumps(task)
         return Response(response_body, 200, mimetype="application/json")
     except Exception as e:
         return error.format_exception(e, target='taskgold', action=request.method)

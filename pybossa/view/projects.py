@@ -1188,6 +1188,9 @@ def make_random_task_gold(short_name):
     project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('update', project)
     task = select_task_for_gold_mode(project, current_user.id)
+    if not task:
+        flash(gettext('There Are No Tasks Avaiable!'), 'error')
+        return redirect_content_type(url_for('.details', short_name=short_name))
     return redirect_content_type(
         url_for(
             '.task_presenter',

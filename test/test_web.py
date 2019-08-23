@@ -9008,6 +9008,38 @@ class TestWeb(web.Helper):
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert b'Use a valid email account' in str(res.data), res.data
 
+    @with_context
+    def test_make_random_gold(self):
+        project = ProjectFactory.create()
+        user = project.owner
+        # with no tasks available
+        url = u'/project/{}/make-random-gold?api_key={}'.format(project.short_name, user.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data['flash'] == 'There Are No Tasks Avaiable!'
+
+        # with tasks available
+        task = TaskFactory.create(project=project)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert u'/task/1?' in data['next'], data['next']
+
+    @with_context
+    def test_get_random_task_for_gold_mode(self):
+        project = ProjectFactory.create()
+        user = project.owner
+        # with no tasks available
+        url = u'/api/project/{}/taskgold?api_key={}'.format(project.id, user.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert not data
+
+        # with tasks available
+        task = TaskFactory.create(project=project)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert data['id'] == task.id
+
 
 class TestWebUserMetadataUpdate(web.Helper):
 
@@ -9554,4 +9586,3 @@ class TestServiceRequest(web.Helper):
                             follow_redirects=False,
                             )
         assert res.data == mock_response.content, res.data
-
