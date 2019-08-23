@@ -100,7 +100,7 @@ class BulkTaskCSVImport(BulkTaskImport):
         self._check_no_empty_headers()
         self._check_required_headers()
 
-        reserved_field_headers = set(self._headers) & reserved_fields
+        reserved_field_headers = set(self._headers) & self.reserved_fields
         self.reserved_field_header_index = [
             self._headers.index(field) for field in reserved_field_headers
         ]
