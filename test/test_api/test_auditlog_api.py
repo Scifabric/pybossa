@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PYBOSSA.
 #
-# Copyright (C) 2015 Scifabric LTD.
+# Copyright (C) 2019 Scifabric LTD.
 #
 # PYBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -67,19 +67,19 @@ class TestAuditlogAPI(TestAPI):
 
         res = self.app.get('/api/auditlog?project_id=1&created_to=2020-01-11T15:24:42.263980&attribute=task_guidelines&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
-        assert len(data) == 6, len(data)
+        assert len(data) == 6, data
         assert data[0]['project_id'] == 1, data
         assert data[0]['attribute'] == 'task_guidelines', data
 
         res = self.app.get('/api/auditlog?project_id=1&created_to=2020-01-11T15:24:42.263980&attribute=task_presenter&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
-        assert len(data) == 1, len(data)
+        assert len(data) == 1, data
         assert data[0]['project_id'] == 1, data
         assert data[0]['attribute'] == 'task_presenter', data
 
         res = self.app.get('/api/auditlog?project_id=1&created_to=2019-01-11T15:24:42.263980&attribute=task_presenter&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
-        assert len(data) == 1, len(data)
+        assert len(data) == 1, data
 
 
     @with_context
@@ -90,13 +90,13 @@ class TestAuditlogAPI(TestAPI):
 
         res = self.app.get('/api/auditlog?project_id=1&created_from=2020-01-10T15:24:42.263980&attribute=task_guidelines&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
-        assert len(data) == 3, len(data)
+        assert len(data) == 3, data
         assert data[0]['project_id'] == 1, data
         assert data[0]['attribute'] == 'task_guidelines', data
 
         res = self.app.get('/api/auditlog?project_id=1&created_from=2019-01-10T15:24:42.263980&attribute=task_presenter&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
-        assert len(data) == 1, len(data)
+        assert len(data) == 1, data
         assert data[0]['project_id'] == 1, data
         assert data[0]['attribute'] == 'task_presenter', data
 
@@ -109,10 +109,9 @@ class TestAuditlogAPI(TestAPI):
         """Test API query for auditlog works"""
         self.create_auditlogs()
         user = UserFactory.create(admin=True)
-
         res = self.app.get('/api/auditlog?project_id=1&all=1&api_key=' + user.api_key)
         data = json.loads(res.data)
-        assert len(data) == 7, len(data)
+        assert len(data) == 7, data
         assert data[0]['project_id'] == 1, data
 
     def test_post_not_allowed(self):
