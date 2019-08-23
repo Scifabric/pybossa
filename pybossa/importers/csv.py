@@ -110,50 +110,58 @@ class BulkTaskCSVImport(BulkTaskImport):
         """Get data from URL."""
         return self.url
 
-    def _convert_row_to_task_data(self, row, row_number):
-        task_data = {"info": {}}
-        private_fields = dict()
-        for idx, cell in enumerate(row):
-            header = self._headers[idx]
-            if idx in self.reserved_field_header_index:
-                if header == 'user_pref':
-                    if cell:
-                        task_data[header] = json.loads(cell.lower())
-                    else:
-                        task_data[header] = {}
-                elif cell:
-                    task_data[header] = cell
-                continue
-
-            gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
-            if gold_match:
+    def _process_cell(self, idx, cell, task_data, private_fields):
+        header = self._headers[idx]
+        if idx in self.reserved_field_header_index:
+            if header == 'user_pref':
                 if cell:
-                    data_type = gold_match.group('type')
-                    field_name = gold_match.group('field')
-                    task_data.setdefault('gold_answers', {})[field_name] = get_value(header, cell, data_type)
-                continue
+                    task_data[header] = json.loads(cell.lower())
+                else:
+                    task_data[header] = {}
+            elif cell:
+                task_data[header] = cell
+            return
 
-            priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
-            if priv_match:
-                if cell:
-                    data_type = priv_match.group('type')
-                    field_name = priv_match.group('field')
-                    if data_access_levels: # This is how we check for private GIGwork.
-                        private_fields[field_name] = get_value(header, cell, data_type)
-                    else:
-                        task_data["info"][field_name] = get_value(header, cell, data_type)
-                continue
+        gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
+        if gold_match:
+            if cell:
+                data_type = gold_match.group('type')
+                field_name = gold_match.group('field')
+                task_data.setdefault('gold_answers', {})[field_name] = get_value(header, cell, data_type)
+            return
 
-            if header == 'data_access' and data_access_levels:
-                if cell:
-                    task_data["info"][header] = json.loads(cell.upper())
-                continue
+        priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
+        if priv_match:
+            if cell:
+                data_type = priv_match.group('type')
+                field_name = priv_match.group('field')
+                if data_access_levels: # This is how we check for private GIGwork.
+                    private_fields[field_name] = get_value(header, cell, data_type)
+                else:
+                    task_data["info"][field_name] = get_value(header, cell, data_type)
+            return
 
-            pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
-            if pub_match: # This must match since there are no other options left.
+        if header == 'data_access' and data_access_levels:
+            if cell:
+                task_data["info"][header] = json.loads(cell.upper())
+            return
+
+        pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
+        if pub_match: # This must match since there are no other options left.
+            if cell:
                 data_type = pub_match.group('type')
                 field_name = pub_match.group('field')
                 task_data["info"][field_name] = get_value(header, cell, data_type)
+            return
+
+        raise BulkImportException('{} is not recognized as a valid import header'.format(header))
+
+    def _convert_row_to_task_data(self, row, row_number):
+        task_data = {"info": {}}
+        private_fields = dict()
+
+        for idx, cell in enumerate(row):
+            self.process_cell(idx, cell, task_data, private_fields)
         if private_fields:
             task_data['private_fields'] = private_fields
         return task_data
