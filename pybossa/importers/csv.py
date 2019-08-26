@@ -61,12 +61,21 @@ def get_value(header, value_string, data_type):
 class ReservedFieldProcessor(object):
     def __init__(self, header):
         self.header = header
-    
+
+    reserved_fields = set([
+        'state',
+        'quorum',
+        'calibration',
+        'priority_0',
+        'n_answers',
+        'user_pref',
+        'expiration'
+    ])
     is_input = False
 
     @staticmethod
-    def can_process(header, index, reserved_field_header_indexes):
-        if index in reserved_field_header_indexes:
+    def can_process(header):
+        if header in ReservedFieldProcessor.reserved_fields:
             return ReservedFieldProcessor(header)
 
     def process(self, task_data, cell, *args):
@@ -162,15 +171,6 @@ class BulkTaskCSVImport(BulkTaskImport):
     """Class to import CSV tasks in bulk."""
 
     importer_id = "csv"
-    reserved_fields = set([
-        'state',
-        'quorum',
-        'calibration',
-        'priority_0',
-        'n_answers',
-        'user_pref',
-        'expiration'
-    ])
 
     def __init__(self, csv_url, last_import_meta=None):
         self.url = csv_url
@@ -199,18 +199,13 @@ class BulkTaskCSVImport(BulkTaskImport):
         self._check_no_empty_headers()
         self._check_required_headers()
 
-        reserved_field_headers = set(self._headers) & self.reserved_fields
-        self.reserved_field_header_index = [
-            self._headers.index(field) for field in reserved_field_headers
-        ]
-
         return self._headers
 
     def fields(self):
         def get_field_processors():
             for idx, header in enumerate(self.headers()):
                 yield (
-                    ReservedFieldProcessor.can_process(header, idx, self.reserved_field_header_index)
+                    ReservedFieldProcessor.can_process(header)
                     or GoldFieldProcessor.can_process(header)
                     or PrivateFieldProcessor.can_process(header)
                     or DataAccessFieldProcessor.can_process(header)
