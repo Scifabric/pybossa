@@ -292,7 +292,8 @@ def locked_scheduler(query_factory):
 
 
 def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=False,
-                    task_type='gold_last', filter_user_prefs=False):
+                    task_type='gold_last', filter_user_prefs=False,
+                    priority_sort=True):
     '''
     `task_type` will affect the type of tasks return by the query and can be one
     one of the following values:
@@ -315,7 +316,8 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
         order_by.append('task.calibration')
     elif task_type == 'gold_first':
         order_by.append('task.calibration DESC NULLS LAST')
-    order_by.append('priority_0 DESC')
+    if priority_sort:
+        order_by.append('priority_0 DESC')
     if rand_within_priority:
         order_by.append('random()')
     else:
@@ -342,6 +344,23 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
            '''.format(' '.join(filters),
                       ','.join(order_by))
     return text(sql)
+
+
+def select_contributable_task(project, user_id, **kwargs):
+    sched, _ = get_scheduler_and_timeout(project)
+    with_user_pref = sched == Schedulers.user_pref
+    sql = locked_task_sql(project.id, user_id, **kwargs)
+    rows = session.execute(sql,
+        dict(project_id=project.id, user_id=user_id, limit=1)
+    )
+    for row in rows:
+        return task_repo.get_task(row.id)
+    return {}
+
+
+def select_task_for_gold_mode(project, user_id):
+    return select_contributable_task(project, user_id,
+        rand_within_priority=True, task_type='no_gold', priority_sort=False)
 
 
 @locked_scheduler

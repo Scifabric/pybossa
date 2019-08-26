@@ -219,3 +219,14 @@ def latest_submission_task_date(project_id):
     sql = text('''SELECT MAX(finish_time) FROM task_run
                 WHERE project_id=:project_id;''')
     return session.scalar(sql, dict(project_id=project_id))
+
+
+def n_unexpired_gold_tasks(project_id):
+    query = text('''
+        SELECT COUNT(id) AS n_tasks FROM task
+        WHERE project_id=:project_id
+        AND calibration = 1
+        AND ((expiration IS NULL) OR (expiration > (now() at time zone 'utc')::timestamp))
+    ''')
+    result = session.execute(query, dict(project_id=project_id))
+    return result.scalar()
