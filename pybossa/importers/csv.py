@@ -131,13 +131,14 @@ class PrivateFieldProcessor(object):
 
 class DataAccessFieldProcessor(object):
     def __init__(self):
-        self.field_name = 'data_access'
+        pass
 
+    field_name = 'data_access'
     is_input = True
 
     @staticmethod
     def can_process(header):
-        if header == self.field_name and data_access_levels:
+        if header == DataAccessFieldProcessor.field_name and data_access_levels:
             return DataAccessFieldProcessor()
 
     def process(self, task_data, cell, *args):
