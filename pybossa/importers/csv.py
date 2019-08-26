@@ -124,7 +124,7 @@ class BulkTaskCSVImport(BulkTaskImport):
                     yield pub_match.group('field')
 
         if self._fields is None:      
-            self._fields = list(get_fields())
+            self._fields = set(get_fields())
 
         return self._fields
 

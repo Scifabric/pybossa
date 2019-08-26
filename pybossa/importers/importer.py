@@ -68,18 +68,19 @@ def validate_n_answers(task, *args):
 def validate_state(task, *args):
     return task.state in ['enrich', 'ongoing', None]
 
-def validate_can_enrich(task, project, *args):
-    return task.state != 'enrich' or project.info.get('enrichments')
+def validate_can_enrich(task, enrichment_output_fields, *args):
+    return task.state != 'enrich' or enrichment_output_fields
 
-def validate_no_enrichment_output_field(task, project, *args):
-    enrichments = project.info.get('enrichments', [])    
-    enrichment_fields_in_import = [
-        out_field_name
-        for enrichment in enrichments
-        for out_field_name in [enrichment.get('out_field_name')]
-        if out_field_name in task.info
-    ]
-    return not enrichment_fields_in_import
+def validate_no_enrichment_output_field(task, enrichment_output_fields, *args):
+    # If not enriching then they are allowed to import the enrichment output.
+    if task.state != 'enrich':
+        return True
+    
+    return not any(enrichment_output in task.info for enrichment_output in enrichment_output_fields)
+
+def get_enrichment_output_fields(project):
+    enrichments = project.info.get('enrichments', [])
+    return {enrichment.get('out_field_name') for enrichment in enrichments}
 
 class TaskImportValidator(object):
 
@@ -164,10 +165,11 @@ class Importer(object):
             if not project:
                 return gettext('Could not load project info')
 
-            task_presenter_fields = project.get_presenter_headers()
+            task_presenter_fields = project.get_presenter_field_set()
             # Check that all task fields used in task presenter are also in import.
-            fields_not_in_import = [field for field in task_presenter_fields
-                                if field not in import_fields]
+            # We exclude enrichment output from the check since we expect those fields to be generated
+            # by enrichment instead of import.
+            fields_not_in_import = task_presenter_fields - import_fields - get_enrichment_output_fields(project)
 
             if not fields_not_in_import:
                 return
@@ -196,7 +198,7 @@ class Importer(object):
         importer = self._create_importer_for(**form_data)
         tasks = importer.tasks()
         msg = ''
-        validator = TaskImportValidator(project)
+        validator = TaskImportValidator(get_enrichment_output_fields(project))
         n_answers = project.get_default_n_answers()
         try:
             for task_data in tasks:
