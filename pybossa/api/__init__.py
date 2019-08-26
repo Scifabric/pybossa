@@ -324,7 +324,7 @@ def user_progress(project_id=None, short_name=None):
                 quiz = current_user.get_quiz_for_project(project)
             )
             if current_user.admin or (current_user.subadmin and current_user.id in project.owners_ids):
-                num_gold_tasks = n_unexpired_gold_tasks(project_id)
+                num_gold_tasks = n_unexpired_gold_tasks(project.id)
                 response['available_gold_tasks'] = num_gold_tasks
             return Response(json.dumps(response), mimetype="application/json")
         else:
