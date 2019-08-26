@@ -29,8 +29,10 @@ class BulkTaskImport(object):
 
     """Class to import tasks in bulk."""
 
+    def __init__(self):
+        self._headers = None
+
     importer_id = None
-    _headers = None
 
     def tasks(self):
         """Return a generator with all the tasks imported."""

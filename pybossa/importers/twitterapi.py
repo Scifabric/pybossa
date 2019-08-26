@@ -27,6 +27,7 @@ class BulkTaskTwitterImport(BulkTaskImport):
 
     def __init__(self, consumer_key, consumer_secret, source,
                  max_tweets=None, last_import_meta=None, user_credentials=None):
+        BulkTaskImport.__init__(self)
         if user_credentials:
             self.client = UserCredentialsClient(consumer_key, consumer_secret,
                                                 user_credentials)

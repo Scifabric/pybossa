@@ -173,6 +173,7 @@ class BulkTaskCSVImportBase(BulkTaskImport):
     """Class to import CSV tasks in bulk."""
 
     def __init__(self):
+        BulkTaskImport.__init__(self)
         self._field_processors = None
         self._input_fields = None
 
