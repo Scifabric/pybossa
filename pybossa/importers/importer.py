@@ -93,13 +93,13 @@ class TaskImportValidator(object):
         'ernichment output in import': validate_no_enrichment_output_field
     }
 
-    def __init__(self, project):
+    def __init__(self, enrichment_output_fields):
         self.errors = defaultdict(int)
-        self._project = project
+        self._enrichment_output_fields = enrichment_output_fields
 
     def validate(self, task):
         for error, validator in self.validations.items():
-            if not validator(task, self._project):
+            if not validator(task, self._enrichment_output_fields):
                 self.errors[error] += 1
                 return False
         return True
