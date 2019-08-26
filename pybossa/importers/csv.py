@@ -197,7 +197,7 @@ class BulkTaskCSVImportBase(BulkTaskImport):
 
     def fields(self, csvreader=None):
         def get_field_processors():
-            for idx, header in enumerate(self.headers(csvreader)):
+            for header in self.headers(csvreader):
                 yield (
                     ReservedFieldProcessor.can_process(header)
                     or GoldFieldProcessor.can_process(header)
