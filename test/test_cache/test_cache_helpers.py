@@ -194,6 +194,18 @@ class TestHelpersCache(Test):
         assert n_gold_tasks == 2, n_available_tasks
 
     @with_context
+    def test_n_unexpired_gold_tasks_unexpired_tasks(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create_batch(2, project=project)
+        task = TaskFactory.create_batch(2, project=project, calibration=1)
+        task = TaskFactory.create_batch(2, project=project,
+            calibration=1,
+            expiration='2999-01-01T00:00:00')
+
+        n_gold_tasks = helpers.n_unexpired_gold_tasks(project.id)
+        assert n_gold_tasks == 4, n_available_tasks
+
+    @with_context
     def test_check_contributing_state_completed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed and user that has contributed to it"""
