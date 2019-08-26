@@ -58,6 +58,105 @@ def get_value(header, value_string, data_type):
 
     return value
 
+class ReservedFieldProcessor(object):
+    def __init__(self, header):
+        self.header = header
+    
+    is_input = False
+
+    @staticmethod
+    def can_process(header, index, reserved_field_header_indexes):
+        if index in reserved_field_header_indexes:
+            return ReservedFieldProcessor(header)
+
+    def process(self, task_data, cell, *args):
+        if self.header == 'user_pref':
+            if cell:
+                task_data[self.header] = json.loads(cell.lower())
+            else:
+                task_data[self.header] = {}
+        elif cell:
+            task_data[self.header] = cell
+
+class GoldFieldProcessor(object):
+    def __init__(self, data_type, field_name, header):
+        self.data_type = data_type
+        self.field_name = field_name
+        self.header = header
+
+    is_input = False
+
+    @staticmethod
+    def can_process(header):
+        gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
+        if gold_match:
+            return GoldFieldProcessor(gold_match.group('type'), gold_match.group('field'), header)
+
+    def process(self, task_data, cell, *args):
+        if not cell:
+            return
+        task_data.setdefault('gold_answers', {})[self.field_name] = get_value(self.header, cell, self.data_type)
+
+class PrivateFieldProcessor(object):
+    def __init__(self, data_type, field_name, header):
+        self.data_type = data_type
+        self.field_name = field_name
+        self.header = header
+
+    is_input = True
+
+    @staticmethod
+    def can_process(header):
+        priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
+        if priv_match:
+            return PrivateFieldProcessor(priv_match.group('type'), priv_match.group('field'), header)
+
+    def process(self, task_data, cell, private_fields, *args):
+        if not cell:
+            return
+
+        if data_access_levels: # This is how we check for private GIGwork.
+            private_fields[self.field_name] = get_value(self.header, cell, self.data_type)
+        else:
+            task_data["info"][self.field_name] = get_value(self.header, cell, self.data_type)
+
+class DataAccessFieldProcessor(object):
+    def __init__(self):
+        self.field_name = 'data_access'
+
+    is_input = True
+
+    @staticmethod
+    def can_process(header):
+        if header == self.field_name and data_access_levels:
+            return DataAccessFieldProcessor()
+
+    def process(self, task_data, cell, *args):
+        if not cell:
+            return
+
+        task_data["info"][self.field_name] = json.loads(cell.upper())
+
+class PublicFieldProcessor(object):
+    def __init__(self, data_type, field_name, header):
+        self.data_type = data_type
+        self.field_name = field_name
+        self.header = header
+
+    is_input = True
+
+    @staticmethod
+    def can_process(header):
+        pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
+        if pub_match: # This must match since there are no other options left.
+            return PublicFieldProcessor(pub_match.group('type'), pub_match.group('field'), header)
+
+    def process(self, task_data, cell, *args):
+        if not cell:
+            return
+
+        task_data["info"][self.field_name] = get_value(self.header, cell, self.data_type)
+
 class BulkTaskCSVImport(BulkTaskImport):
 
     """Class to import CSV tasks in bulk."""
@@ -76,7 +175,8 @@ class BulkTaskCSVImport(BulkTaskImport):
     def __init__(self, csv_url, last_import_meta=None):
         self.url = csv_url
         self.last_import_meta = last_import_meta
-        self._fields = None
+        self._field_processors = None
+        self._input_fields = None
 
     def tasks(self):
         """Get tasks from a given URL."""
@@ -107,83 +207,32 @@ class BulkTaskCSVImport(BulkTaskImport):
         return self._headers
 
     def fields(self):
-        def get_fields():
+        def get_field_processors():
             for idx, header in enumerate(self.headers()):
-                if idx in self.reserved_field_header_index:
-                    yield header
-                gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
-                if gold_match:
-                    continue
-                priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
-                if priv_match:
-                    yield priv_match.group('field')
-                if header == 'data_access' and data_access_levels:
-                    yield header
-                pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
-                if pub_match: # This must match since there are no other options left.
-                    yield pub_match.group('field')
+                yield (
+                    ReservedFieldProcessor.can_process(header, idx, self.reserved_field_header_index)
+                    or GoldFieldProcessor.can_process(header)
+                    or PrivateFieldProcessor.can_process(header)
+                    or DataAccessFieldProcessor.can_process(header)
+                    or PublicFieldProcessor.can_process(header)
+                )
 
-        if self._fields is None:      
-            self._fields = set(get_fields())
+        if self._field_processors is None:
+            self._field_processors = list(get_field_processors())
+            self._input_fields = {field.field_name for field in self._field_processors if field.is_input}
 
-        return self._fields
+        return self._input_fields
 
     def _get_data_url(self):
         """Get data from URL."""
         return self.url
-
-    def _process_cell(self, idx, cell, task_data, private_fields):
-        header = self._headers[idx]
-        if idx in self.reserved_field_header_index:
-            if header == 'user_pref':
-                if cell:
-                    task_data[header] = json.loads(cell.lower())
-                else:
-                    task_data[header] = {}
-            elif cell:
-                task_data[header] = cell
-            return
-
-        gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
-        if gold_match:
-            if cell:
-                data_type = gold_match.group('type')
-                field_name = gold_match.group('field')
-                task_data.setdefault('gold_answers', {})[field_name] = get_value(header, cell, data_type)
-            return
-
-        priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
-        if priv_match:
-            if cell:
-                data_type = priv_match.group('type')
-                field_name = priv_match.group('field')
-                if data_access_levels: # This is how we check for private GIGwork.
-                    private_fields[field_name] = get_value(header, cell, data_type)
-                else:
-                    task_data["info"][field_name] = get_value(header, cell, data_type)
-            return
-
-        if header == 'data_access' and data_access_levels:
-            if cell:
-                task_data["info"][header] = json.loads(cell.upper())
-            return
-
-        pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
-        if pub_match: # This must match since there are no other options left.
-            if cell:
-                data_type = pub_match.group('type')
-                field_name = pub_match.group('field')
-                task_data["info"][field_name] = get_value(header, cell, data_type)
-            return
-
-        raise BulkImportException('{} is not recognized as a valid import header'.format(header))
 
     def _convert_row_to_task_data(self, row, row_number):
         task_data = {"info": {}}
         private_fields = dict()
 
         for idx, cell in enumerate(row):
-            self._process_cell(idx, cell, task_data, private_fields)
+            self._field_processors[idx].process(task_data, cell, private_fields)
         if private_fields:
             task_data['private_fields'] = private_fields
         return task_data
@@ -206,23 +255,6 @@ class BulkTaskCSVImport(BulkTaskImport):
                                 .format(','.join(invalid_fields)))
                 raise BulkImportException(msg)
             task_data = self._convert_row_to_task_data(row, row_number)
-            # task_state = task_data.get('state')
-            # print 'task_state', task_state
-            # if task_state not in ['enrich', 'ongoing', None]:
-            #     raise BulkImportException('Invalid task state: {}'.format(task_state))
-
-            # if self.project and task_state == 'enrich':
-            #     enrichments = project.info.get('enrichments')
-            #     if not enrichments:
-            #         raise BulkImportException('No enrichment settings configured. Task state of "enrich" not allowed.')
-            #     enrichment_fields_in_import = [
-            #         out_field_name
-            #         for enrichment in enrichments
-            #         for out_field_name in [enrichment.get('out_field_name')]
-            #         if out_field_name in task_data['info']
-            #     ]
-            #     if enrichment_fields_in_import:
-            #         raise BulkImportException('Enrichment output field is in import: {}'.format(', '.join(enrichment_fields_in_import)))
             yield task_data
 
     def _check_no_duplicated_headers(self):
