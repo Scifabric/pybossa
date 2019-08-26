@@ -1072,12 +1072,13 @@ def import_task(short_name):
 def _import_tasks(project, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
-        report = importer.validate_headers(project, **form_data)
-        if not report:
-            report = importer.create_tasks(task_repo, project, **form_data)
-            flash(report.message)
-            if report.total > 0:
-                cached_projects.delete_browse_tasks(project.id)
+        report = (
+            importer.validate_headers(project, **form_data)
+            or importer.create_tasks(task_repo, project, **form_data)
+        )
+        flash(report.message)
+        if report.total > 0:
+            cached_projects.delete_browse_tasks(project.id)
     else:
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\

@@ -741,9 +741,10 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
 
     try:
         with current_app.test_request_context():
-            report = importer.validate_headers(project, **form_data)
-            if not report:
-                report = importer.create_tasks(task_repo, project, **form_data)
+            report = (
+                importer.validate_headers(project, **form_data)
+                or importer.create_tasks(task_repo, project, **form_data)
+            )
     except JobTimeoutException:
         from pybossa.core import db
         db.session.rollback()
