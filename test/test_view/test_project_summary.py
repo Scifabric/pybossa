@@ -42,3 +42,29 @@ class TestSummary(web.Helper):
         data = json.loads(res.data)
         assert data['flash'] == 'Configuration updated successfully'
 
+    @with_context
+    def test_post_ownership_setting(self):
+        project = ProjectFactory.create(published=True)
+        url = '/project/%s/coowners?api_key=%s' % (project.short_name, project.owner.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        csrf = ""
+        fields = {'coowners': ['1111']}
+        res = self.app.post(url, content_type='application/json',
+                            data=json.dumps(fields),
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        assert data['flash'] == 'Configuration updated successfully'
+
+    @with_context
+    def test_invalid_post(self):
+        project = ProjectFactory.create(published=True)
+        url = '/project/%s/project-config?api_key=%s' % (project.short_name, project.owner.api_key)
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        csrf = ""
+        res = self.app.post(url, content_type='application/json',
+                            data={},
+                            headers={'X-CSRFToken': csrf})
+        data = json.loads(res.data)
+        assert data['flash'] == 'An error occurred.'
