@@ -43,6 +43,9 @@ class BulkTaskImport(object):
     def headers(self):
         return self._headers
 
+    def fields(self):
+        return set(self.headers() or [])
+
     def import_metadata(self):
         return None
 

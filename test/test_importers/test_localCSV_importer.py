@@ -42,10 +42,6 @@ class TestBulkTaskLocalCSVImport(Test):
         # confirm object is not of type other than BulkTaskLocalCSVImport
         assert isinstance(self.importer, BulkTaskGDImport) is False
 
-    def test_importer_form_data_csv_filename(self):
-        csv_file = self.importer._get_data()
-        assert csv_file == 'fakefile.csv'
-
     @with_context
     @patch('pybossa.importers.csv.get_import_csv_file')
     def test_count_tasks_returns_0_row(self, s3_get):
@@ -151,10 +147,12 @@ class TestBulkTaskLocalCSVImport(Test):
             rows.append(','.join(map(lambda x: x[i], fields.itervalues())))
         data = unicode('\n'.join(rows))
         print data
+        form_data = {'type': 'localCSV', 'csv_filename': 'fakefile.csv'}
+
         with patch('pybossa.importers.csv.io.open', mock_open(read_data= data), create=True):
             for is_private in [True, False]:
                 with patch('pybossa.importers.csv.data_access_levels', is_private):
-                    [t1, t2, t3, t4, t5, t6] = self.importer.tasks()
+                    [t1, t2, t3, t4, t5, t6] = BulkTaskLocalCSVImport(**form_data).tasks()
                     if is_private:
                         assert_equal(t1['private_fields'], expected_t1_priv_field), t1
                         assert_equal(t2['private_fields'], expected_t2_priv_field), t2
