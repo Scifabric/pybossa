@@ -66,7 +66,8 @@ from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
-from pybossa.cache.helpers import n_available_tasks, n_available_tasks_for_user
+from pybossa.cache.helpers import (n_available_tasks, n_available_tasks_for_user,
+    n_unexpired_gold_tasks)
 from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
                            has_lock, release_lock, Schedulers, get_locks)
 from pybossa.api.project_by_name import ProjectByNameAPI
@@ -322,6 +323,9 @@ def user_progress(project_id=None, short_name=None):
                 remaining_for_user=num_available_tasks_for_user,
                 quiz = current_user.get_quiz_for_project(project)
             )
+            if current_user.admin or (current_user.subadmin and current_user.id in project.owners_ids):
+                num_gold_tasks = n_unexpired_gold_tasks(project_id)
+                response['available_gold_tasks'] = num_gold_tasks
             return Response(json.dumps(response), mimetype="application/json")
         else:
             return abort(404)

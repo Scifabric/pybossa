@@ -950,6 +950,40 @@ class TestProjectAPI(TestAPI):
         assert 'remaining' in data
         assert 'remaining_for_user' in data
 
+    @with_context
+    def test_user_progress_n_gold_tasks(self):
+        """Test API userprogress as an authenticated user works"""
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        tasks = TaskFactory.create_batch(2, project=project)
+        tasks = TaskFactory.create_batch(2, project=project, calibration = 1)
+        taskruns = []
+        for task in tasks:
+            taskruns.extend(TaskRunFactory.create_batch(2, task=task, user=user))
+
+        url = '/api/project/1/userprogress?api_key=%s' % user.api_key
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert 'available_gold_tasks' not in data, data
+
+        # non-subadmin owner
+        url = '/api/project/1/userprogress?api_key=%s' % owner.api_key
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert 'available_gold_tasks' not in data, data
+
+        # subadmin owner
+        owner.subadmin = True
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert 'available_gold_tasks' in data, data
+        assert data['available_gold_tasks'] == 2
+
+        url = '/api/project/1/userprogress?api_key=%s' % admin.api_key
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert 'available_gold_tasks' in data, data
+        assert data['available_gold_tasks'] == 2
 
     @with_context
     def test_delete_project_cascade(self):
@@ -965,7 +999,6 @@ class TestProjectAPI(TestAPI):
 
         task_runs = task_repo.filter_task_runs_by(project_id=project.id)
         assert len(task_runs) == 0, "There should not be any task run"
-
 
     @with_context
     @patch('pybossa.api.pwd_manager.ProjectPasswdManager.password_needed')
