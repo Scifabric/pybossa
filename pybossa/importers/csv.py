@@ -166,31 +166,24 @@ class PublicFieldProcessor(object):
 
         task_data["info"][self.field_name] = get_value(self.header, cell, self.data_type)
 
-class BulkTaskCSVImport(BulkTaskImport):
+# Abstract base class
+class BulkTaskCSVImportBase(BulkTaskImport):
 
     """Class to import CSV tasks in bulk."""
 
-    importer_id = "csv"
-
-    def __init__(self, csv_url, last_import_meta=None):
-        self.url = csv_url
-        self.last_import_meta = last_import_meta
+    def __init__(self):
         self._field_processors = None
         self._input_fields = None
 
     def tasks(self):
         """Get tasks from a given URL."""
-        dataurl = self._get_data_url()
-        r = requests.get(dataurl)
-        return self._get_csv_data_from_request(r)
+        return self._get_csv_data()
 
     def headers(self, csvreader=None):
         if self._headers is not None:
             return self._headers
         if not csvreader:
-            dataurl = self._get_data_url()
-            r = requests.get(dataurl)
-            csvreader = self._get_csv_reader_from_request(r)
+            csvreader = self._get_csv_reader()
         self._headers = []
         for row in csvreader:
             self._headers = row
@@ -201,9 +194,9 @@ class BulkTaskCSVImport(BulkTaskImport):
 
         return self._headers
 
-    def fields(self):
+    def fields(self, csvreader=None):
         def get_field_processors():
-            for idx, header in enumerate(self.headers()):
+            for idx, header in enumerate(self.headers(csvreader)):
                 yield (
                     ReservedFieldProcessor.can_process(header)
                     or GoldFieldProcessor.can_process(header)
@@ -218,10 +211,6 @@ class BulkTaskCSVImport(BulkTaskImport):
 
         return self._input_fields
 
-    def _get_data_url(self):
-        """Get data from URL."""
-        return self.url
-
     def _convert_row_to_task_data(self, row, row_number):
         task_data = {"info": {}}
         private_fields = dict()
@@ -235,7 +224,7 @@ class BulkTaskCSVImport(BulkTaskImport):
     def _import_csv_tasks(self, csvreader):
         """Import CSV tasks."""
         csviterator = iter(csvreader)
-        self.headers(csvreader=csviterator)
+        self.fields(csvreader=csviterator)
         row_number = 0
         for row in csviterator:
             row_number += 1
@@ -280,8 +269,27 @@ class BulkTaskCSVImport(BulkTaskImport):
                           'required header(s): {0}'.format(','.join(missing_headers)))
             raise BulkImportException(msg)
 
-    def _get_csv_reader_from_request(self, r):
+    # must implement
+    # def _get_csv_reader(self):
+
+    def _get_csv_data(self):
+        return self._import_csv_tasks(self._get_csv_reader())
+
+class BulkTaskUrlCSVImport(BulkTaskCSVImportBase):
+    importer_id = "csv"
+
+    def __init__(self, csv_url, last_import_meta=None):
+        BulkTaskCSVImportBase.__init__(self)
+        self.url = csv_url
+        self.last_import_meta = last_import_meta
+
+    def _get_data_url(self):
+        """Get data from URL."""
+        return self.url
+
+    def _get_csv_reader(self):
         """Get CSV data from a request."""
+        r = requests.get(self._get_data_url())
         if r.status_code == 403:
             msg = ("Oops! It looks like you don't have permission to access"
                    " that file")
@@ -295,19 +303,16 @@ class BulkTaskCSVImport(BulkTaskImport):
         csvcontent = StringIO(r.text)
         return unicode_csv_reader(csvcontent)
 
-    def _get_csv_data_from_request(self, r):
-        return self._import_csv_tasks(self._get_csv_reader_from_request(r))
-
-class BulkTaskGDImport(BulkTaskCSVImport):
+class BulkTaskGDImport(BulkTaskUrlCSVImport):
 
     """Class to import tasks from Google Drive in bulk."""
 
     importer_id = "gdocs"
 
     def __init__(self, googledocs_url):
-        self.url = googledocs_url
+        BulkTaskUrlCSVImport.__init__(self, googledocs_url)
 
-    def _get_data_url(self, **form_data):
+    def _get_data_url(self):
         """Get data from URL."""
         # For old data links of Google Spreadsheets
         if 'ccc?key' in self.url:
@@ -319,23 +324,21 @@ class BulkTaskGDImport(BulkTaskCSVImport):
                             'export?format=csv'])
 
 
-class BulkTaskLocalCSVImport(BulkTaskCSVImport):
+class BulkTaskLocalCSVImport(BulkTaskCSVImportBase):
 
     """Class to import CSV tasks in bulk from local file."""
 
     importer_id = "localCSV"
 
     def __init__(self, **form_data):
+       BulkTaskCSVImportBase.__init__(self)
        self.form_data = form_data
-
-    def _get_data(self):
-        """Get data."""
-        return self.form_data['csv_filename']
 
     def count_tasks(self):
         return len([task for task in self.tasks()])
 
-    def _get_csv_data_from_request(self, csv_filename):
+    def _get_csv_reader(self):
+        csv_filename = self.form_data['csv_filename']
         if csv_filename is None:
             msg = ("Not a valid csv file for import")
             raise BulkImportException(gettext(msg), 'error')
@@ -349,10 +352,7 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImport):
 
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read())
-        csvreader = unicode_csv_reader(csvcontent)
-        return list(self._import_csv_tasks(csvreader))
-
+        return unicode_csv_reader(csvcontent)
+    
     def tasks(self):
-        """Get tasks from a given URL."""
-        csv_filename = self._get_data()
-        return self._get_csv_data_from_request(csv_filename)
+        return list(BulkTaskCSVImportBase.tasks(self))
