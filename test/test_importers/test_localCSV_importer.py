@@ -195,3 +195,25 @@ class TestBulkTaskLocalCSVImport(Test):
                     with patch('pybossa.importers.csv.io.open', mock_open(read_data= data), create=True):
                         with assert_raises(BulkImportException):
                             [t1] = self.importer.tasks()
+
+    @with_context
+    @patch('pybossa.importers.csv.get_import_csv_file')
+    def test_correct_field_names(self, s3_get):
+        fields = {
+            'ans1_json': 'ans1',
+            'ans2_number': 'ans2',
+            'ans3_bool': 'ans3',
+            'ans4_null': 'ans4',
+            'ans9_priv_json': "ans9",
+            'ans10_priv_number': 'ans10',
+            'ans11_priv_bool': 'ans11',
+            'ans12_priv_null': 'ans12'
+        }
+        form_data = {'type': 'localCSV', 'csv_filename': 'fakefile.csv'}
+
+        for is_private in [True, False]:
+            with patch('pybossa.importers.csv.data_access_levels', is_private):
+                for header, field_name in fields.iteritems():
+                    with patch('pybossa.importers.csv.io.open', mock_open(read_data= unicode(header)), create=True):
+                        field_names = BulkTaskLocalCSVImport(**form_data).fields()
+                        assert field_names == {field_name}, {'field_names': field_names, 'field_name': field_name}
