@@ -275,7 +275,7 @@ class BulkTaskCSVImportBase(BulkTaskImport):
     def _get_csv_data(self):
         return self._import_csv_tasks(self._get_csv_reader())
 
-class BulkTaskUrlCSVImport(BulkTaskCSVImportBase):
+class BulkTaskCSVImport(BulkTaskCSVImportBase):
     importer_id = "csv"
 
     def __init__(self, csv_url, last_import_meta=None):
@@ -303,14 +303,14 @@ class BulkTaskUrlCSVImport(BulkTaskCSVImportBase):
         csvcontent = StringIO(r.text)
         return unicode_csv_reader(csvcontent)
 
-class BulkTaskGDImport(BulkTaskUrlCSVImport):
+class BulkTaskGDImport(BulkTaskCSVImport):
 
     """Class to import tasks from Google Drive in bulk."""
 
     importer_id = "gdocs"
 
     def __init__(self, googledocs_url):
-        BulkTaskUrlCSVImport.__init__(self, googledocs_url)
+        BulkTaskCSVImport.__init__(self, googledocs_url)
 
     def _get_data_url(self):
         """Get data from URL."""
