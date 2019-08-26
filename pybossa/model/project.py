@@ -176,7 +176,7 @@ class Project(db.Model, DomainObject):
                     continue
             field = match.group(1)
             if not field.endswith('__upload_url'):
-                fields.add(header)
+                fields.add(field)
             search_backward_stop = match.end()
 
         return fields
