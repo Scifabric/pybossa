@@ -808,7 +808,7 @@ def update(short_name):
     return handle_content_type(response)
 
 
-@blueprint.route('/<short_name>/', )
+@blueprint.route('/<short_name>/')
 @login_required
 def details(short_name):
 
@@ -2234,13 +2234,8 @@ def task_timeout(short_name):
                                                                     current_user,
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
-    # if request.headers.get('content-type') == 'application/json' and request.data:
-    #     body = json.loads(request.data)
-    #     data = body['task'] if body.get('task') else body
-    #     form = TaskTimeoutForm(get_json_multiDict(data))
-    # else:
-    #     form = TaskTimeoutForm()
-    form = TaskTimeoutForm(request.body)
+    form = TaskTimeoutForm(request.body) if request.data else TaskTimeoutForm()
+
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -3133,7 +3128,7 @@ def ext_config(short_name):
         template='/projects/external_config.html',
         project=sanitize_project,
         title=gettext("Configure external services"),
-        form=template_forms,
+        forms=template_forms,
         pro_features=pro_features()
     )
 
