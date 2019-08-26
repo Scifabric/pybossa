@@ -16,8 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from mock import patch, Mock
-from nose.tools import assert_raises
-from pybossa.importers import Importer, BulkImportException
+from pybossa.importers import Importer
 from default import Test, with_context
 from factories import ProjectFactory, TaskFactory
 from pybossa.repositories import TaskRepository
