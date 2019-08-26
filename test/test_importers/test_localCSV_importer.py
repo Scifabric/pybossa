@@ -207,7 +207,23 @@ class TestBulkTaskLocalCSVImport(Test):
             'ans9_priv_json': "ans9",
             'ans10_priv_number': 'ans10',
             'ans11_priv_bool': 'ans11',
-            'ans12_priv_null': 'ans12'
+            'ans12_priv_null': 'ans12',
+            'data_access': 'data_access',
+            'state': None,
+            'quorum': None,
+            'calibration': None,
+            'priority_0': None,
+            'n_answers': None,
+            'user_pref': None,
+            'expiration': None,
+            'ans13_priv_gold_json': None,
+            'ans14_priv_gold_number': None,
+            'ans15_priv_gold_bool': None,
+            'ans16_priv_gold_null': None,
+            'ans5_gold_json': None,
+            'ans6_gold_number': None,
+            'ans7_gold_bool': None,
+            'ans8_gold_null': None
         }
         form_data = {'type': 'localCSV', 'csv_filename': 'fakefile.csv'}
 
@@ -216,4 +232,4 @@ class TestBulkTaskLocalCSVImport(Test):
                 for header, field_name in fields.iteritems():
                     with patch('pybossa.importers.csv.io.open', mock_open(read_data= unicode(header)), create=True):
                         field_names = BulkTaskLocalCSVImport(**form_data).fields()
-                        assert field_names == {field_name}, {'field_names': field_names, 'field_name': field_name}
+                        assert field_names == ({field_name} if field_name else set()), {'field_names': field_names, 'field_name': field_name}
