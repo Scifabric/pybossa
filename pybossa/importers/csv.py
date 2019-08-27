@@ -336,9 +336,6 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImportBase):
        BulkTaskCSVImportBase.__init__(self)
        self.form_data = form_data
 
-    def count_tasks(self):
-        return len([task for task in self.tasks()])
-
     def _get_csv_reader(self):
         csv_filename = self.form_data['csv_filename']
         if csv_filename is None:
