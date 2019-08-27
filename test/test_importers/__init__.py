@@ -251,7 +251,7 @@ class TestImporterPublicMethods(Test):
             result = self.importer.create_tasks(task_repo, project, **form_data)
             importer_factory.assert_called_with(**form_data)
             upload_from_string.assert_called()
-            assert result.message == '1 new task was imported successfully ', result
+            assert result.message == '1 new task was imported successfully ', result.message
 
             # validate task created has private fields url, gold_answers url
             # calibration and exported flag set
@@ -379,7 +379,6 @@ class TestImporterPublicMethods(Test):
     ):
         mock_importer = Mock()
         mock_importer.fields.return_value = {'Foo', 'Bar2', 'Bar'}
-        importer_factory.return_value = mock_importer
         project = ProjectFactory.create(info={
             'task_presenter':'task.info.bar'
         })
@@ -393,7 +392,7 @@ class TestImporterPublicMethods(Test):
                 'ENABLE_ENCRYPTION': True
             }
         ):
-            import_report = self.importer.validate_headers(project, **form_data)
+            import_report = self.importer._validate_headers(mock_importer, project, **form_data)
             print import_report.message
             assert import_report.message
 
@@ -436,7 +435,6 @@ class TestImporterPublicMethods(Test):
     ):
         mock_importer = Mock()
         mock_importer.fields.return_value = {'Foo', 'Bar2', 'Bar'}
-        importer_factory.return_value = mock_importer
         project = ProjectFactory.create(info={
             'task_presenter':'task.info.enriched task.info.bar'
         })
@@ -450,5 +448,5 @@ class TestImporterPublicMethods(Test):
                 'ENABLE_ENCRYPTION': True
             }
         ):
-            import_report = self.importer.validate_headers(project, **form_data)
+            import_report = self.importer._validate_headers(mock_importer, project, **form_data)
             assert import_report is None
