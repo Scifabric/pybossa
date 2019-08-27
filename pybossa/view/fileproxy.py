@@ -21,7 +21,6 @@ from functools import wraps
 from flask import Blueprint, current_app, Response, request
 from flask_login import current_user, login_required
 
-import operator
 import six
 import requests
 from werkzeug.exceptions import Forbidden, BadRequest, InternalServerError, NotFound
@@ -60,9 +59,8 @@ def is_valid_hdfs_url(attempt_path, attempt_args):
     return is_valid_url
 
 
-def check_allowed(user_id, task_id, project, is_valid_url=None):
+def check_allowed(user_id, task_id, project, is_valid_url):
     task = task_repo.get_task(task_id)
-    is_valid_url = is_valid_url or operator.eq
 
     if not task or task.project_id != project['id']:
         raise BadRequest('Task does not exist')
@@ -100,7 +98,7 @@ def encrypted_file(store, bucket, project_id, path):
     payload = signer.loads(signature, max_age=timeout)
     task_id = payload['task_id']
 
-    check_allowed(current_user.id, task_id, project, request.path)
+    check_allowed(current_user.id, task_id, project, lambda v: v == request.path)
 
     ## download file
     try:
