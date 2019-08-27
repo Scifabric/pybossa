@@ -36,7 +36,7 @@ class TestImporterValidation(Test):
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
+        form_data = dict(type='gdocs', googledocs_url='http://ggl.com', validate_tp=False)
         result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
@@ -51,7 +51,7 @@ class TestImporterValidation(Test):
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
+        form_data = dict(type='gdocs', googledocs_url='http://ggl.com', validate_tp=False)
         result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
@@ -66,7 +66,7 @@ class TestImporterValidation(Test):
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
+        form_data = dict(type='gdocs', googledocs_url='http://ggl.com', validate_tp=False)
         with patch.dict(self.flask_app.config, { 'ALLOWED_S3_BUCKETS': ['valid'] }):
             result = self.importer.create_tasks(task_repo, project, **form_data)
             tasks = task_repo.filter_tasks_by(project_id=project.id)

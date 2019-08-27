@@ -37,7 +37,7 @@ class TestImporterPublicMethods(Test):
                                             'n_answers': 20}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='csv', csv_url='http://fakecsv.com')
+        form_data = dict(type='csv', csv_url='http://fakecsv.com', validate_tp=False)
         self.importer.create_tasks(task_repo, project, **form_data)
         task = task_repo.get_task(1)
 
@@ -55,7 +55,7 @@ class TestImporterPublicMethods(Test):
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
+        form_data = dict(type='gdocs', googledocs_url='http://ggl.com', validate_tp=False)
         result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
@@ -70,7 +70,7 @@ class TestImporterPublicMethods(Test):
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
         TaskFactory.create(project=project, info={'question': 'question'})
-        form_data = dict(type='flickr', album_id='1234')
+        form_data = dict(type='flickr', album_id='1234', validate_tp=False)
 
         result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
@@ -87,7 +87,7 @@ class TestImporterPublicMethods(Test):
         mock_importer.import_metadata.return_value = metadata
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='flickr', album_id='1234')
+        form_data = dict(type='flickr', album_id='1234', validate_tp=False)
 
         result = self.importer.create_tasks(task_repo, project, **form_data)
 
@@ -103,7 +103,7 @@ class TestImporterPublicMethods(Test):
         mock_importer.import_metadata.return_value = metadata
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='flickr', album_id='1234')
+        form_data = dict(type='flickr', album_id='1234', validate_tp=False)
         with patch.object(task_repo, 'save', side_effect=Exception('a')):
             result = self.importer.create_tasks(task_repo, project, **form_data)
         assert '1 task import failed due to a' in result.message, result.message
@@ -180,7 +180,7 @@ class TestImporterPublicMethods(Test):
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -238,7 +238,7 @@ class TestImporterPublicMethods(Test):
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -296,7 +296,7 @@ class TestImporterPublicMethods(Test):
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -325,7 +325,7 @@ class TestImporterPublicMethods(Test):
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create(info={'enrichments':[{'out_field_name':'enriched'}]})
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -354,7 +354,7 @@ class TestImporterPublicMethods(Test):
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -408,7 +408,6 @@ class TestImporterPublicMethods(Test):
     ):
         mock_importer = Mock()
         mock_importer.fields.return_value = {'Foo', 'Bar2', 'Bar'}
-        importer_factory.return_value = mock_importer
         project = ProjectFactory.create(info={
             'enrichments':[{'out_field_name':'enriched'}],
             'task_presenter':'task.info.enriched task.info.Bar'
@@ -423,7 +422,7 @@ class TestImporterPublicMethods(Test):
                 'ENABLE_ENCRYPTION': True
             }
         ):
-            import_report = self.importer.validate_headers(project, **form_data)
+            import_report = self.importer._validate_headers(mock_importer, project, **form_data)
             assert import_report is None
 
     @with_context
