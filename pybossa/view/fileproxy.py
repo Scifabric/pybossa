@@ -16,10 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from urlparse import urlparse, parse_qs
 from functools import wraps
 from flask import Blueprint, current_app, Response, request
 from flask_login import current_user, login_required
 
+import operator
+import six
 import requests
 from werkzeug.exceptions import Forbidden, BadRequest, InternalServerError, NotFound
 
@@ -45,13 +48,26 @@ def no_cache(view_func):
     return decorated
 
 
-def check_allowed(user_id, task_id, project, file_url):
+def is_valid_hdfs_url(attempt_path, attempt_args):
+    def is_valid_url(v):
+        if not isinstance(v, six.string_types):
+            return False
+        parsed = urlparse(v)
+        parsed_args = parse_qs(parsed.query)
+        return (parsed.path == attempt_path
+                and parsed_args.get('offset') == attempt_args.get('offset')
+                and parsed_args.get('length') == attempt_args.get('length'))
+    return is_valid_url
+
+
+def check_allowed(user_id, task_id, project, is_valid_url=None):
     task = task_repo.get_task(task_id)
+    is_valid_url = is_valid_url or operator.eq
 
     if not task or task.project_id != project['id']:
         raise BadRequest('Task does not exist')
 
-    if file_url not in task.info.values():
+    if not any(is_valid_url(v) for v in task.info.values()):
         raise Forbidden('Invalid task content')
 
     if current_user.admin:
@@ -117,9 +133,11 @@ def hdfs_file(project_id, cluster, path):
     timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
     payload = signer.loads(signature, max_age=timeout)
     task_id = payload['task_id']
-    check_allowed(current_user.id, task_id, project, request.path)
+    check_allowed(current_user.id, task_id, project,
+                  is_valid_hdfs_url(request.path, request.args.to_dict(flat=False)))
     client = HDFSKerberos(**current_app.config['HDFS_CONFIG'][cluster])
-    offset, length = request.args.get('offset'), request.args.get('length')
+    offset = request.args.get('offset')
+    length = request.args.get('length')
 
     try:
         offset = int(offset) if offset else None

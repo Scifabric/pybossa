@@ -25,6 +25,7 @@ from factories import ProjectFactory, TaskFactory, UserFactory
 from pybossa.core import signer
 from pybossa.encryption import AESWithGCM
 from boto.exception import S3ResponseError
+from pybossa.view.fileproxy import is_valid_hdfs_url
 
 
 class TestFileproxy(web.Helper):
@@ -351,3 +352,18 @@ class TestHDFSproxy(web.Helper):
         with patch.dict(self.flask_app.config, self.app_config):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 500, res.status_code
+
+
+def test_is_file_url():
+    file_url = '/a/b'
+    qps = {'offset': ['1'], 'length': ['2']}
+    is_valid_url = is_valid_hdfs_url(file_url, qps)
+    assert not is_valid_url(1)
+    assert not is_valid_url('/a/c')
+    assert not is_valid_url('/a/b?offset=1')
+    assert not is_valid_url('/a/b?offset=1&offset=2')
+    assert not is_valid_url('/a/b?length=2')
+    assert not is_valid_url('/a/b?offset=1&length=3')
+    assert not is_valid_url('/a/b?offset=1&length=3&task-signature=asdfasdfad')
+    assert is_valid_url('/a/b?offset=1&length=2')
+    assert is_valid_url('/a/b?offset=1&length=2&task-signature=asdfasdfas')
