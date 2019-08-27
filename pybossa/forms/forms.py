@@ -320,6 +320,11 @@ class BulkTaskGDImportForm(Form):
 
 class BulkTaskLocalCSVImportForm(Form):
     form_name = TextField(label=None, widget=HiddenInput(), default='localCSV')
+    do_not_validate_tp = BooleanField(
+        label=lazy_gettext("Do not require all fields used in task presenter code to be present in the csv file"),
+        default=False
+    )
+
     _allowed_extensions = set(['csv'])
     def _allowed_file(self, filename):
         return '.' in filename and \
@@ -350,7 +355,11 @@ class BulkTaskLocalCSVImportForm(Form):
             if csv_file and self._allowed_file(csv_file.filename):
                 file_path = get_file_path_for_import_csv(csv_file)
                 return {'type': 'localCSV', 'csv_filename': file_path}
-        return {'type': 'localCSV', 'csv_filename': None}
+        return {
+            'type': 'localCSV',
+            'csv_filename': None,
+            'validate_tp': not self.do_not_validate_tp.data
+        }
 
 
 class BulkTaskEpiCollectPlusImportForm(Form):

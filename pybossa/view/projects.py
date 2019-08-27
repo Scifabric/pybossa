@@ -1085,8 +1085,9 @@ def _import_tasks(project, **form_data):
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
-    return redirect_content_type(url_for('.tasks',
-                                         short_name=project.short_name))
+    return redirect_content_type(url_for('.import_task',
+                                         short_name=project.short_name,
+                                         type=form_data['type']))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
