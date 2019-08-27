@@ -118,17 +118,21 @@ def hdfs_file(project_id, cluster, path):
     payload = signer.loads(signature, max_age=timeout)
     task_id = payload['task_id']
     check_allowed(current_user.id, task_id, project, request.path)
-
     client = HDFSKerberos(**current_app.config['HDFS_CONFIG'][cluster])
+    offset, length = request.args.get('offset'), request.args.get('length')
+
     try:
-        content = client.get('/{}'.format(path))
+        offset = int(offset) if offset else None
+        length = int(length) if length else None
+        content = client.get('/{}'.format(path), offset=offset, length=length)
         project_encryption = project['info'].get('ext_config', {}).get('encryption', {})
         if project_encryption and all(project_encryption.values()):
             secret = get_secret_from_vault(project_encryption)
             cipher = AESWithGCM(secret)
             content = cipher.decrypt(content)
     except Exception:
-        current_app.logger.exception('Project id {} get task file {}'.format(project_id, path))
+        current_app.logger.exception('Project id {} get task file {} {}'.format(project_id, path,
+                                                                                str(request.args)))
         raise InternalServerError('An Error Occurred')
 
     return Response(content)
