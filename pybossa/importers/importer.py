@@ -152,9 +152,8 @@ class Importer(object):
         use_file_url = (task.get('state') == 'enrich')        
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
-    def validate_headers(self, project, **form_data):
+    def _validate_headers(self, importer, project, **form_data):
         validate_against_task_presenter = form_data.pop('validate_tp', True)
-        importer = self._create_importer_for(**form_data)
         import_fields = importer.fields()
 
         def get_error_message():
@@ -187,7 +186,7 @@ class Importer(object):
             current_app.logger.error(msg)
             return ImportReport(message=msg, metadata=None, total=0)
 
-    def create_tasks(self, task_repo, project, **form_data):
+    def create_tasks(self, task_repo, project, importer=None, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
         from pybossa.cache import projects as cached_projects
@@ -195,8 +194,11 @@ class Importer(object):
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
         n = 0
-        importer = self._create_importer_for(**form_data)
+        importer = importer or self._create_importer_for(**form_data)
         tasks = importer.tasks()
+        header_report = self._validate_headers(importer, project, **form_data)
+        if header_report:
+            return header_report
         msg = ''
         validator = TaskImportValidator(get_enrichment_output_fields(project))
         n_answers = project.get_default_n_answers()
@@ -213,14 +215,16 @@ class Importer(object):
 
                 found = task_repo.find_duplicate(project_id=project.id,
                                                 info=task.info)
-                if found is None:
-                    if validator.validate(task):
-                        try:
-                            n += 1
-                            task_repo.save(task, clean_project=False)
-                        except Exception as e:
-                            current_app.logger.exception(msg)
-                            validator.add_error(str(e))
+                if found is not None:
+                    continue
+                if not validator.validate(task):
+                    continue
+                try:
+                    n += 1
+                    task_repo.save(task, clean_project=False)
+                except Exception as e:
+                    current_app.logger.exception(msg)
+                    validator.add_error(str(e))
         finally:
             cached_projects.clean_project(project.id)
 
@@ -238,6 +242,12 @@ class Importer(object):
         msg += str(validator)
 
         return ImportReport(message=msg, metadata=metadata, total=n)
+
+    def import_if_not_more_than(self, max_task_count, task_repo, project, **form_data):
+        importer = self._create_importer_for(**form_data)
+        if importer.count_tasks() > max_task_count:
+            return
+        return self.create_tasks(task_repo, project, importer, **form_data)
 
     def count_tasks_to_import(self, **form_data):
         """Count tasks to import."""
