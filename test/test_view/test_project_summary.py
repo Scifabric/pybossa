@@ -46,7 +46,7 @@ class TestSummary(web.Helper):
             'data_access': ['L1', 'L2'],
             'select_users': ['1', '2']
         }
-        res = self.app.post(url, content_type='application/json',
+        res = self.app.post(url, method='POST', content_type='application/json',
                             data=json.dumps(fields),
                             headers={'X-CSRFToken': csrf})
         data = json.loads(res.data)
@@ -60,7 +60,7 @@ class TestSummary(web.Helper):
         data = json.loads(res.data)
         csrf = ""
         fields = {'coowners': ['1111']}
-        res = self.app.post(url, content_type='application/json',
+        res = self.app.post(url, method='POST', content_type='application/json',
                             data=json.dumps(fields),
                             headers={'X-CSRFToken': csrf})
         data = json.loads(res.data)
