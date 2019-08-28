@@ -72,7 +72,7 @@ def new_task(project_id, sched, user_id=None, user_ip=None,
     elif disable_gold:
         # This is here for testing. It removes the random variable to make testing deterministic.
         task_type = 'no_gold'
-    elif not random.randint(0, 10):
+    elif random.random() < project.get_gold_task_probability():
         task_type = 'gold_first'
 
     return scheduler(project_id,

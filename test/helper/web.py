@@ -210,6 +210,7 @@ class Helper(Test):
         if method == "POST":
             return self.app.post(url, data={
                 'sched': sched,
+                'gold_task_probability': .4
             }, follow_redirects=True)
         else:
             return self.app.get(url, follow_redirects=True)

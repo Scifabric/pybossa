@@ -251,6 +251,16 @@ class TaskSchedulerForm(Form):
     _choices = map(_translate_names, sched_variants())
     sched = SelectField(lazy_gettext('Task Scheduler'), choices=_choices)
     rand_within_priority = BooleanField(lazy_gettext('Randomize Within Priority'))
+    gold_task_probability_validator = validators.NumberRange(
+        min=0,
+        max=1,
+        message=lazy_gettext('Gold task probability must be a value between 0.0 and 1.0')
+    )
+    gold_task_probability = DecimalField(
+        label=lazy_gettext('Gold Probability'),
+        validators=[gold_task_probability_validator],
+        description=lazy_gettext('Probability value between 0 and 1')
+    )
 
     @classmethod
     def update_sched_options(cls, new_options):
