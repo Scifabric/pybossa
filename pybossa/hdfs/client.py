@@ -37,7 +37,7 @@ class HDFSKerberos(KerberosClient):
         self.get_ticket()
         self.write(path, content, overwrite=True)
 
-    def get(self, path):
+    def get(self, path, **kwargs):
         self.get_ticket()
-        with self.read(path) as reader:
+        with self.read(path, **kwargs) as reader:
             return reader.read()
