@@ -26,13 +26,23 @@ class TestSummary(web.Helper):
 
     @with_context
     def test_post_project_config_setting(self):
+        ext_config = {
+            'ml_service': {
+                'display': 'Active Learning Config',
+                'fields': [{
+                    'name': 'model'
+                    'type': 'TextField'
+                }]
+            }
+        }
+        patch.dict(self.flask_app.config, {'EXTERNAL_CONFIGURATIONS_VUE': ext_config})
         project = ProjectFactory.create(published=True)
         url = '/project/%s/project-config?api_key=%s' % (project.short_name, project.owner.api_key)
         res = self.app_get_json(url)
         data = json.loads(res.data)
         csrf = ""
         fields = {
-            'config': {'target_bucket': 'bucket'},
+            'config': {'model': 'test_model'},
             'data_access': ['L1', 'L2'],
             'select_users': ['1', '2']
         }
