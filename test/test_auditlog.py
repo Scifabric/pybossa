@@ -557,7 +557,7 @@ class TestAuditlogWEB(web.Helper):
 
         old_value = 'default'
 
-        self.app.post(url, data={'sched': new_string}, follow_redirects=True)
+        self.app.post(url, data={'sched': new_string, 'gold_task_probability': .2}, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         assert len(logs) == 1, logs

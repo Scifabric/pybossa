@@ -7302,7 +7302,7 @@ class TestWeb(web.Helper):
             assert data['form']['csrf'] is not None, data
             assert 'sched' in data['form'].keys(), data
 
-            res = self.app_post_json(new_url, data=dict(sched=sched))
+            res = self.app_post_json(new_url, data=dict(sched=sched, gold_task_probability=.5))
             data = json.loads(res.data)
             project = db.session.query(Project).get(1)
             assert project.info['sched'] == sched
@@ -8511,7 +8511,7 @@ class TestWeb(web.Helper):
         project = ProjectFactory.create(owner=admin, short_name='test')
         url = '/project/{}/tasks/scheduler'.format(project.short_name)
         new_url = url + '?api_key={}'.format(admin.api_key)
-        self.app_post_json(new_url, data=dict(sched='locked_scheduler'))
+        self.app_post_json(new_url, data=dict(sched='locked_scheduler', gold_task_probability=.6))
         task = TaskFactory.create(project=project)
 
         self.app.get('/api/project/{}/newtask'.format(project.id),
@@ -8527,7 +8527,7 @@ class TestWeb(web.Helper):
         project2 = ProjectFactory.create(owner=admin, short_name='test2')
         url = '/project/{}/tasks/scheduler'.format(project2.short_name)
         new_url = url + '?api_key={}'.format(admin.api_key)
-        self.app_post_json(new_url, data=dict(sched='user_pref_scheduler'))
+        self.app_post_json(new_url, data=dict(sched='user_pref_scheduler', gold_task_probability=.7))
         task = TaskFactory.create(project=project2)
 
         self.app.get('/api/project/{}/newtask'.format(project2.id),

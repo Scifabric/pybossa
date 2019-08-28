@@ -220,6 +220,6 @@ class Project(db.Model, DomainObject):
         return self.info.get('sched_gold_task_probability', .1)
 
     def set_gold_task_probability(self, value):
-        self.info['sched_gold_task_probability'] = value
+        self.info['sched_gold_task_probability'] = float(value)
 
 Index('project_owner_id_idx', Project.owner_id)

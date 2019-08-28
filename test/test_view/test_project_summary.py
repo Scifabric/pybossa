@@ -67,6 +67,7 @@ class TestSummary(web.Helper):
         csrf = data['csrf']
         fields = {'task': {
             'sched': 'locked_scheduler',
+            'gold_task_probability': .3,
             'minutes': 1,
             'seconds': 30,
             'default_n_answers': 1,
