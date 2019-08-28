@@ -30,7 +30,7 @@ class TestSummary(web.Helper):
             'ml_service': {
                 'display': 'Active Learning Config',
                 'fields': [{
-                    'name': 'model'
+                    'name': 'model',
                     'type': 'TextField'
                 }]
             }
