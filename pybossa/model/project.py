@@ -216,4 +216,10 @@ class Project(db.Model, DomainObject):
     def set_quiz(self, quiz):
         self.info['quiz'] = quiz
 
+    def get_gold_task_probability(self):
+        return self.info.get('sched_gold_task_probability', .1)
+
+    def set_gold_task_probability(self, value):
+        self.info['sched_gold_task_probability'] = value
+
 Index('project_owner_id_idx', Project.owner_id)
