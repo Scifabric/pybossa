@@ -237,7 +237,7 @@ class TestImporterPublicMethods(Test):
             'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enrich'}]
 
         importer_factory.return_value = mock_importer
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(info={'enrichments':[{'out_field_name':'enriched'}]})
         form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
