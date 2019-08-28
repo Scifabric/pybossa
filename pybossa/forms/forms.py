@@ -258,7 +258,7 @@ class TaskSchedulerForm(Form):
     )
     gold_task_probability = DecimalField(
         label=lazy_gettext('Gold Probability'),
-        validators=[gold_task_probability_validator]
+        validators=[gold_task_probability_validator],
         description=lazy_gettext('Probability value between 0 and 1')
     )
 
