@@ -2143,11 +2143,12 @@ def task_scheduler(short_name):
 
     if request.method == 'GET':
         if project.info.get('sched'):
-            for s in form.sched.choices:
-                if project.info['sched'] == s[0]:
-                    form.sched.data = s[0]
+            for sched_name, _ in form.sched.choices:
+                if project.info['sched'] == sched_name:
+                    form.sched.data = sched_name
                     break
         form.rand_within_priority.data = project.info.get('sched_rand_within_priority', False)
+        form.gold_task_probability.data = project.get_gold_task_probability()
         return respond()
 
     if request.method == 'POST' and form.validate():
@@ -2159,6 +2160,7 @@ def task_scheduler(short_name):
         if form.sched.data:
             project.info['sched'] = form.sched.data
         project.info['sched_rand_within_priority'] = form.rand_within_priority.data
+        project.set_gold_task_probability(form.gold_task_probability.data)
         project_repo.save(project)
         # Log it
         if old_sched != project.info['sched']:
