@@ -860,118 +860,22 @@ def details(short_name):
     response = dict(template=template, **template_args)
     return handle_content_type(response)
 
-
-def save_project_configuration(body, project, short_name):
-    # update each field on project summary page (eg: project, ownership, task, answer, quiz)
-    if "project" in body:
-        key = "project"
-        data = body.get(key) or {}
-        project.info['ext_config'] = data.get('config')
-
-        if bool(data_access_levels):
-            # for private gigwork
-            project.info['data_access'] = data.get('data_access')
-            assign_users(short_name)
-
-    elif "task" in body:
-        key = "task"
-        data = body.get(key) or {}
-        result = task_scheduler(short_name)
-        result = task_timeout(short_name)
-        task_n_answers(short_name)
-
-    elif "ownership" in body:
-        key = "ownership"
-        data = body.get(key) or {}
-        ensure_authorized_to('read', project)
-        ensure_authorized_to('update', project)
-        old_list = project.owners_ids or []
-        new_list = [str(x) for x in data.get('coowners') or []]
-        overlap_list = [value for value in old_list if value in new_list]
-        add = [value for value in new_list if value not in overlap_list]
-        delete = [value for value in old_list if value not in overlap_list]
-        for _id in delete:
-            project.owners_ids.remove(_id)
-        for _id in add:
-            project.owners_ids.append(_id)
-    elif "quiz" in body:
-        key = "quiz"
-        data = body.get(key) or {}
-        result = process_quiz_mode_request(project)
-    elif "answer_fields" in body or "consensus_config" in body:
-        key = 'answer_fields_configutation'
-        data = body
-        result = answerfieldsconfig(short_name)
-    else:
-        raise ValueError('Empty data in post request from /summary.')
-
-    project_repo.save(project)
-    auditlogger.log_event(project, current_user, 'update', 'project.' + key,
-    'N/A', data)
-
-@blueprint.route('/<short_name>/summary', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/summary', methods=['GET'])
 @login_required
 def summary(short_name):
     project, owner, ps = project_by_shortname(short_name)
-    external_config = project.info.get('ext_config') or {}
-    external_config_form = current_app.config.get('EXTERNAL_CONFIGURATIONS_VUE', {})
-    data_access = project.info.get('data_access') or []
-    users = cached_users.get_users_for_data_access(data_access) if data_access_levels and data_access else []
-    scheduler = project.info.get('sched')
-    timeout = project.info.get('timeout') or DEFAULT_TASK_TIMEOUT
-    default_task_redundancy = project.get_default_n_answers()
-    answer_fields_config = project.info.get('answer_fields') or {}
-    consensus_config = project.info.get('consensus_config') or {}
-    quiz_config = project.get_quiz()
-    all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
-    all_user_quizzes = [dict(row) for row in all_user_quizzes]
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                 owner,
                                                                 current_user,
                                                                 ps)
-    coowners = [cached_users.get_user_by_id(_id) for _id in project.owners_ids]
-    coowners = [{"id": user.id, "fullname": user.fullname} for user in coowners]
-    assign_user = [cached_users.get_user_by_id(_id) for _id in project.get_project_users()]
-    assign_user = [{"id": user.id, "fullname": user.fullname} for user in assign_user]
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
-    template = '/projects/summary.html'
     pro = pro_features()
-    if request.method == 'POST':
-        try:
-            body = json.loads(request.data) or {}
-            save_project_configuration(body, project, short_name)
-            msg = gettext("Configuration updated successfully")
-            flash(msg, 'success')
-        except Exception:
-            flash(gettext('An error occurred.'), 'error')
 
-    quiz_config['mode_choices'] = [
-            ('all_questions', 'Present all the quiz questions'),
-            ('short_circuit', 'End as soon as pass/fail status is known') ]
-    sched_config= dict(sched=scheduler,
-                       rand_within_priority=project.info.get('sched_rand_within_priority'),
-                       sched_variants=sched.sched_variants())
     response = {"template": '/projects/summary.html',
                 "project": project_sanitized,
                 "pro_features": pro,
                 "overall_progress": ps.overall_progress,
-                "external_config": json.dumps(external_config),
-                "external_config_form": json.dumps(external_config_form),
-                "assign_user": json.dumps(assign_user),
-                "users": json.dumps(users),
-                "data_access": json.dumps(data_access),
-                "valid_access_levels": data_access_levels.get('valid_access_levels') or [],
-                "owner": json.dumps(owner_sanitized),
-                "coowners": json.dumps(coowners),
-                "default_task_redundancy": default_task_redundancy,
-                "sched_config": json.dumps(sched_config),
-                "timeout": int(timeout),
-                "answer_fields": json.dumps(answer_fields_config),
-                "consensus_config": json.dumps(consensus_config),
-                "quiz_config": json.dumps(quiz_config),
-                "all_user_quizzes": json.dumps(all_user_quizzes),
-                "csrf": generate_csrf()
                 }
 
     return handle_content_type(response)
@@ -2216,16 +2120,8 @@ def task_scheduler(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
     title = project_title(project, gettext('Task Scheduler'))
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        body = json.loads(request.data)
-        data = body['task'] if body.get('task') else body
-        result = get_json_multiDict(data)
-    else:
-        result = request.body
-
-    form = TaskSchedulerForm(result)
+    form = TaskSchedulerForm(request.body)
     pro = pro_features()
-
 
     def respond():
         project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -2235,7 +2131,7 @@ def task_scheduler(short_name):
         response = dict(template='/projects/task_scheduler.html',
                         title=title,
                         form=form,
-                        sched_variants=sched.sched_variants(),
+                        sched_variants=current_app.config.get('AVAILABLE_SCHEDULERS'),
                         project=project_sanitized,
                         owner=owner_sanitized,
                         pro_features=pro,
@@ -2338,12 +2234,13 @@ def task_timeout(short_name):
                                                                     current_user,
                                                                     ps)
     title = project_title(project, gettext('Timeout'))
-    if request.headers.get('content-type') == 'application/json' and request.data:
-        body = json.loads(request.data)
-        data = body['task'] if body.get('task') else body
-        form = TaskTimeoutForm(get_json_multiDict(data))
-    else:
-        form = TaskTimeoutForm()
+    # if request.headers.get('content-type') == 'application/json' and request.data:
+    #     body = json.loads(request.data)
+    #     data = body['task'] if body.get('task') else body
+    #     form = TaskTimeoutForm(get_json_multiDict(data))
+    # else:
+    #     form = TaskTimeoutForm()
+    form = TaskTimeoutForm(request.body)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     pro = pro_features()
@@ -2371,19 +2268,19 @@ def task_timeout(short_name):
         msg = gettext("Project Task Timeout updated!")
         flash(msg, 'success')
 
-        return redirect(url_for('.tasks', short_name=project.short_name))
+        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
     else:
         if not form.in_range():
             flash(gettext('Timeout should be between {} seconds and {} minuntes')
                           .format(form.min_seconds, form.max_minutes), 'error')
         else:
             flash(gettext('Please correct the errors'), 'error')
-        return render_template('/projects/task_timeout.html',
+        return handle_content_type(dict(template='/projects/task_timeout.html',
                                title=title,
                                form=form,
                                project=project_sanitized,
-                               owner=owner,
-                               pro_features=pro)
+                               owner=owner_sanitized,
+                               pro_features=pro))
 
 
 @blueprint.route('/<short_name>/blog')
@@ -2812,7 +2709,6 @@ def transfer_ownership(short_name):
 @login_required
 def coowners(short_name):
     """Manage coowners of a project."""
-    # import pdb; pdb.set_trace()
     form = SearchForm(request.body)
     project, owner, ps = project_by_shortname(short_name)
     sanitize_project, owner_sanitized = sanitize_project_owner(project, owner, current_user, ps)
@@ -2833,27 +2729,14 @@ def coowners(short_name):
         owner=owner_sanitized,
         title=gettext("Manage Co-owners"),
         form=form,
+        found=[],
         pro_features=pro_features(),
         csrf=generate_csrf()
     )
 
     if request.method == 'POST':
-        # update coowners
-        old_list = project.owners_ids or []
-        old_list = [1, 3]
-        new_list = [int(x) for x in json.loads(request.data).get('coowners') or []]
-        overlap_list = [value for value in old_list if value in new_list]
-        # delete ids that don't exist anymore
-        delete = [value for value in old_list if value not in overlap_list]
-        for _id in delete:
-            project.owners_ids.remove(_id)
-        # add ids that weren't there
-        add = [value for value in new_list if value not in overlap_list]
-        for _id in add:
-            project.owners_ids.append(_id)
-        project_repo.save(project)
-
         if form.user.data:
+            # search users
             query = form.user.data
 
             filters = {'enabled': True}
@@ -2873,6 +2756,21 @@ def coowners(short_name):
                     public_user['id'] = user.id
                     found.append(public_user)
                 response['found'] = found
+        else:
+            # save coowners
+            old_list = project.owners_ids or []
+            new_list = [int(x) for x in json.loads(request.data).get('coowners') or []]
+            overlap_list = [value for value in old_list if value in new_list]
+            # delete ids that don't exist anymore
+            delete = [value for value in old_list if value not in overlap_list]
+            for _id in delete:
+                project.owners_ids.remove(_id)
+            # add ids that weren't there
+            add = [value for value in new_list if value not in overlap_list]
+            for _id in add:
+                project.owners_ids.append(_id)
+            project_repo.save(project)
+            flash(gettext('Configuration updated successfully'), 'success')
 
     return handle_content_type(response)
 
@@ -3132,7 +3030,6 @@ def project_config(short_name):
         '''
         input_forms = []
         ext_config_field_name = []
-        # print(forms)
         for _, content in six.iteritems(forms):
             input_forms.append(content)
             for field in content.get('fields', []):
@@ -3162,22 +3059,27 @@ def project_config(short_name):
                     cf[name] = config_dict[name]
             if cf:
                 new_config[fieldname] = cf
+        print(new_config)
         return new_config
 
     if request.method == 'POST':
-        data = json.loads(request.data)
-        project.info['ext_config'] = integrate_ext_config(data.get('config'))
-        if bool(data_access_levels):
-            # for private gigwork
-            project.info['data_access'] = data.get('data_access')
+        try:
+            data = json.loads(request.data)
+            project.info['ext_config'] = integrate_ext_config(data.get('config'))
+            if bool(data_access_levels):
+                # for private gigwork
+                project.info['data_access'] = data.get('data_access')
+            project_repo.save(project)
+            flash(gettext('Configuration updated successfully'), 'success')
+        except Exception:
+            flash(gettext('An error occurred.'), 'error')
+
 
     ext_config = project.info.get('ext_config', {})
     input_forms, ext_config_dict = generate_input_forms_and_external_config_dict()
     data_access = project.info.get('data_access') or []
 
     response = dict(template='/projects/summary.html',
-                    external_config_form=json.dumps(forms),
-                    external_config=json.dumps(ext_config),
                     external_config_dict=json.dumps(ext_config_dict),
                     forms=input_forms,
                     data_access=json.dumps(data_access),
@@ -3191,8 +3093,6 @@ def project_config(short_name):
 @login_required
 @admin_or_subadmin_required
 def ext_config(short_name):
-    """Manage configuration of external services."""
-    import pdb;pdb.set_trace()
     from pybossa.forms.dynamic_forms import form_builder
 
     project, owner, ps = project_by_shortname(short_name)
@@ -3233,7 +3133,7 @@ def ext_config(short_name):
         template='/projects/external_config.html',
         project=sanitize_project,
         title=gettext("Configure external services"),
-        forms=template_forms,
+        form=template_forms,
         pro_features=pro_features()
     )
 
@@ -3266,17 +3166,14 @@ def assign_users(short_name):
             url_for('.settings', short_name=project.short_name))
 
     users = cached_users.get_users_for_data_access(access_levels)
-    # users = [{"id": user.id, "fullname": user.fullname} for user in users]
     if not users:
         current_app.logger.info(
             'Project id {} no user matching data access level {} for this project.'.format(project.id, access_levels))
         flash('Cannot assign users. There is no user matching data access level for this project', 'warning')
         return redirect_content_type(url_for('.settings', short_name=project.short_name))
-    import pdb; pdb.set_trace()
 
     form = DataAccessForm(request.body)
-    project_users = request.body.get('select_users')
-    print(project_users)
+    project_users = json.loads(request.data).get("select_users", []) if request.data else request.form.getlist('select_users')
 
     if request.method == 'GET':
         project_sanitized, owner_sanitized = sanitize_project_owner(
@@ -3289,10 +3186,12 @@ def assign_users(short_name):
             project=project_sanitized,
             title=gettext("Assign Users to Project"),
             project_users=project_users,
-            users=json.dumps(users),
+            form=form,
+            all_users=users,
             pro_features=pro_features()
         )
         return handle_content_type(response)
+
     project_users = map(int, project_users)
     project.set_project_users(project_users)
     project_repo.save(project)
@@ -3345,6 +3244,7 @@ def process_quiz_mode_request(project):
         user = user_repo.get(user_id)
         user.reset_quiz(project)
         user_repo.update(user)
+    flash(gettext('Configuration updated successfully'), 'success')
     return redirect_content_type(url_for('.quiz_mode', short_name=project.short_name))
 
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
@@ -3410,7 +3310,6 @@ def answerfieldsconfig(short_name):
     project, owner, ps = project_by_shortname(short_name)
     pro = pro_features()
     ensure_authorized_to('update', project)
-    print(project)
 
     answer_fields_key = 'answer_fields'
     consensus_config_key = 'consensus_config'
