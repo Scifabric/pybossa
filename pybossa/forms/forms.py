@@ -346,18 +346,20 @@ class BulkTaskLocalCSVImportForm(Form):
         raise IOError('Local Upload folder is missing: {0}'.format(filepath))
 
     def get_import_data(self):
-        if request.method == 'POST':
+        def get_csv_filename():
+            if request.method != 'POST':
+                return
             if 'file' not in request.files:
-                return {'type': 'localCSV', 'csv_filename': None}
+                return
             csv_file = request.files['file']
             if csv_file.filename == '':
-                return {'type': 'localCSV', 'csv_filename': None}
+                return
             if csv_file and self._allowed_file(csv_file.filename):
-                file_path = get_file_path_for_import_csv(csv_file)
-                return {'type': 'localCSV', 'csv_filename': file_path}
+                return get_file_path_for_import_csv(csv_file)
+
         return {
             'type': 'localCSV',
-            'csv_filename': None,
+            'csv_filename': get_csv_filename(),
             'validate_tp': not self.do_not_validate_tp.data
         }
 
