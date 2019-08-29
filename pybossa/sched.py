@@ -303,8 +303,10 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
         gold_first ->   gold tasks will be returned before non-gold tasks.
     '''
     filters = []
+    current_app.logger.info(filter_user_prefs)
     if filter_user_prefs:
         filters.append('AND ({})'.format(cached_users.get_user_preferences(user_id)))
+    current_app.logger.info(filters)
     filters.append(data_access.get_data_access_db_clause_for_task_assignment(user_id) or '')
     if task_type == 'gold':
         filters.append('AND task.calibration = 1')
@@ -349,10 +351,14 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
 def select_contributable_task(project, user_id, **kwargs):
     sched, _ = get_scheduler_and_timeout(project)
     with_user_pref = sched == Schedulers.user_pref
+    kwargs['filter_user_prefs'] = with_user_pref
+
+    params = dict(project_id=project.id, user_id=user_id, limit=1)
+    if with_user_pref:
+        params['assign_user'] = None
+
     sql = locked_task_sql(project.id, user_id, **kwargs)
-    rows = session.execute(sql,
-        dict(project_id=project.id, user_id=user_id, limit=1)
-    )
+    rows = session.execute(sql, params)
     for row in rows:
         return task_repo.get_task(row.id)
     return {}
