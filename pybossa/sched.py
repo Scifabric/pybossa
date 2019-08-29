@@ -303,10 +303,8 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
         gold_first ->   gold tasks will be returned before non-gold tasks.
     '''
     filters = []
-    current_app.logger.info(filter_user_prefs)
     if filter_user_prefs:
         filters.append('AND ({})'.format(cached_users.get_user_preferences(user_id)))
-    current_app.logger.info(filters)
     filters.append(data_access.get_data_access_db_clause_for_task_assignment(user_id) or '')
     if task_type == 'gold':
         filters.append('AND task.calibration = 1')
