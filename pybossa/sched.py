@@ -349,10 +349,14 @@ def locked_task_sql(project_id, user_id=None, limit=1, rand_within_priority=Fals
 def select_contributable_task(project, user_id, **kwargs):
     sched, _ = get_scheduler_and_timeout(project)
     with_user_pref = sched == Schedulers.user_pref
+    kwargs['filter_user_prefs'] = with_user_pref
+
+    params = dict(project_id=project.id, user_id=user_id, limit=1)
+    if with_user_pref:
+        params['assign_user'] = None
+
     sql = locked_task_sql(project.id, user_id, **kwargs)
-    rows = session.execute(sql,
-        dict(project_id=project.id, user_id=user_id, limit=1)
-    )
+    rows = session.execute(sql, params)
     for row in rows:
         return task_repo.get_task(row.id)
     return {}
