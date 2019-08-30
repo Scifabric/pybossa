@@ -145,7 +145,7 @@ def get_project_encryption(project):
     if not encryption_jpath:
         return None
     data = project['info']
-    for segment in path:
+    for segment in encryption_jpath:
         data = data.get(segment, {})
     return data
 
