@@ -101,9 +101,15 @@ def encrypted_file(store, bucket, project_id, path):
     check_allowed(current_user.id, task_id, project, lambda v: v == request.path)
 
     ## download file
+    if bucket != current_app.config.get('S3_REQUEST_BUCKET'):
+        secret = get_encryption_key(project)
+    else:
+        secret = current_app.config.get('FILE_ENCRYPTION_KEY')
+
     try:
         key_name = '/{}/{}'.format(project_id, path)
-        decrypted, key = get_content_and_key_from_s3(bucket, key_name, 'S3_TASK_REQUEST', decrypt=True)
+        decrypted, key = get_content_and_key_from_s3(
+            bucket, key_name, 'S3_TASK_REQUEST', decrypt=secret, secret=secret)
     except S3ResponseError as e:
         current_app.logger.exception('Project id {} get task file {} {}'.format(project_id, path, e))
         if e.error_code == 'NoSuchKey':
@@ -115,6 +121,39 @@ def encrypted_file(store, bucket, project_id, path):
     response.headers.add('Content-Encoding', key.content_encoding)
     response.headers.add('Content-Disposition', key.content_disposition)
     return response
+
+
+def get_path(dict_, path):
+    if not path:
+        return dict_
+    return get_path(dict_[path[0]], path[1:])
+
+
+def get_secret_from_vault(project_encryption):
+    config = current_app.config['VAULT_CONFIG']
+    res = requests.get(config['url'].format(**project_encryption), **config['request'])
+    res.raise_for_status()
+    data = res.json()
+    try:
+        return get_path(data, config['response'])
+    except Exception:
+        raise RuntimeError(get_path(data, config['error']))
+
+
+def get_project_encryption(project):
+    encryption_jpath = current_app.config.get('ENCRYPTION_CONFIG_PATH')
+    if not encryption_jpath:
+        return None
+    data = project['info']
+    for segment in path:
+        data = data.get(segment, {})
+    return data
+
+
+def get_encryption_key(project):
+    project_encryption = get_project_encryption(project)
+    if project_encryption:
+        return get_secret_from_vault(project_encryption)
 
 
 @blueprint.route('/hdfs/<string:cluster>/<int:project_id>/<path:path>')
@@ -141,7 +180,7 @@ def hdfs_file(project_id, cluster, path):
         offset = int(offset) if offset else None
         length = int(length) if length else None
         content = client.get('/{}'.format(path), offset=offset, length=length)
-        project_encryption = project['info'].get('ext_config', {}).get('encryption', {})
+        project_encryption = get_project_encryption(project)
         if project_encryption and all(project_encryption.values()):
             secret = get_secret_from_vault(project_encryption)
             cipher = AESWithGCM(secret)
@@ -152,20 +191,3 @@ def hdfs_file(project_id, cluster, path):
         raise InternalServerError('An Error Occurred')
 
     return Response(content)
-
-
-def get_secret_from_vault(project_encryption):
-    config = current_app.config['VAULT_CONFIG']
-    res = requests.get(config['url'].format(**project_encryption), **config['request'])
-    res.raise_for_status()
-    data = res.json()
-    try:
-        return get_path(data, config['response'])
-    except Exception:
-        raise RuntimeError(get_path(data, config['error']))
-
-
-def get_path(dict_, path):
-    if not path:
-        return dict_
-    return get_path(dict_[path[0]], path[1:])
