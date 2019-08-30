@@ -80,7 +80,8 @@ class TestFileproxy(web.Helper):
         key.get_contents_as_string.return_value = aes.encrypt('the content')
 
         with patch.dict(self.flask_app.config, {
-            'FILE_ENCRYPTION_KEY': encryption_key
+            'FILE_ENCRYPTION_KEY': encryption_key,
+            'S3_REQUEST_BUCKET': 'test'
         }):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 200, res.status_code
@@ -105,7 +106,8 @@ class TestFileproxy(web.Helper):
         key.get_contents_as_string.return_value = aes.encrypt('the content')
 
         with patch.dict(self.flask_app.config, {
-            'FILE_ENCRYPTION_KEY': encryption_key
+            'FILE_ENCRYPTION_KEY': encryption_key,
+            'S3_REQUEST_BUCKET': 'test'
         }):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 200, res.status_code
@@ -164,7 +166,8 @@ class TestFileproxy(web.Helper):
         key.get_contents_as_string.return_value = aes.encrypt('the content')
 
         with patch.dict(self.flask_app.config, {
-            'FILE_ENCRYPTION_KEY': encryption_key
+            'FILE_ENCRYPTION_KEY': encryption_key,
+            'S3_REQUEST_BUCKET': 'test'
         }):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 200, res.status_code
@@ -228,7 +231,8 @@ class TestHDFSproxy(web.Helper):
             },
             'response': ['key'],
             'error': ['error']
-        }
+        },
+        'ENCRYPTION_CONFIG_PATH': ['ext_config', 'encryption']
     }
 
     @with_context
