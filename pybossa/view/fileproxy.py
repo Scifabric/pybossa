@@ -170,8 +170,15 @@ def hdfs_file(project_id, cluster, path):
     timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
     payload = signer.loads(signature, max_age=timeout)
     task_id = payload['task_id']
-    check_allowed(current_user.id, task_id, project,
-                  is_valid_hdfs_url(request.path, request.args.to_dict(flat=False)))
+
+    try:
+        check_allowed(current_user.id, task_id, project,
+                    is_valid_hdfs_url(request.path, request.args.to_dict(flat=False)))
+    except Exception:
+        current_app.logger.exception('Project id %s not allowed to get file %s %s', project_id, path,
+                                                                                    str(request.args))
+        raise
+
     client = HDFSKerberos(**current_app.config['HDFS_CONFIG'][cluster])
     offset = request.args.get('offset')
     length = request.args.get('length')

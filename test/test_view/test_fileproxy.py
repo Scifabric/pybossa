@@ -392,6 +392,37 @@ class TestHDFSproxy(web.Helper):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 500, res.status_code
 
+    @with_context
+    @patch('pybossa.view.fileproxy.HDFSKerberos.get')
+    @patch('pybossa.view.fileproxy.requests.get')
+    def test_offset_length(self, http_get, hdfs_get):
+        res = MagicMock()
+        res.json.return_value = {'key': 'testkey'}
+        http_get.return_value = res
+
+        project = ProjectFactory.create(info={
+            'ext_config': {
+                'encryption': {'key_id': 123}
+            }
+        })
+        url = '/fileproxy/hdfs/test/%s/file.ndjson?offset=10&length=10' % project.id
+        task = TaskFactory.create(project=project, info={
+            'url': url
+        })
+        owner = project.owner
+
+        signature = signer.dumps({'task_id': task.id})
+        req_url = '%s&api_key=%s&task-signature=%s' % (url, owner.api_key, signature)
+
+        encryption_key = 'testkey'
+        aes = AESWithGCM(encryption_key)
+        hdfs_get.return_value = aes.encrypt('the content')
+
+        with patch.dict(self.flask_app.config, self.app_config):
+            res = self.app.get(req_url, follow_redirects=True)
+            assert res.status_code == 200, res.status_code
+            assert res.data == 'the content', res.data
+
 
 def test_is_file_url():
     file_url = '/a/b'
