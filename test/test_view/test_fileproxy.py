@@ -80,7 +80,8 @@ class TestFileproxy(web.Helper):
         key.get_contents_as_string.return_value = aes.encrypt('the content')
 
         with patch.dict(self.flask_app.config, {
-            'FILE_ENCRYPTION_KEY': encryption_key
+            'FILE_ENCRYPTION_KEY': encryption_key,
+            'S3_REQUEST_BUCKET': 'test'
         }):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 200, res.status_code
@@ -105,7 +106,8 @@ class TestFileproxy(web.Helper):
         key.get_contents_as_string.return_value = aes.encrypt('the content')
 
         with patch.dict(self.flask_app.config, {
-            'FILE_ENCRYPTION_KEY': encryption_key
+            'FILE_ENCRYPTION_KEY': encryption_key,
+            'S3_REQUEST_BUCKET': 'test'
         }):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 200, res.status_code
@@ -164,7 +166,43 @@ class TestFileproxy(web.Helper):
         key.get_contents_as_string.return_value = aes.encrypt('the content')
 
         with patch.dict(self.flask_app.config, {
-            'FILE_ENCRYPTION_KEY': encryption_key
+            'FILE_ENCRYPTION_KEY': encryption_key,
+            'S3_REQUEST_BUCKET': 'test'
+        }):
+            res = self.app.get(req_url, follow_redirects=True)
+            assert res.status_code == 200, res.status_code
+            assert res.data == 'the content', res.data
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.create_connection')
+    @patch('pybossa.view.fileproxy.has_lock')
+    @patch('pybossa.view.fileproxy.get_secret_from_vault')
+    def test_file_user_key_from_vault(self, get_secret, has_lock, create_connection):
+        has_lock.return_value = True
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(info={
+            'encryption': {
+                'key': 'abc'
+            }
+        })
+        url = '/fileproxy/encrypted/s3/anothertest/%s/file.pdf' % project.id
+        task = TaskFactory.create(project=project, info={
+            'url': url
+        })
+
+        signature = signer.dumps({'task_id': task.id})
+        req_url = '%s?api_key=%s&task-signature=%s' % (url, user.api_key, signature)
+
+        encryption_key = 'testkey'
+        aes = AESWithGCM(encryption_key)
+        key = self.get_key(create_connection)
+        key.get_contents_as_string.return_value = aes.encrypt('the content')
+        get_secret.return_value = encryption_key
+
+        with patch.dict(self.flask_app.config, {
+            'FILE_ENCRYPTION_KEY': 'another key',
+            'S3_REQUEST_BUCKET': 'test',
+            'ENCRYPTION_CONFIG_PATH': ['encryption']
         }):
             res = self.app.get(req_url, follow_redirects=True)
             assert res.status_code == 200, res.status_code
@@ -228,7 +266,8 @@ class TestHDFSproxy(web.Helper):
             },
             'response': ['key'],
             'error': ['error']
-        }
+        },
+        'ENCRYPTION_CONFIG_PATH': ['ext_config', 'encryption']
     }
 
     @with_context
