@@ -9010,7 +9010,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_make_random_gold(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(info={'sched': 'user_pref_scheduler'})
         user = project.owner
         # with no tasks available
         url = u'/project/{}/make-random-gold?api_key={}'.format(project.short_name, user.api_key)
