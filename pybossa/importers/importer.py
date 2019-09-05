@@ -243,12 +243,6 @@ class Importer(object):
 
         return ImportReport(message=msg, metadata=metadata, total=n)
 
-    def import_if_not_more_than(self, max_task_count, task_repo, project, **form_data):
-        importer = self._create_importer_for(**form_data)
-        if importer.count_tasks() > max_task_count:
-            return
-        return self.create_tasks(task_repo, project, importer, **form_data)
-
     def count_tasks_to_import(self, **form_data):
         """Count tasks to import."""
         return self._create_importer_for(**form_data).count_tasks()

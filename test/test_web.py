@@ -6269,7 +6269,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.projects.importer_queue', autospec=True)
-    @patch('pybossa.importers.csv.BulkTaskCSVImportBase.count_tasks')
+    @patch('pybossa.view.projects.importer.count_tasks_to_import')
     def test_import_tasks_as_background_job(self, count_tasks, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
         from pybossa.view.projects import MAX_NUM_SYNCHRONOUS_TASKS_IMPORT
