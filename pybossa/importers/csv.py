@@ -176,18 +176,10 @@ class BulkTaskCSVImportBase(BulkTaskImport):
         BulkTaskImport.__init__(self)
         self._field_processors = None
         self._input_fields = None
-        self._task_list = None
-    
-    def count_tasks(self):
-        """Return amount of tasks to be imported."""
-        return len(self.tasks())
     
     def tasks(self):
         """Get tasks from a given URL."""
-        if self._task_list is None:
-            self._task_list = list(self._get_csv_data())
-        
-        return self._task_list
+        return self._get_csv_data()
 
     def headers(self, csvreader=None):
         if self._headers is not None:
@@ -360,3 +352,6 @@ class BulkTaskLocalCSVImport(BulkTaskCSVImportBase):
         csv_file.stream.seek(0)
         csvcontent = io.StringIO(csv_file.stream.read())
         return unicode_csv_reader(csvcontent)
+
+    def tasks(self):
+        return list(BulkTaskCSVImportBase.tasks(self))

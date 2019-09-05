@@ -132,7 +132,7 @@ class TestBulkTaskGDImport(object):
 
         raised = False
         try:
-            self.importer.tasks()
+            self.importer.tasks().next()
         except BulkImportException as e:
             assert e[0] == msg, e
             raised = True
@@ -146,7 +146,8 @@ class TestBulkTaskGDImport(object):
                                 encoding='utf-8')
         request.return_value = csv_file
 
-        task = self.importer.tasks()[0]
+        tasks = self.importer.tasks()
+        task = tasks.next()
 
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
 
@@ -158,7 +159,8 @@ class TestBulkTaskGDImport(object):
                                 encoding='utf-8')
         request.return_value = csv_file
 
-        task = self.importer.tasks()[0]
+        tasks = self.importer.tasks()
+        task = tasks.next()
 
         assert task == {'info': {u'Foo': u'1', u'Bar': u'2'},
                         u'priority_0': u'3'}, task
@@ -170,6 +172,7 @@ class TestBulkTaskGDImport(object):
                                 encoding='ISO-8859-1')
         request.return_value = csv_file
 
-        task = self.importer.tasks()[0]
+        tasks = self.importer.tasks()
+        task = tasks.next()
 
         assert csv_file.encoding == 'utf-8'
