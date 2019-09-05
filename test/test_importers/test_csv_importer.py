@@ -84,11 +84,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = csv_file
         msg = "The file you uploaded has two headers with the same name."
 
-        assert_raises(BulkImportException, self.importer.count_tasks)
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.count_tasks()
-        except BulkImportException as e:
-            assert e[0] == msg, e
+        assert context.exception[0] == msg, context.exception
 
     def test_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = FakeResponse(text='Forbidden', status_code=403,
