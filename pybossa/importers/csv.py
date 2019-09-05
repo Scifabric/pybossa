@@ -74,7 +74,7 @@ class ReservedFieldProcessor(object):
     is_input = False
 
     @staticmethod
-    def can_process(header):
+    def create_if_can_process(header):
         if header in ReservedFieldProcessor.reserved_fields:
             return ReservedFieldProcessor(header)
 
@@ -96,7 +96,7 @@ class GoldFieldProcessor(object):
     is_input = False
 
     @staticmethod
-    def can_process(header):
+    def create_if_can_process(header):
         gold_match = re.match('(?P<field>.*?)(_priv)?_gold(_(?P<type>json|number|bool|null))?$', header)
         if gold_match:
             return GoldFieldProcessor(gold_match.group('type'), gold_match.group('field'), header)
@@ -115,7 +115,7 @@ class PrivateFieldProcessor(object):
     is_input = True
 
     @staticmethod
-    def can_process(header):
+    def create_if_can_process(header):
         priv_match = re.match('(?P<field>.*?)_priv(_(?P<type>json|number|bool|null))?$', header)
         if priv_match:
             return PrivateFieldProcessor(priv_match.group('type'), priv_match.group('field'), header)
@@ -137,7 +137,7 @@ class DataAccessFieldProcessor(object):
     is_input = True
 
     @staticmethod
-    def can_process(header):
+    def create_if_can_process(header):
         if header == DataAccessFieldProcessor.field_name and data_access_levels:
             return DataAccessFieldProcessor()
 
@@ -156,7 +156,7 @@ class PublicFieldProcessor(object):
     is_input = True
 
     @staticmethod
-    def can_process(header):
+    def create_if_can_process(header):
         pub_match = re.match('(?P<field>.*?)(_(?P<type>json|number|bool|null))?$', header)
         if pub_match: # This must match since there are no other options left.
             return PublicFieldProcessor(pub_match.group('type'), pub_match.group('field'), header)
@@ -200,11 +200,11 @@ class BulkTaskCSVImportBase(BulkTaskImport):
         def get_field_processors():
             for header in self.headers(csvreader):
                 yield (
-                    ReservedFieldProcessor.can_process(header)
-                    or GoldFieldProcessor.can_process(header)
-                    or PrivateFieldProcessor.can_process(header)
-                    or DataAccessFieldProcessor.can_process(header)
-                    or PublicFieldProcessor.can_process(header)
+                    ReservedFieldProcessor.create_if_can_process(header)
+                    or GoldFieldProcessor.create_if_can_process(header)
+                    or PrivateFieldProcessor.create_if_can_process(header)
+                    or DataAccessFieldProcessor.create_if_can_process(header)
+                    or PublicFieldProcessor.create_if_can_process(header)
                 )
 
         if self._field_processors is None:
@@ -225,6 +225,9 @@ class BulkTaskCSVImportBase(BulkTaskImport):
 
     def _import_csv_tasks(self, csvreader):
         """Import CSV tasks."""
+        # These two lines execute immediately when the function is called.
+        # The rest is deferred inside the generator function until the 
+        # first task is iterated.
         csviterator = iter(csvreader)
         self.fields(csvreader=csviterator)
 
@@ -275,8 +278,8 @@ class BulkTaskCSVImportBase(BulkTaskImport):
                           'required header(s): {0}'.format(','.join(missing_headers)))
             raise BulkImportException(msg)
 
-    # must implement
-    # def _get_csv_reader(self):
+    def _get_csv_reader(self):
+        raise NotImplementedError()
 
     def _get_csv_data(self):
         return self._import_csv_tasks(self._get_csv_reader())
