@@ -17,7 +17,6 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from mock import patch, Mock
 from pybossa.importers import Importer
-
 from default import Test, with_context
 from factories import ProjectFactory, TaskFactory
 from pybossa.repositories import TaskRepository
@@ -38,7 +37,7 @@ class TestImporterPublicMethods(Test):
                                             'n_answers': 20}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='csv', csv_url='http://fakecsv.com')
+        form_data = dict(type='csv', csv_url='http://fakecsv.com', validate_tp=False)
         self.importer.create_tasks(task_repo, project, **form_data)
         task = task_repo.get_task(1)
 
@@ -56,7 +55,7 @@ class TestImporterPublicMethods(Test):
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
+        form_data = dict(type='gdocs', googledocs_url='http://ggl.com', validate_tp=False)
         result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
@@ -71,7 +70,7 @@ class TestImporterPublicMethods(Test):
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
         TaskFactory.create(project=project, info={'question': 'question'})
-        form_data = dict(type='flickr', album_id='1234')
+        form_data = dict(type='flickr', album_id='1234', validate_tp=False)
 
         result = self.importer.create_tasks(task_repo, project, **form_data)
         tasks = task_repo.filter_tasks_by(project_id=project.id)
@@ -88,7 +87,7 @@ class TestImporterPublicMethods(Test):
         mock_importer.import_metadata.return_value = metadata
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='flickr', album_id='1234')
+        form_data = dict(type='flickr', album_id='1234', validate_tp=False)
 
         result = self.importer.create_tasks(task_repo, project, **form_data)
 
@@ -104,7 +103,7 @@ class TestImporterPublicMethods(Test):
         mock_importer.import_metadata.return_value = metadata
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='flickr', album_id='1234')
+        form_data = dict(type='flickr', album_id='1234', validate_tp=False)
         with patch.object(task_repo, 'save', side_effect=Exception('a')):
             result = self.importer.create_tasks(task_repo, project, **form_data)
         assert '1 task import failed due to a' in result.message, result.message
@@ -181,7 +180,7 @@ class TestImporterPublicMethods(Test):
 
         importer_factory.return_value = mock_importer
         project = ProjectFactory.create()
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -238,9 +237,8 @@ class TestImporterPublicMethods(Test):
             'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enrich'}]
 
         importer_factory.return_value = mock_importer
-        # enrichments needs to be a truthy value to trigger enrichment.
-        project = ProjectFactory.create()
-        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+        project = ProjectFactory.create(info={'enrichments':[{'out_field_name':'enriched'}]})
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
 
         with patch.dict(
             self.flask_app.config,
@@ -253,7 +251,7 @@ class TestImporterPublicMethods(Test):
             result = self.importer.create_tasks(task_repo, project, **form_data)
             importer_factory.assert_called_with(**form_data)
             upload_from_string.assert_called()
-            assert result.message == '1 new task was imported successfully ', result
+            assert result.message == '1 new task was imported successfully ', result.message
 
             # validate task created has private fields url, gold_answers url
             # calibration and exported flag set
@@ -282,3 +280,173 @@ class TestImporterPublicMethods(Test):
             assert filename == 'task_private_gold_answer.json', filename
             assert task.calibration and task.exported
             assert task.state == 'enrich', task.state
+    
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_enrich_task_requires_enrichment_config(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
+            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enrich'}]
+
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create()
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            import_report = self.importer.create_tasks(task_repo, project, **form_data)
+            print import_report.message
+            assert 'task import failed' in import_report.message
+    
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_enrich_task_with_enrichment_output_fails(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {u'Foo': u'a', u'enriched': 1}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
+            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enrich'}]
+
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create(info={'enrichments':[{'out_field_name':'enriched'}]})
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            import_report = self.importer.create_tasks(task_repo, project, **form_data)
+            print import_report.message
+            assert 'task import failed' in import_report.message
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_invalid_state_fails(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {u'Foo': u'a'}, 'private_fields': {u'Bar2': u'd', u'Bar': u'c'},
+            'gold_answers': {u'ans2': u'e', u'ans': u'b'}, 'calibration': 1, 'exported': True, 'state': u'enriched'}]
+
+        importer_factory.return_value = mock_importer
+        project = ProjectFactory.create()
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            import_report = self.importer.create_tasks(task_repo, project, **form_data)
+            print import_report.message
+            assert 'task import failed' in import_report.message
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_task_presenter_validation_fails_with_missing_import_field(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.fields.return_value = {'Foo', 'Bar2', 'Bar'}
+        project = ProjectFactory.create(info={
+            'task_presenter':'task.info.bar'
+        })
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            import_report = self.importer._validate_headers(mock_importer, project, **form_data)
+            print import_report.message
+            assert import_report.message
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_task_presenter_validation_ignores_enrichment_output(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.fields.return_value = {'Foo', 'Bar2', 'Bar'}
+        project = ProjectFactory.create(info={
+            'enrichments':[{'out_field_name':'enriched'}],
+            'task_presenter':'task.info.enriched task.info.Bar'
+        })
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv')
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            import_report = self.importer._validate_headers(mock_importer, project, **form_data)
+            assert import_report is None
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.s3_upload_from_string', return_value='https:/s3/task.json')
+    @patch('pybossa.importers.importer.delete_import_csv_file', return_value=None)
+    def test_task_presenter_validation_can_be_turned_off(
+        self,
+        mock_del,
+        upload_from_string,
+        importer_factory
+    ):
+        mock_importer = Mock()
+        mock_importer.fields.return_value = {'Foo', 'Bar2', 'Bar'}
+        project = ProjectFactory.create(info={
+            'task_presenter':'task.info.enriched task.info.bar'
+        })
+        form_data = dict(type='localCSV', csv_filename='fakefile.csv', validate_tp=False)
+
+        with patch.dict(
+            self.flask_app.config,
+            {
+                'S3_REQUEST_BUCKET': 'mybucket',
+                'S3_CONN_TYPE': 'dev',
+                'ENABLE_ENCRYPTION': True
+            }
+        ):
+            import_report = self.importer._validate_headers(mock_importer, project, **form_data)
+            assert import_report is None

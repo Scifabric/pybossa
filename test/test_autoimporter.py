@@ -439,7 +439,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         self.signin()
         owner = user_repo.get(1)
-        autoimporter = {'type': 'localCSV', 'csv_filename': None}
+        autoimporter = {'type': 'localCSV', 'csv_filename': None, 'validate_tp': True}
         project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter" % project.short_name
         data = {'form_name': 'localCSV', 'csv_filename': 'http://fakeurl.com'}

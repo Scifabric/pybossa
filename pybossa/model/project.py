@@ -148,12 +148,12 @@ class Project(db.Model, DomainObject):
         else:
             return default
 
-    def get_presenter_headers(self):
-        headers = set()
+    def get_presenter_field_set(self):
+        fields = set()
         task_presenter = self.info.get('task_presenter')
 
         if not task_presenter:
-            return headers
+            return fields
 
         search_backward_stop = 0
         for match in re.finditer('\.info\.([a-zA-Z0-9_]+)', task_presenter):
@@ -174,12 +174,12 @@ class Project(db.Model, DomainObject):
                     '*/', search_backward_stop, match.start())
                 if comment_end < 0:
                     continue
-            header = match.group(1)
-            if not header.endswith('__upload_url'):
-                headers.add(header)
+            field = match.group(1)
+            if not field.endswith('__upload_url'):
+                fields.add(field)
             search_backward_stop = match.end()
 
-        return headers
+        return fields
 
     def set_project_users(self, users):
         from pybossa.cache.users import get_users_access_levels

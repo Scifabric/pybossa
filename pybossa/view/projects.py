@@ -975,6 +975,7 @@ def import_task(short_name):
 
 
 def _import_tasks(project, **form_data):
+    report = None
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
         report = importer.create_tasks(task_repo, project, **form_data)
@@ -985,8 +986,13 @@ def _import_tasks(project, **form_data):
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
-    return redirect_content_type(url_for('.tasks',
-                                         short_name=project.short_name))
+    
+    if not report or report.total > 0: #success
+        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
+    else:
+        return redirect_content_type(url_for('.import_task',
+                                         short_name=project.short_name,
+                                         type=form_data['type']))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])

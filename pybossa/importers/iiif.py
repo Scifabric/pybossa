@@ -30,6 +30,7 @@ class BulkTaskIIIFImporter(BulkTaskImport):
 
     def __init__(self, manifest_uri, version='2.1'):
         """Init method."""
+        BulkTaskImport.__init__(self)
         self.manifest_uri = manifest_uri
         self.version = version
 

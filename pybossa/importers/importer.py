@@ -41,14 +41,14 @@ from flask import url_for
 from pybossa.task_creator_helper import set_gold_answers, upload_files_priv
 
 
-def validate_s3_bucket(task):
+def validate_s3_bucket(task, *args):
     valid = valid_or_no_s3_bucket(task.info)
     if not valid:
         current_app.logger.error('Invalid S3 bucket. project id: {}, task info: {}'.format(task.project_id, task.info))
     return valid
 
 
-def validate_priority(task):
+def validate_priority(task, *args):
     if task.priority_0 is None:
         return True
     try:
@@ -58,28 +58,48 @@ def validate_priority(task):
         return False
 
 
-def validate_n_answers(task):
+def validate_n_answers(task, *args):
     try:
         int(task.n_answers)
         return True
     except Exception:
         return False
 
+def validate_state(task, *args):
+    return task.state in ['enrich', 'ongoing', None]
+
+def validate_can_enrich(task, enrichment_output_fields, *args):
+    return task.state != 'enrich' or enrichment_output_fields
+
+def validate_no_enrichment_output_field(task, enrichment_output_fields, *args):
+    # If not enriching then they are allowed to import the enrichment output.
+    if task.state != 'enrich':
+        return True
+    
+    return not any(enrichment_output in task.info for enrichment_output in enrichment_output_fields)
+
+def get_enrichment_output_fields(project):
+    enrichments = project.info.get('enrichments', [])
+    return {enrichment.get('out_field_name') for enrichment in enrichments}
 
 class TaskImportValidator(object):
 
     validations = {
         'invalid priority': validate_priority,
         'invalid s3 bucket': validate_s3_bucket,
-        'invalid n_answers': validate_n_answers
+        'invalid n_answers': validate_n_answers,
+        'invalid state': validate_state,
+        'no enrichment config': validate_can_enrich,
+        'ernichment output in import': validate_no_enrichment_output_field
     }
 
-    def __init__(self):
+    def __init__(self, enrichment_output_fields):
         self.errors = defaultdict(int)
+        self._enrichment_output_fields = enrichment_output_fields
 
     def validate(self, task):
         for error, validator in self.validations.items():
-            if not validator(task):
+            if not validator(task, self._enrichment_output_fields):
                 self.errors[error] += 1
                 return False
         return True
@@ -132,7 +152,41 @@ class Importer(object):
         use_file_url = (task.get('state') == 'enrich')        
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
-    def create_tasks(self, task_repo, project, **form_data):
+    def _validate_headers(self, importer, project, **form_data):
+        validate_against_task_presenter = form_data.pop('validate_tp', True)
+        import_fields = importer.fields()
+
+        def get_error_message():
+            if not validate_against_task_presenter:
+                return
+            if not import_fields:
+                return
+            if not project:
+                return gettext('Could not load project info')
+
+            task_presenter_fields = project.get_presenter_field_set()
+            # Check that all task fields used in task presenter are also in import.
+            # We exclude enrichment output from the check since we expect those fields to be generated
+            # by enrichment instead of import.
+            fields_not_in_import = task_presenter_fields - import_fields - get_enrichment_output_fields(project)
+
+            if not fields_not_in_import:
+                return
+
+            msg = 'Task presenter code uses fields not in import. '
+            additional_msg = 'Fields missing from import: {}'.format((', '.join(fields_not_in_import))[:80])
+            current_app.logger.error(msg)
+            current_app.logger.error(', '.join(fields_not_in_import))
+            return msg + additional_msg
+
+        msg = get_error_message()
+
+        if msg:
+            # Failed validation
+            current_app.logger.error(msg)
+            return ImportReport(message=msg, metadata=None, total=0)
+
+    def create_tasks(self, task_repo, project, importer=None, **form_data):
         """Create tasks."""
         from pybossa.model.task import Task
         from pybossa.cache import projects as cached_projects
@@ -140,33 +194,13 @@ class Importer(object):
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
         n = 0
-        importer = self._create_importer_for(**form_data)
+        importer = importer or self._create_importer_for(**form_data)
         tasks = importer.tasks()
-        import_headers = importer.headers()
-        mismatch_headers = []
-
+        header_report = self._validate_headers(importer, project, **form_data)
+        if header_report:
+            return header_report
         msg = ''
-        if import_headers:
-            if not project:
-                msg = gettext('Could not load project info')
-            else:
-                task_presenter_headers = project.get_presenter_headers()
-                mismatch_headers = [header for header in task_presenter_headers
-                                    if header not in import_headers]
-
-            if mismatch_headers:
-                msg = 'Imported columns do not match task presenter code. '
-                additional_msg = 'Mismatched columns: {}'.format((', '.join(mismatch_headers))[:80])
-                current_app.logger.error(msg)
-                current_app.logger.error(', '.join(mismatch_headers))
-                msg += additional_msg
-
-            if msg:
-                # Failed validation
-                current_app.logger.error(msg)
-                return ImportReport(message=msg, metadata=None, total=0)
-
-        validator = TaskImportValidator()
+        validator = TaskImportValidator(get_enrichment_output_fields(project))
         n_answers = project.get_default_n_answers()
         try:
             for task_data in tasks:
@@ -181,14 +215,16 @@ class Importer(object):
 
                 found = task_repo.find_duplicate(project_id=project.id,
                                                 info=task.info)
-                if found is None:
-                    if validator.validate(task):
-                        try:
-                            n += 1
-                            task_repo.save(task, clean_project=False)
-                        except Exception as e:
-                            current_app.logger.exception(msg)
-                            validator.add_error(str(e))
+                if found is not None:
+                    continue
+                if not validator.validate(task):
+                    continue
+                try:
+                    n += 1
+                    task_repo.save(task, clean_project=False)
+                except Exception as e:
+                    current_app.logger.exception(msg)
+                    validator.add_error(str(e))
         finally:
             cached_projects.clean_project(project.id)
 
