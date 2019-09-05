@@ -58,11 +58,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, self.importer.count_tasks)
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.count_tasks()
-        except BulkImportException as e:
-            assert e[0] == msg, e
+        assert context.exception[0] == msg, context.exception
 
     def test_count_tasks_raises_exception_if_not_CSV_file(self, request):
         html_request = FakeResponse(text='Not a CSV', status_code=200,
@@ -71,11 +69,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, self.importer.count_tasks)
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.count_tasks()
-        except BulkImportException as e:
-            assert e[0] == msg, e
+        assert context.exception[0] == msg, context.exception
 
     def test_count_tasks_raises_exception_if_dup_header(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
@@ -95,11 +91,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, self.importer.tasks)
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.tasks()
-        except BulkImportException as e:
-            assert e[0] == msg, e
+        assert context.exception[0] == msg, context.exception
 
     def test_tasks_raises_exception_if_not_CSV_file(self, request):
         html_request = FakeResponse(text='Not a CSV', status_code=200,
@@ -108,11 +102,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, self.importer.tasks)
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.tasks()
-        except BulkImportException as e:
-            assert e[0] == msg, e
+        assert context.exception[0] == msg, context.exception
 
     def test_tasks_raises_exception_if_dup_header(self, request):
         csv_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
