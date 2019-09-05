@@ -113,14 +113,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = csv_file
         msg = "The file you uploaded has two headers with the same name."
 
-        raised = False
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.tasks().next()
-        except BulkImportException as e:
-            assert e[0] == msg, e
-            raised = True
-        finally:
-            assert raised, "Exception not raised"
+        assert context.exception[0] == msg, context.exception
 
     def test_tasks_raises_exception_if_empty_headers(self, request):
         csv_file = FakeResponse(text='Foo,Bar,\n1,2,3', status_code=200,
@@ -129,14 +124,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = csv_file
         msg = "The file you uploaded has an empty header on column 3."
 
-        raised = False
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.tasks().next()
-        except BulkImportException as e:
-            raised = True
-            assert e[0] == msg, e
-        finally:
-            assert raised, "Exception not raised"
+        assert context.exception[0] == msg, context.exception
 
     @with_context
     def test_tasks_raises_exception_if_headers_row_mismatch(self, request):
@@ -146,14 +136,9 @@ class TestBulkTaskCSVImport(object):
         request.return_value = csv_file
         msg = "The file you uploaded has an extra value on row 2."
 
-        raised = False
-        try:
+        with assert_raises(BulkImportException) as context:
             self.importer.tasks().next()
-        except BulkImportException as e:
-            raised = True
-            assert e[0] == msg, e
-        finally:
-            assert raised, "Exception not raised"
+        assert context.exception[0] == msg, context.exception
 
     @with_context
     def test_tasks_return_tasks_with_only_info_fields(self, request):
