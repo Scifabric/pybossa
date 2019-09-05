@@ -6246,7 +6246,7 @@ class TestWeb(web.Helper):
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
 
-        assert "1 new task was imported successfully" in res.data
+        assert "1 new task was imported successfully" in res.data, res.data
         redirect.assert_called_with('/project/%s/tasks/' % project.short_name)
 
     @with_context

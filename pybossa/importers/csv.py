@@ -227,21 +227,25 @@ class BulkTaskCSVImportBase(BulkTaskImport):
         """Import CSV tasks."""
         csviterator = iter(csvreader)
         self.fields(csvreader=csviterator)
-        row_number = 0
-        for row in csviterator:
-            row_number += 1
-            self._check_valid_row_length(row, row_number)
 
-            # check required fields
-            fvals = {self._headers[idx]: cell for idx, cell in enumerate(row)}
-            invalid_fields = validate_required_fields(fvals)
-            if invalid_fields:
-                msg = gettext('The file you uploaded has incorrect/missing '
-                                'values for required header(s): {0}'
-                                .format(','.join(invalid_fields)))
-                raise BulkImportException(msg)
-            task_data = self._convert_row_to_task_data(row, row_number)
-            yield task_data
+        def task_generator():
+            row_number = 0
+            for row in csviterator:
+                row_number += 1
+                self._check_valid_row_length(row, row_number)
+
+                # check required fields
+                fvals = {self._headers[idx]: cell for idx, cell in enumerate(row)}
+                invalid_fields = validate_required_fields(fvals)
+                if invalid_fields:
+                    msg = gettext('The file you uploaded has incorrect/missing '
+                                    'values for required header(s): {0}'
+                                    .format(','.join(invalid_fields)))
+                    raise BulkImportException(msg)
+                task_data = self._convert_row_to_task_data(row, row_number)
+                yield task_data
+
+        return task_generator()
 
     def _check_no_duplicated_headers(self):
         if len(self._headers) != len(set(self._headers)):
