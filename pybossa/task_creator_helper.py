@@ -19,6 +19,7 @@
 from flask import current_app
 import hashlib
 from pybossa.cloud_store_api.s3 import upload_json_data, get_content_from_s3
+from pybossa.util import get_now_plus_delta_ts
 from flask import url_for
 import json
 
@@ -40,6 +41,9 @@ def set_gold_answers(task, gold_answers):
     if encrypted():
         url = upload_files_priv(task, task.project_id, gold_answers, TASK_PRIVATE_GOLD_ANSWER_FILE_NAME)['externalUrl']
         gold_answers = dict([(TASK_GOLD_ANSWER_URL_KEY, url)])
+        task_exp = get_now_plus_delta_ts(days=current_app.config.get('REQUEST_FILE_EXPIRATION', 60))
+        task.expiration = task.expiration or task_exp
+        task.expiration = min(task.expiration, task_exp)
 
     task.gold_answers = gold_answers
     task.calibration = 1
