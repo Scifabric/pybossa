@@ -1132,3 +1132,7 @@ def sign_task(task):
         from pybossa.core import signer
         signature = signer.dumps({'task_id': task['id']})
         task['signature'] = signature
+
+
+def get_now_plus_delta_ts(**kwargs):
+    return (datetime.utcnow() + timedelta(**kwargs)).isoformat()

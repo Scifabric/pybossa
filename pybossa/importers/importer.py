@@ -29,7 +29,8 @@ from .iiif import BulkTaskIIIFImporter
 from .s3 import BulkTaskS3Import
 from .base import BulkImportException
 from .usercsv import BulkUserCSVImport
-from pybossa.util import check_password_strength, valid_or_no_s3_bucket
+from pybossa.util import (check_password_strength, valid_or_no_s3_bucket,
+    get_now_plus_delta_ts)
 from flask_login import current_user
 from werkzeug.datastructures import MultiDict
 import copy
@@ -75,7 +76,7 @@ def validate_no_enrichment_output_field(task, enrichment_output_fields, *args):
     # If not enriching then they are allowed to import the enrichment output.
     if task.state != 'enrich':
         return True
-    
+
     return not any(enrichment_output in task.info for enrichment_output in enrichment_output_fields)
 
 def get_enrichment_output_fields(project):
@@ -149,7 +150,10 @@ class Importer(object):
             return
         file_name = 'task_private_data.json'
         urls = upload_files_priv(task, project_id, private_fields, file_name)
-        use_file_url = (task.get('state') == 'enrich')        
+        use_file_url = (task.get('state') == 'enrich')
+        file_exp = get_now_plus_delta_ts(days=current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60))
+        expiration = task.get('expiration', file_exp)
+        task['expiration'] = min(expiration, file_exp)
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
     def _validate_headers(self, importer, project, **form_data):
@@ -204,9 +208,9 @@ class Importer(object):
         n_answers = project.get_default_n_answers()
         try:
             for task_data in tasks:
-                
+
                 self.upload_private_data(task_data, project.id)
-                
+
                 task = Task(project_id=project.id, n_answers=n_answers)
                 [setattr(task, k, v) for k, v in task_data.iteritems()]
 
