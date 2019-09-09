@@ -151,7 +151,8 @@ class Importer(object):
         file_name = 'task_private_data.json'
         urls = upload_files_priv(task, project_id, private_fields, file_name)
         use_file_url = (task.get('state') == 'enrich')
-        file_exp = get_now_plus_delta_ts(days=current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60))
+        validity = current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60)
+        file_exp = get_now_plus_delta_ts(days=validity).isoformat()
         expiration = task.get('expiration', file_exp)
         task['expiration'] = min(expiration, file_exp)
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
