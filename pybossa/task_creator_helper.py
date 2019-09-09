@@ -51,7 +51,7 @@ def get_task_expiration(current_expiration):
     if isinstance(current_expiration, str):
         task_exp = task_exp.isoformat()
     current_expiration = current_expiration or task_exp
-    return min(task.expiration, task_exp)
+    return min(current_expiration, task_exp)
 
 
 def set_gold_answers(task, gold_answers):
