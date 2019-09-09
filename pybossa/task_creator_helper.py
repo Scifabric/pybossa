@@ -22,6 +22,7 @@ from pybossa.cloud_store_api.s3 import upload_json_data, get_content_from_s3
 from pybossa.util import get_now_plus_delta_ts
 from flask import url_for
 import json
+from six import string_types
 
 TASK_PRIVATE_GOLD_ANSWER_FILE_NAME = 'task_private_gold_answer.json'
 TASK_GOLD_ANSWER_URL_KEY = 'gold_ans__upload_url'
@@ -48,7 +49,7 @@ def get_task_expiration(current_expiration):
     """
     validity = current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60)
     task_exp = get_now_plus_delta_ts(days=validity)
-    if isinstance(current_expiration, str):
+    if isinstance(current_expiration, string_types):
         task_exp = task_exp.isoformat()
     current_expiration = current_expiration or task_exp
     return min(current_expiration, task_exp)
