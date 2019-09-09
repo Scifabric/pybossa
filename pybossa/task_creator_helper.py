@@ -48,6 +48,10 @@ def get_task_expiration(current_expiration):
     current_expiration can be a iso datetime string or a datetime object
     """
     validity = current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60)
+    return _get_task_expiration(current_expiration, validity)
+
+
+def _get_task_expiration(current_expiration, validity):
     task_exp = get_now_plus_delta_ts(days=validity)
     if isinstance(current_expiration, string_types):
         task_exp = task_exp.isoformat()
