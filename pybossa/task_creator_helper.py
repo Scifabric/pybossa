@@ -39,7 +39,13 @@ def s3_conn_type():
     return current_app.config.get('S3_CONN_TYPE')
 
 
-def get_expiration(current_expiration):
+def get_task_expiration(current_expiration):
+    """
+    Find the appropriate expiration to be added to a task with expiring data.
+    If no expiration is set, return the data expiration; otherwise, return
+    the smallest between the current expiration and the data expiration.
+    current_expiration can be a iso datetime string or a datetime object
+    """
     validity = current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60)
     task_exp = get_now_plus_delta_ts(days=validity)
     if isinstance(current_expiration, str):
@@ -54,7 +60,7 @@ def set_gold_answers(task, gold_answers):
     if encrypted():
         url = upload_files_priv(task, task.project_id, gold_answers, TASK_PRIVATE_GOLD_ANSWER_FILE_NAME)['externalUrl']
         gold_answers = dict([(TASK_GOLD_ANSWER_URL_KEY, url)])
-        task.expiration = get_expiration(task.expiration)
+        task.expiration = get_task_expiration(task.expiration)
 
     task.gold_answers = gold_answers
     task.calibration = 1
