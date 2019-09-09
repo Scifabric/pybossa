@@ -26,14 +26,27 @@ import json
 TASK_PRIVATE_GOLD_ANSWER_FILE_NAME = 'task_private_gold_answer.json'
 TASK_GOLD_ANSWER_URL_KEY = 'gold_ans__upload_url'
 
+
 def encrypted():
     return current_app.config.get('ENABLE_ENCRYPTION')
+
 
 def bucket_name():
     return current_app.config.get("S3_REQUEST_BUCKET")
 
+
 def s3_conn_type():
     return current_app.config.get('S3_CONN_TYPE')
+
+
+def get_expiration(current_expiration):
+    validity = current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60)
+    task_exp = get_now_plus_delta_ts(days=validity)
+    if isinstance(current_expiration, str):
+        task_exp = task_exp.isoformat()
+    current_expiration = current_expiration or task_exp
+    return min(task.expiration, task_exp)
+
 
 def set_gold_answers(task, gold_answers):
     if not gold_answers:
@@ -41,15 +54,14 @@ def set_gold_answers(task, gold_answers):
     if encrypted():
         url = upload_files_priv(task, task.project_id, gold_answers, TASK_PRIVATE_GOLD_ANSWER_FILE_NAME)['externalUrl']
         gold_answers = dict([(TASK_GOLD_ANSWER_URL_KEY, url)])
-        task_exp = get_now_plus_delta_ts(days=current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60))
-        task.expiration = task.expiration or task_exp
-        task.expiration = min(task.expiration, task_exp)
+        task.expiration = get_expiration(task.expiration)
 
     task.gold_answers = gold_answers
     task.calibration = 1
     task.exported = True
     if task.state == u'completed':
         task.state = u'ongoing'
+
 
 def upload_files_priv(task, project_id, data, file_name):
     bucket = bucket_name()
@@ -71,6 +83,7 @@ def upload_files_priv(task, project_id, data, file_name):
         conn_name='S3_TASK_REQUEST'
     )
     return { 'externalUrl': file_url, 'internalUrl': internal_url }
+
 
 def get_gold_answers(task):
     gold_answers = task.gold_answers
