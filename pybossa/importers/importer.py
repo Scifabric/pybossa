@@ -39,7 +39,7 @@ from pybossa.util import delete_import_csv_file
 from pybossa.cloud_store_api.s3 import upload_json_data
 import hashlib
 from flask import url_for
-from pybossa.task_creator_helper import set_gold_answers, upload_files_priv
+from pybossa.task_creator_helper import set_gold_answers, upload_files_priv, get_task_expiration
 
 
 def validate_s3_bucket(task, *args):
@@ -151,9 +151,7 @@ class Importer(object):
         file_name = 'task_private_data.json'
         urls = upload_files_priv(task, project_id, private_fields, file_name)
         use_file_url = (task.get('state') == 'enrich')
-        file_exp = get_now_plus_delta_ts(days=current_app.config.get('REQUEST_FILE_VALIDITY_IN_DAYS', 60))
-        expiration = task.get('expiration', file_exp)
-        task['expiration'] = min(expiration, file_exp)
+        task['expiration'] = get_task_expiration(task.get('expiration'))
         task['info']['private_json__upload_url'] = urls if use_file_url else urls['externalUrl']
 
     def _validate_headers(self, importer, project, **form_data):

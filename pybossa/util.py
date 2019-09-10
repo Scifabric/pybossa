@@ -1135,4 +1135,4 @@ def sign_task(task):
 
 
 def get_now_plus_delta_ts(**kwargs):
-    return (datetime.utcnow() + timedelta(**kwargs)).isoformat()
+    return (datetime.utcnow() + timedelta(**kwargs))
