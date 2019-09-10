@@ -92,7 +92,8 @@ from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from datetime import datetime
 from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_to_form,
-    ensure_data_access_assignment_from_form, subadmins_are_privileged)
+    ensure_data_access_assignment_from_form, subadmins_are_privileged,
+    ensure_annotation_config_from_form, ensure_amp_config_applied_to_project)
 import app_settings
 from copy import deepcopy
 
@@ -418,6 +419,7 @@ def new():
 
     project.set_password(form.password.data)
     ensure_data_access_assignment_from_form(project.info, form)
+    ensure_annotation_config_from_form(project.info, form)
 
     project_repo.save(project)
 
@@ -672,6 +674,7 @@ def update(short_name):
             new_project.category_id = form.category_id.data
             new_project.email_notif = form.email_notif.data
             ensure_data_access_assignment_from_form(new_project.info, form)
+            ensure_annotation_config_from_form(new_project.info, form)
 
         if form.password.data:
             new_project.set_password(form.password.data)
@@ -682,26 +685,6 @@ def update(short_name):
         new_project.info['product'] = form.product.data
         new_project.info['subproduct'] = form.subproduct.data
         new_project.info['kpi'] = float(form.kpi.data)
-        annotation = {}
-        annotation_fields = [
-            'dataset_description',
-            'provider',
-            'restrictions_and_permissioning',
-            'store_pvf',
-            'sampling_method',
-            'sampling_script',
-            'label_aggregation_strategy',
-            'task_input_schema',
-            'task_output_schema'
-        ]
-        for field_name in annotation_fields:
-            value = getattr(form, field_name).data
-            if value:
-                annotation[field_name] = value
-        if annotation:
-            new_project.info['annotation'] = annotation
-        else:
-            new_project.info.pop('annotation', None)
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
@@ -724,11 +707,10 @@ def update(short_name):
         project.product = project.info.get('product')
         project.subproduct = project.info.get('subproduct')
         project.kpi = project.info.get('kpi')
-        for k, v in six.iteritems(project.info.get('annotation', {})):
-            setattr(project, k, v)
+        ensure_amp_config_applied_to_project(project, project.info.get('annotation_config', {}))
         form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
                                     products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
-
+        ensure_data_access_assignment_to_form(project.info, form)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
         categories = sorted(categories,
@@ -737,7 +719,6 @@ def update(short_name):
         if project.category_id is None:
             project.category_id = categories[0].id
         form.populate_obj(project)
-        ensure_data_access_assignment_to_form(project.info, form)
 
 
     if request.method == 'POST':
@@ -3427,4 +3408,61 @@ def configure_enrichment(short_name):
         auditlogger.log_event(project, current_user, 'update', 'project',
                                 'enrichment', json.dumps(project.info['enrichments']))
         flash(gettext("Success! Project data enrichment updated"))
+    return redirect_content_type(url_for('.settings', short_name=project.short_name))
+
+
+@blueprint.route('/<short_name>/annotconfig', methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def annotation_config(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(
+        project, owner, current_user, ps)
+    ensure_authorized_to('read', project)
+
+    annotation_config = deepcopy(project.info.get('annotation_config', {}))
+    if request.method != 'POST':
+        pro = pro_features()
+        annotation_config.pop('amp_store', None)
+        annotation_config.pop('amp_pvf', None)
+        form = AnnotationForm(**annotation_config)
+        response = dict(template='projects/annotations.html',
+                        form=form,
+                        project=project_sanitized,
+                        pro_features=pro,
+                        csrf=generate_csrf())
+        return handle_content_type(response)
+
+    ensure_authorized_to('update', Project)
+    form = AnnotationForm(request.body)
+    if not form.validate():
+        flash("Please fix annotation configuration errors", 'message')
+        current_app.logger.error('Annotation config errors for project {}, error {}'.format(project.id, form.errors))
+        return form
+
+    annotation_fields = [
+        'dataset_description',
+        'provider',
+        'restrictions_and_permissioning',
+        'sampling_method',
+        'sampling_script',
+        'label_aggregation_strategy',
+        'task_input_schema',
+        'task_output_schema'
+    ]
+
+    for field_name in annotation_fields:
+        value = getattr(form, field_name).data
+        if value:
+            annotation_config[field_name] = value
+        else:
+            annotation_config.pop(field_name, None)
+    if not annotation_config:
+        project.info.pop('annotation_config', None)
+    else:
+        project.info['annotation_config'] = annotation_config
+    project_repo.save(project)
+    auditlogger.log_event(project, current_user, 'update', 'project',
+                            'annotation_config', json.dumps(project.info.get('annotation_config')))
+    flash(gettext('Project annotation configurations updated'), 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))

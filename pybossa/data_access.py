@@ -18,6 +18,7 @@
 """Module with data access helper functions."""
 from functools import wraps
 from werkzeug.exceptions import BadRequest
+import six
 
 import app_settings
 
@@ -157,6 +158,24 @@ def ensure_data_access_assignment_from_form(obj, form):
         raise BadRequest('Invalid access levels')
     obj['data_access'] = access_levels
 
+
+@when_data_access()
+def ensure_annotation_config_from_form(obj, form):
+    obj['annotation_config'] = obj.get('annotation_config', {})
+    if form.amp_store.data:
+        obj['annotation_config']['amp_store'] = form.amp_store.data
+        obj['annotation_config']['amp_pvf'] = form.amp_pvf.data or ''
+    else:
+        obj['annotation_config'].pop('amp_store', None)
+        obj['annotation_config'].pop('amp_pvf', None)
+    if not obj['annotation_config']:
+        obj.pop('annotation_config', None)
+
+
+@when_data_access()
+def ensure_amp_config_applied_to_project(project, amp_config):
+    project.amp_store = amp_config.get('amp_store', False)
+    project.amp_pvf = amp_config.get('amp_pvf', '')
 
 @when_data_access()
 def ensure_task_assignment_to_project(task, project):
