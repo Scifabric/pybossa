@@ -7,7 +7,7 @@ def mark_if_complete(task_id, project_id):
     if task and task.calibration == 1:
         return
 
-    if project.published and is_task_completed(task_id):
+    if is_task_completed(task_id):
         update_task_state(task_id)
 
 
