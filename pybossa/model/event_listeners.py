@@ -273,8 +273,10 @@ def on_taskrun_submit(mapper, conn, target):
             conn.execute(sql_query)
         return
 
-    if is_task_completed(conn, target.task_id, target.project_id) and _published:
+    is_completed = is_task_completed(conn, target.task_id, target.project_id)
+    if is_completed:
         update_task_state(conn, target.task_id)
+    if is_completed and _published:
         update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)
         project_private = dict()
