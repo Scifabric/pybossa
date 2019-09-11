@@ -25,9 +25,8 @@ class WizardTestHelper(Test):
                 'enable_checks': {'and': ['project_exist'], 'or': []},
                 'visible_checks': {'always': True},
                 'config_for_checks': {
-                    'condition': {'and': ['tracking_id'], 'or': ['hdfs', 'gigwork_poller']},
-                    'attrs': {'tracking_id': 'info.ext_config.data_access.tracking_id',
-                              'hdfs': 'info.ext_config.hdfs.path',
+                    'condition': {'and': [], 'or': ['hdfs', 'gigwork_poller']},
+                    'attrs': {'hdfs': 'info.ext_config.hdfs.path',
                               'gigwork_poller': 'info.ext_config.gigwork_poller.target_bucket'}}}),
             ('publish', {
                 'title': 'Publish',
@@ -53,8 +52,7 @@ class WizardTestHelper(Test):
             id=1,
             short_name='project1',
             info=dict(ext_config={'hdfs': {'path': 'hdfs/path/test'},
-                                  'gigwork_poller': {'target_bucket': 'bcos-test'},
-                                  'data_access': {'tracking_id': '4545'}}))
+                                  'gigwork_poller': {'target_bucket': 'bcos-test'}}))
 
         return project
 

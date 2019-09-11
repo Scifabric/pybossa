@@ -110,9 +110,6 @@ class TestAccessLevels(Test):
                 data_access.ensure_task_assignment_to_project(task, project)
             project.info['data_access'] = ['A', 'B']
             task.info['data_access'] = ['A']
-            with assert_raises(Exception):
-                data_access.ensure_task_assignment_to_project(task, project)
-            project.info['ext_config'] = {'data_access': {'tracking_id': '123'}}
             data_access.ensure_task_assignment_to_project(task, project)
 
     @with_context
@@ -123,8 +120,7 @@ class TestAccessLevels(Test):
         )
         with patch.dict(data_access.data_access_levels, patched_levels):
             project = ProjectFactory.create(info={
-                'data_access': ['A'],
-                'ext_config': {'data_access': {'tracking_id': '123'}}
+                'data_access': ['A']
             })
             task = Task(project_id=project.id, info={'data_access': ['A']})
             task_repo.save(task)
