@@ -7718,8 +7718,7 @@ class TestWeb(web.Helper):
         self.signin(email=admin.email_addr, password='1234')
 
         project = ProjectFactory.create(info={
-                'data_access': ["L1"],
-                'ext_config': {'data_access': {'tracking_id': '123'}}
+                'data_access': ["L1"]
             })
         task = Task(project_id=project.id, info={'data_access': ['L1']})
         task_repo.save(task)
