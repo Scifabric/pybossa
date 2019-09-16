@@ -475,6 +475,7 @@ def task_gold(project_id=None):
             task = sched.select_task_for_gold_mode(project, current_user.id)
             if task:
                 task = task.dictize()
+                sign_task(task)
             response_body = json.dumps(task)
         return Response(response_body, 200, mimetype="application/json")
     except Exception as e:
