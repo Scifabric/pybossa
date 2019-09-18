@@ -15,7 +15,7 @@ class TestAnnotations(web.Helper):
         annotation_config = {
             "sampling_script": "ddddd",
             "task_output_schema": "gggggg",
-            "sampling_method": "cccccc",
+            "sampling_method": "RANDOM",
             "dataset_description": "aaaaa",
             "provider": "CONTINGENT_WORKER",
             "task_input_schema": "fffff",
