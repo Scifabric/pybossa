@@ -179,8 +179,6 @@ def ensure_amp_config_applied_to_project(project, amp_config):
 
 @when_data_access()
 def ensure_task_assignment_to_project(task, project):
-    if not project.info.get('ext_config', {}).get('data_access', {}).get('tracking_id'):
-        raise BadRequest('Required Project > Settings > External Configurations are missing.')
     task_levels = get_valid_project_levels_for_task(task)
     if not task_levels:
         raise BadRequest('Task is missing data access level.')

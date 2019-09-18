@@ -7680,19 +7680,15 @@ class TestWeb(web.Helper):
     @with_context
     def test_task_gold(self):
         """Test WEB when making a task gold"""
-        admin = UserFactory.create(admin=True)
-        admin.set_password('1234')
-        user_repo.save(admin)
-        self.signin(email=admin.email_addr, password='1234')
+        self.register()
+        self.signin()
         self.new_project()
         self.new_task(1)
 
-
         url = "/api/project/1/taskgold"
-
         project = project_repo.get(1)
 
-        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': 1}
+        payload = {'info': {'ans1': 'test'}, 'task_id': 1, 'project_id': project.id}
         res = self.app_post_json(url,
                             data=payload,
                             follow_redirects=False,
@@ -7707,8 +7703,7 @@ class TestWeb(web.Helper):
         assert t.calibration == 1, t.calibration
         assert t.exported == True, t.exported
         assert t.gold_answers == {'ans1': 'test'}, t.gold_answers
-
-
+        assert not t.expiration
 
     @with_context
     @patch('pybossa.task_creator_helper.url_for', return_value='testURL')
@@ -7723,8 +7718,7 @@ class TestWeb(web.Helper):
         self.signin(email=admin.email_addr, password='1234')
 
         project = ProjectFactory.create(info={
-                'data_access': ["L1"],
-                'ext_config': {'data_access': {'tracking_id': '123'}}
+                'data_access': ["L1"]
             })
         task = Task(project_id=project.id, info={'data_access': ['L1']})
         task_repo.save(task)
@@ -7739,15 +7733,16 @@ class TestWeb(web.Helper):
                                 follow_redirects=False,
                                 )
 
-            data = json.loads(res.data)
-            assert data.get('success') == True, data
+        data = json.loads(res.data)
+        assert data.get('success') == True, data
 
-            t = task_repo.get_task(1)
+        t = task_repo.get_task(1)
 
-            assert t.state == 'ongoing', t.state
-            assert t.calibration == 1, t.calibration
-            assert t.exported == True, t.exported
-            assert t.gold_answers == {u'gold_ans__upload_url': u'testURL'}, t.gold_answers
+        assert t.state == 'ongoing', t.state
+        assert t.calibration == 1, t.calibration
+        assert t.exported == True, t.exported
+        assert t.gold_answers == {u'gold_ans__upload_url': u'testURL'}, t.gold_answers
+        assert t.expiration
 
     @with_context
     @patch('pybossa.task_creator_helper.upload_json_data')

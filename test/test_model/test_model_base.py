@@ -164,14 +164,14 @@ class TestModelBase(Test):
 
         project = db.session.query(Project).get(project_id)
         assert project.name == u'My New Project', project
-        # year would start with 201...
-        assert project.created.startswith('201'), project.created
+        # year would start with 20... - 2020 is coming
+        assert project.created.startswith('20'), project.created
         assert len(project.tasks) == 1, project
         assert project.owner.name == username, project
         out_task = project.tasks[0]
         assert out_task.info['question'] == task_info['question'], out_task
         assert out_task.quorum == 0, out_task
-        assert out_task.state == "ongoing", out_task
+        assert out_task.state == "completed", out_task
         assert out_task.calibration == 0, out_task
         assert out_task.priority_0 == 0, out_task
         assert len(out_task.task_runs) == 1, out_task
