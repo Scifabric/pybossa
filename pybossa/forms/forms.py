@@ -137,7 +137,11 @@ class AnnotationForm(Form):
         coerce=lambda x: None if x == "None" else x
     )
     restrictions_and_permissioning = TextAreaField(lazy_gettext('Restrictions & Permissioning'))
-    sampling_method = TextField(lazy_gettext('Sampling Method'))
+    sampling_method = SelectField(
+        label=lazy_gettext('Sampling Method'),
+        choices=[(None, "NONE")] + [(x,x) for x in ["RANDOM","SYSTEMATIC","STRATIFIED","CLUSTERED"]],
+        coerce=lambda x: None if x == "None" else x
+    )
     sampling_script = TextField(lazy_gettext('Sampling Script Link'))
     label_aggregation_strategy = TextField(lazy_gettext('Label Aggregation Strategy'))
     task_input_schema = TextAreaField(lazy_gettext('Task Input Schema'))
