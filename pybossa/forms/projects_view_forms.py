@@ -33,4 +33,5 @@ from forms import (
     GenericBulkTaskImportForm,
     AvatarUploadForm,
     TransferOwnershipForm,
-    DataAccessForm)
+    DataAccessForm,
+    AnnotationForm)

@@ -1,6 +1,6 @@
 from flask_babel import lazy_gettext
 from flask_wtf import FlaskForm as Form
-from wtforms import SelectField, validators
+from wtforms import SelectField, validators, TextField, BooleanField
 from pybossa.forms.fields.select_two import Select2Field
 
 import wtforms
@@ -36,6 +36,12 @@ def dynamic_project_form(class_type, form_data, data_access_levels, products=Non
             choices=data_access_levels['valid_access_levels'],
             default=[])
         ProjectFormExtraInputs.data_access = data_access
+        ProjectFormExtraInputs.amp_store = BooleanField(
+            lazy_gettext('Opt in to store annotations on Annotation Management Platform'))
+        ProjectFormExtraInputs.amp_pvf = TextField(
+            lazy_gettext('Annotation Store PVF'),
+            [validators.Regexp('^([A-Z]{3,4}\s\d+)?$')]) #[validators.Regexp('^$|[A-Z]\s\d')])
+
 
     return ProjectFormExtraInputs(form_data, obj=obj)
 
