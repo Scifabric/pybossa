@@ -3102,6 +3102,7 @@ def ext_config(short_name):
                 if not form.validate():
                     flash(gettext('Please correct the errors', 'error'))
                 ext_conf[form_name] = form.data
+                ext_conf[form_name].pop('csrf_token', None)     #Fflask-wtf v0.14.2 issue 102
                 project.info['ext_config'] = ext_conf
                 project_repo.save(project)
                 sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
