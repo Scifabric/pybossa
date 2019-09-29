@@ -5,7 +5,8 @@ requirements = [
     "beautifulsoup4>=4.3.2, <5.0",
     "blinker>=1.3, <2.0",
     "Flask-Babel>=0.9, <0.10",
-    "flask-login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
+    # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
+    "flask-login",
     "Flask-Mail>=0.9.0, <1.0",
     "misaka>=1.0.0, <2.0.0",
     "Flask-Misaka>=0.2.0, <0.4.0",
@@ -43,7 +44,8 @@ requirements = [
     "unidecode>=0.04.16, <0.05",
     "flask-plugins",
     "humanize",
-    "pbr>=1.0, <2.0",                   # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
+    # keep an eye on pbr: https://github.com/rackspace/pyrax/issues/561
+    "pbr>=1.0, <2.0",
     "feedparser",
     "twitter>=1.17.1, <1.18",
     "google-api-python-client>=1.5.0, <1.6.0",
@@ -65,36 +67,36 @@ requirements = [
     "wtforms-components>=0.10.3, <0.10.4",
     "yacryptopan",
     "Faker",
-    "Werkzeug>=0.14.1, <0.14.2",
+    "Werkzeug>=0.15.3, <0.15.4",
     "keyring>=13.2.1, <13.2.2",
     "iiif-prezi>=0.2.9, <1.0.0"
 ]
 
 setup(
-    name = 'pybossa',
-    version = '2.12.0',
-    packages = find_packages(),
-    install_requires = requirements,
+    name='pybossa',
+    version='2.12.0',
+    packages=find_packages(),
+    install_requires=requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
     # Keep in mind that dependency_links are not used when installing with requirements.txt
     # and need to be added redundant to requirements.txt in this case!
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
-    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
-                        'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard',
-                        'git+https://github.com/Scifabric/flatten.git@5d57cc6336df277822305ad70b86adf8c6a1c947#egg=flatten_json',
-                        ],
+    dependency_links=['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
+                      'git+https://github.com/Scifabric/rq-dashboard.git#egg=rq-dashboard',
+                      'git+https://github.com/Scifabric/flatten.git@5d57cc6336df277822305ad70b86adf8c6a1c947#egg=flatten_json',
+                      ],
 
     # metadata for upload to PyPI
-    author = 'Scifabric LTD',
-    author_email = 'info@scifabric.com',
-    description = 'Open Source CrowdSourcing framework',
-    long_description = '''PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.''',
-    license = 'AGPLv3',
-    url = 'http://pybossa.com',
-    download_url = 'https://github.com/Scifabric/pybossa',
-    include_package_data = True,
-    classifiers = [
+    author='Scifabric LTD',
+    author_email='info@scifabric.com',
+    description='Open Source CrowdSourcing framework',
+    long_description='''PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.''',
+    license='AGPLv3',
+    url='http://pybossa.com',
+    download_url='https://github.com/Scifabric/pybossa',
+    include_package_data=True,
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
@@ -103,6 +105,6 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    entry_points = '''
+    entry_points='''
     '''
 )
