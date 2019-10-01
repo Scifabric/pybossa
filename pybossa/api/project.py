@@ -32,7 +32,7 @@ from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
 from pybossa.core import auditlog_repo, result_repo, http_signer
 from pybossa.auditlogger import AuditLogger
-from pybossa.data_access import ensure_user_assignment_to_project
+from pybossa.data_access import ensure_user_assignment_to_project, set_default_amp_store
 
 auditlogger = AuditLogger(auditlog_repo, caller='api')
 
@@ -51,6 +51,13 @@ class ProjectAPI(APIBase):
                          'published', 'secret_key'])
     private_keys = set(['secret_key'])
     restricted_keys = set()
+
+    def _preprocess_post_data(self, data):
+        # set amp_store default as true when not passed as input param
+        amp_config = data.get('info', {}).get('annotation_config', {}).get('amp_store')
+        if amp_config is None:
+            set_default_amp_store(data)
+
 
     def _create_instance_from_request(self, data):
         inst = super(ProjectAPI, self)._create_instance_from_request(data)

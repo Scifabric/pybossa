@@ -149,6 +149,9 @@ def ensure_data_access_assignment_to_form(obj, form):
     if not valid_access_levels(access_levels):
         raise BadRequest('Invalid access levels')
     form.data_access.data = access_levels
+    if 'checked' in form.amp_store.render_kw:
+        amp_store_status = obj.get('annotation_config', {}).get('amp_store', False)
+        form.amp_store.render_kw['checked'] = amp_store_status
 
 
 @when_data_access()
@@ -236,3 +239,9 @@ def subadmins_are_privileged(user):
 def valid_user_type_based_data_access(user_type, access_levels):
     valid_data_access = data_access_levels['valid_access_levels_for_user_types'].get(user_type)
     return all(l in valid_data_access for l in access_levels), valid_data_access
+
+@when_data_access()
+def set_default_amp_store(project):
+    annotation_config = project['info'].get('annotation_config', {})
+    annotation_config['amp_store'] = True
+    project['info']['annotation_config'] = annotation_config
