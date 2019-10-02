@@ -37,9 +37,11 @@ except ImportError:  # pragma: no cover
     import pickle
 
 try:
-    import settings_local as settings
+    from app_settings import config as settings
+    REDIS_KEYPREFIX = settings['REDIS_KEYPREFIX']
 except ImportError:  # pragma: no cover
     import pybossa.default_settings as settings
+    REDIS_KEYPREFIX = settings.REDIS_KEYPREFIX
     os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 ONE_DAY = 24 * 60 * 60
@@ -78,7 +80,7 @@ def get_hash_key(prefix, key_to_hash):
 
 
 def get_cache_group_key(key):
-    return '{}:memoize_cache_group:{}'.format(settings.REDIS_KEYPREFIX, key)
+    return '{}:memoize_cache_group:{}'.format(REDIS_KEYPREFIX, key)
 
 
 def add_key_to_cache_groups(key_to_add, cache_group_keys_arg, *args, **kwargs):
@@ -116,7 +118,7 @@ def cache(key_prefix, timeout=300, cache_group_keys=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
+            key = "%s::%s" % (REDIS_KEYPREFIX, key_prefix)
             if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
                 output = sentinel.slave.get(key)
                 if output:
@@ -145,7 +147,7 @@ def memoize(timeout=300, cache_group_keys=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
+            key = "%s:%s_args:" % (REDIS_KEYPREFIX, f.__name__)
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
             if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
@@ -180,7 +182,7 @@ def memoize_essentials(timeout=300, essentials=None, cache_group_keys=None):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
+            key = "%s:%s_args:" % (REDIS_KEYPREFIX, f.__name__)
             essential_args = [args[i] for i in essentials]
             key += get_key_to_hash(*essential_args) + ":"
             key_to_hash = get_key_to_hash(*args, **kwargs)
@@ -209,7 +211,7 @@ def delete_cached(key):
 
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
-        key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
+        key = "%s::%s" % (REDIS_KEYPREFIX, key)
         return bool(sentinel.master.delete(key))
     return True
 
@@ -222,7 +224,7 @@ def delete_memoized(function, *args, **kwargs):
 
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
-        key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
+        key = "%s:%s_args:" % (REDIS_KEYPREFIX, function.__name__)
         if args or kwargs:
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
@@ -242,7 +244,7 @@ def delete_memoized_essential(function, *args, **kwargs):
 
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
-        key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
+        key = "%s:%s_args:" % (REDIS_KEYPREFIX, function.__name__)
         if args or kwargs:
             key += get_key_to_hash(*args, **kwargs)
         keys_to_delete = list(sentinel.slave.scan_iter(match=key + '*', count=10000))
