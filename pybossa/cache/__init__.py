@@ -37,7 +37,7 @@ except ImportError:  # pragma: no cover
     import pickle
 
 try:
-    import settings_local as settings
+    from app_settings import config as settings
 except ImportError:  # pragma: no cover
     import pybossa.default_settings as settings
     os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
