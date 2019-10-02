@@ -38,8 +38,10 @@ except ImportError:  # pragma: no cover
 
 try:
     from app_settings import config as settings
+    REDIS_KEYPREFIX = settings['REDIS_KEYPREFIX']
 except ImportError:  # pragma: no cover
     import pybossa.default_settings as settings
+    REDIS_KEYPREFIX = settings.REDIS_KEYPREFIX
     os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 ONE_DAY = 24 * 60 * 60
