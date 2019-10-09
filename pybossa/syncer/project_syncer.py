@@ -37,7 +37,7 @@ class ProjectSyncer(Syncer):
             'id', 'created', 'updated', 'completed', 'contacted',
             'published', 'secret_key', 'owner_id', 'owners_ids',
             'links', 'link', 'category_id')
-    pass_through_keys = ('task_presenter', )
+    pass_through_keys = ('task_presenter', 'task_guidelines')
     github_keys = ('pusher', 'ref', 'ref_url', 'timestamp', 'message')
 
     def sync(self, project):
