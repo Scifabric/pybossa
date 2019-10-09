@@ -9035,6 +9035,37 @@ class TestWeb(web.Helper):
         data = json.loads(res.data)
         assert data['id'] == task.id
 
+    @with_context
+    def test_delete_task(self):
+        """Test delete works."""
+        admin = UserFactory.create(admin=True)
+        admin.set_password('1234')
+        user_repo.save(admin)
+        self.signin(email=admin.email_addr, password='1234')
+
+        # Test locked_scheduler
+        project = ProjectFactory.create(owner=admin, short_name='test')
+        task = TaskFactory.create(project=project)
+
+        url = '/project/{}/tasks/delete?api_key={}'.format(project.short_name, admin.api_key)
+        res = self.app_get_json(url)
+        csrf = json.loads(res.data)['csrf']
+
+        url = '/project/{}/tasks/deleteselected'.format(project.short_name)
+        new_url = url + '?api_key={}'.format(admin.api_key)
+        res = self.app_post_json(
+            new_url,
+            data={
+                'taskIds': [task.id]
+            },
+            headers={
+                'X-CSRFToken': csrf
+            }
+        )
+
+        assert res.status_code == 200, res.status_code
+        assert len(task_repo.filter_tasks_by(project_id=project.id)) == 0
+
 
 class TestWebUserMetadataUpdate(web.Helper):
 
