@@ -247,7 +247,7 @@ def n_task_runs(project_id):
     return n_task_runs
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_remaining_task_runs(project_id):
     """Return total number of tasks runs currently remaining for a project."""
     sql = text('''SELECT SUM(task.n_answers - COALESCE(t.actual_answers, 0))

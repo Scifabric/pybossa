@@ -214,7 +214,7 @@ class TaskRepository(Repository):
                    DELETE FROM task WHERE project_id=:project_id
                                     AND id=:task_id;'''), args)
         self.db.session.commit()
-
+        cached_projects.clean_project(project_id)
 
     def delete_valid_from_project(self, project, force_reset=False, filters=None):
         if not force_reset:
