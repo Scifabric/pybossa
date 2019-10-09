@@ -188,7 +188,7 @@ def export_users():
         return redirect(url_for('.index'))
     if fmt not in export_formats:
         abort(415)
-    mail_queue.enqueue(export_all_users, fmt, current_user.email_addr)
+    mail_queue.enqueue(export_all_users, fmt, current_user.email_addr, job_timeout='1200s')
     flash(gettext('You will be emailed when your export has been'
                   ' completed'), 'success')
     return redirect(url_for('.index'))
