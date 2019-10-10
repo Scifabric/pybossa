@@ -8,16 +8,15 @@ from nose.tools import assert_raises
 
 class QuizTest(web.Helper):
 
-    def create_project_and_user(self, short_circuit=None):
+    def create_project_and_user(self, completion_mode='short_circuit'):
         admin = UserFactory.create()
         user = UserFactory.create()
         project_quiz = {
             'enabled':True,
             'questions':10,
-            'passing':7
+            'passing':7,
+            'completion_mode': completion_mode
         }
-        if short_circuit is not None:
-            project_quiz['short_circuit'] = short_circuit
 
         project = ProjectFactory.create(
             owner=admin,
@@ -243,6 +242,7 @@ class TestQuizUpdate(QuizTest):
                 }
             }
         )
+        import pdb; pdb.set_trace()
         user.reset_quiz(project)
         quiz = user.get_quiz_for_project(project)
         assert quiz == {
@@ -263,7 +263,7 @@ class TestQuizUpdate(QuizTest):
     @with_context
     def test_completion_mode_all_questions(self):
         '''Test quiz does not end until all questions have been presented'''
-        project, user = self.create_project_and_user(short_circuit=False)
+        project, user = self.create_project_and_user(completion_mode='all_questions')
         task_answers = {}
         quiz = project.get_quiz()
 
@@ -286,7 +286,7 @@ class TestQuizUpdate(QuizTest):
                 task_run_url,
                 data=json.dumps(task_run_data)
             )
-
+        import pdb; pdb.set_trace()
         for _ in range(quiz['questions'] - 1):
             submit_wrong_answer()
             updated_quiz = user.get_quiz_for_project(project)
