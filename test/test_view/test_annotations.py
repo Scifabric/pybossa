@@ -19,7 +19,7 @@ class TestAnnotations(web.Helper):
             "dataset_description": "aaaaa",
             "provider": "CONTINGENT_WORKER",
             "task_input_schema": "fffff",
-            "label_aggregation_strategy": "eeeee",
+            "label_aggregation_strategy": "MAJORITY",
             "restrictions_and_permissioning": "bbbbb"
         }
 

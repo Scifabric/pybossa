@@ -58,6 +58,12 @@ USER_NAME_MAX_LENGTH = 35
 USER_FULLNAME_MAX_LENGTH = 35
 PROJECT_PWD_MIN_LEN = 5
 
+def create_nullable_select(label, items):
+    return SelectField(
+        label=lazy_gettext(label),
+        choices=[(None, "NONE")] + [(x,x) for x in items],
+        coerce=lambda x: None if x == "None" else x
+    )
 
 ### Custom Validators
 
@@ -131,19 +137,20 @@ class ProjectUpdateForm(ProjectForm):
 
 class AnnotationForm(Form):
     dataset_description = TextAreaField(lazy_gettext('Dataset Description'))
-    provider = SelectField(
-        lazy_gettext('Annotation Provider'),
-        choices=[(None, "NONE")] + [(x,x) for x in ["PERSONNEL","VENDOR","CONTINGENT_WORKER","FREELANCER","CROWDSOURCING_WORKER"]],
-        coerce=lambda x: None if x == "None" else x
+    provider = create_nullable_select(
+        'Annotation Provider',
+        ["PERSONNEL","VENDOR","CONTINGENT_WORKER","FREELANCER","CROWDSOURCING_WORKER"]
     )
     restrictions_and_permissioning = TextAreaField(lazy_gettext('Restrictions & Permissioning'))
-    sampling_method = SelectField(
-        label=lazy_gettext('Sampling Method'),
-        choices=[(None, "NONE")] + [(x,x) for x in ["RANDOM","SYSTEMATIC","STRATIFIED","CLUSTERED"]],
-        coerce=lambda x: None if x == "None" else x
+    sampling_method = create_nullable_select(
+        'Sampling Method',
+        ["RANDOM","SYSTEMATIC","STRATIFIED","CLUSTERED"]
     )
     sampling_script = TextField(lazy_gettext('Sampling Script Link'))
-    label_aggregation_strategy = TextField(lazy_gettext('Label Aggregation Strategy'))
+    label_aggregation_strategy = create_nullable_select(
+        'Label Aggregation Strategy',
+        ["MAJORITY","WORKER_TRUST"]
+    )
     task_input_schema = TextAreaField(lazy_gettext('Task Input Schema'))
     task_output_schema = TextAreaField(lazy_gettext('Task Output Schema'))
 
