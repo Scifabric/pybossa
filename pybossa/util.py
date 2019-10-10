@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Module with PYBOSSA utils."""
+import os
+
 from yacryptopan import CryptoPAn
 from datetime import timedelta, datetime
 from functools import update_wrapper
@@ -41,6 +43,9 @@ from flask_babel import lazy_gettext
 import re
 import pycountry
 
+
+def redis_cache_is_enabled():
+    return os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED', 0) != 1
 
 def last_flashed_message():
     """Return last flashed message by flask."""
