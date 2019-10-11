@@ -194,7 +194,5 @@ class User(db.Model, DomainObject, UserMixin):
         project_key = str(project.id)
         user_quizzes.pop(project_key, None)
         self.info['quiz'] = user_quizzes
-        if self.get_quiz_enabled(project):
-            self.set_quiz_status(project, 'in_progress')
         from pybossa.sched import release_user_locks_for_project
         release_user_locks_for_project(self.id, project.id)

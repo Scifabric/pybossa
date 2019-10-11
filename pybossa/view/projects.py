@@ -24,7 +24,7 @@ import math
 import requests
 from StringIO import StringIO
 import six
-
+from pybossa.cache.helpers import n_unexpired_gold_tasks
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
 from flask import Markup, jsonify
@@ -967,7 +967,7 @@ def _import_tasks(project, **form_data):
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
-    
+
     if not report or report.total > 0: #success
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
     else:
@@ -3193,44 +3193,52 @@ def assign_users(short_name):
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
 def process_quiz_mode_request(project):
+
     current_quiz_config = project.get_quiz()
-    current_quiz_config['completion_mode'] = 'short_circuit' if current_quiz_config['short_circuit'] else 'all_questions'
 
     if request.method == 'GET':
         return ProjectQuizForm(**current_quiz_config)
+    try:
+        form = ProjectQuizForm(request.body)
+        if not form.validate():
+            flash('Please correct the errors on this form.', 'message')
+            return form
 
-    form = ProjectQuizForm(request.body)
-    if not form.validate():
-        flash("Please fix the errors", 'message')
-        return form
+        new_quiz_config = form.data
+        new_quiz_config['short_circuit'] = (new_quiz_config['completion_mode'] == 'short_circuit')
+        project.set_quiz(new_quiz_config)
+        project_repo.update(project)
 
-    new_quiz_config = form.data
-    gold_task_count = task_repo.get_gold_task_count_for_project(project.id)
-    question_count = new_quiz_config['questions']
-    if gold_task_count < question_count:
-        flash(
-            "There must be at least as many gold tasks as the number of questions in the quiz. You have {} gold tasks and {} questions.".format(gold_task_count, question_count),
-            "error"
+        auditlogger.log_event(
+            project,
+            current_user,
+            'update',
+            'project.quiz',
+            json.dumps(current_quiz_config),
+            json.dumps(new_quiz_config)
         )
-        return form
 
-    new_quiz_config['short_circuit'] = (new_quiz_config['completion_mode'] == 'short_circuit')
-    project.set_quiz(new_quiz_config)
-    project_repo.update(project)
-    auditlogger.log_event(
-        project,
-        current_user,
-        'update',
-        'project.quiz',
-        json.dumps(current_quiz_config),
-        json.dumps(new_quiz_config)
-    )
-    for user_id in request.form.getlist('reset') or []:
-        user = user_repo.get(user_id)
-        user.reset_quiz(project)
-        user_repo.update(user)
-    flash(gettext('Configuration updated successfully'), 'success')
-    return redirect_content_type(url_for('.quiz_mode', short_name=project.short_name))
+        if request.data:
+            users = json.loads(request.data).get('users', [])
+            for u in users:
+                user = user_repo.get(u['id'])
+                if u['quiz']['config'].get('reset', False):
+                    user.reset_quiz(project)
+                quiz = user.get_quiz_for_project(project)
+                if u['quiz']['config']['enabled']:
+                    quiz['status'] = 'in_progress'
+                quiz['config']['enabled'] = u['quiz']['config']['enabled']
+                quiz['config']['completion_mode'] = u['quiz']['config']['completion_mode']
+                quiz['config']['short_circuit'] = (quiz['config']['completion_mode'] == 'short_circuit')
+                user_repo.update(user)
+
+        flash(gettext('Configuration updated successfully'), 'success')
+
+    except Exception as e:
+        flash(gettext('An error occurred.'), 'error')
+
+    return form
+
 
 @blueprint.route('/<short_name>/quiz-mode', methods=['GET', 'POST'])
 @login_required
@@ -3241,22 +3249,19 @@ def quiz_mode(short_name):
     ensure_authorized_to('update', project)
 
     form = process_quiz_mode_request(project)
-    if not isinstance(form, ProjectQuizForm):
-        return form
+
     all_user_quizzes = user_repo.get_all_user_quizzes_for_project(project.id)
     all_user_quizzes = [dict(row) for row in all_user_quizzes]
     quiz_mode_choices = [
             ('all_questions', 'Present all the quiz questions'),
             ('short_circuit', 'End as soon as pass/fail status is known') ]
     project_sanitized, _ = sanitize_project_owner(project, owner, current_user, ps)
+
     return handle_content_type(dict(
-        template='/projects/quiz_mode.html',
-        action_url=url_for('project.quiz_mode', short_name=short_name),
-        project=project_sanitized,
-        pro_features=pro_features(),
         form=form,
         all_user_quizzes=all_user_quizzes,
         quiz_mode_choices=quiz_mode_choices,
+        n_gold_unexpired=n_unexpired_gold_tasks(project.id),
         csrf=generate_csrf()
     ))
 

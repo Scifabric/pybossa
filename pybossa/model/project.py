@@ -206,11 +206,12 @@ class Project(db.Model, DomainObject):
             {
                 'enabled': False,
                 'passing': 0,
-                'questions': 0
+                'questions': 0,
+                'short_circuit': True,
+                'completion_mode': 'short_circuit'
             }
         )
-        # If short_circuit is not configured for the project then use the current app setting.
-        quiz.setdefault('short_circuit', current_app.config.get('SHORT_CIRCUIT_QUIZ', True))
+
         return quiz
 
     def set_quiz(self, quiz):
