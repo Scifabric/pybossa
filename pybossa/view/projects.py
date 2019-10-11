@@ -3201,7 +3201,7 @@ def process_quiz_mode_request(project):
     try:
         form = ProjectQuizForm(request.body)
         if not form.validate():
-            flash('Please correct the errors on this form.', 'message', )
+            flash('Please correct the errors on this form.', 'message')
             return form
 
         new_quiz_config = form.data
