@@ -3193,6 +3193,7 @@ def assign_users(short_name):
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
 
 def process_quiz_mode_request(project):
+
     current_quiz_config = project.get_quiz()
 
     if request.method == 'GET':
@@ -3218,7 +3219,7 @@ def process_quiz_mode_request(project):
         )
 
         if request.data:
-            users = json.loads(request.data)['users']
+            users = json.loads(request.data).get('users', [])
             for u in users:
                 user = user_repo.get(u['id'])
                 if u['quiz']['config'].get('reset', False):
@@ -3228,12 +3229,12 @@ def process_quiz_mode_request(project):
                     quiz['status'] = 'in_progress'
                 quiz['config']['enabled'] = u['quiz']['config']['enabled']
                 quiz['config']['completion_mode'] = u['quiz']['config']['completion_mode']
-
+                quiz['config']['short_circuit'] = (quiz['config']['completion_mode'] == 'short_circuit')
                 user_repo.update(user)
 
         flash(gettext('Configuration updated successfully'), 'success')
 
-    except Exception:
+    except Exception as e:
         flash(gettext('An error occurred.'), 'error')
 
     return form

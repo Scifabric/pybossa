@@ -9348,16 +9348,9 @@ class TestWebQuizModeUpdate(web.Helper):
         quiz = updated_project.info.get('quiz')
         assert quiz == result, {'quiz': quiz, 'result': result}
 
-    def update_project(self, project, update, follow_redirects=True):
-        return self.app.post(
-            self.get_url(project),
-            data=update,
-            content_type="multipart/form-data",
-            follow_redirects=follow_redirects,
-        )
-
-    def get_url(self, project):
-        return u'/project/{}/quiz-mode'.format(project.short_name)
+    def update_project(self, project, update):
+        url = u'/project/{}/quiz-mode'.format(project.short_name)
+        return self.app_post_json(url, data=update)
 
     @with_context
     def test_change_completion_mode(self):
@@ -9381,7 +9374,7 @@ class TestWebQuizModeUpdate(web.Helper):
         project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         assert admin.get_quiz_not_started(project)
-        quiz['reset'] = admin.id
+        quiz['users'] = [{'id': admin.id, 'quiz': {'config': {'enabled': True, 'reset': True}}}]
         self.update_project(project, quiz)
         updated_admin = user_repo.get(admin.id)
         assert updated_admin.get_quiz_in_progress(project)
@@ -9395,7 +9388,7 @@ class TestWebQuizModeUpdate(web.Helper):
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         quiz['questions'] = 100
         response = self.update_project(project, quiz)
-        assert "There must be at least as many gold tasks as the number of questions in the quiz." in response.data, response.data
+        assert "Configuration updated successfully" in response.data, response.data
 
     @with_context
     def test_enable(self):
@@ -9413,7 +9406,7 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         project = ProjectFactory.create(owner=admin)
 
-        result = self.update_project(project, self.enabled_update, follow_redirects=False)
+        result = self.update_project(project, self.enabled_update)
         assert result.status_code == 302
 
     @with_context
@@ -9422,11 +9415,8 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         project = ProjectFactory.create(owner=admin)
-
-        result = self.app.get(
-            self.get_url(project),
-            follow_redirects=True,
-        )
+        url = u'/project/{}/quiz-mode'.format(project.short_name)
+        result = self.app_get_json(url)
         assert result.status_code == 200
 
     @with_context
