@@ -184,7 +184,7 @@ class User(db.Model, DomainObject, UserMixin):
         if not status:
             return
 
-        if quiz['config']['completion_mode'] == 'short_circuit' or right_count + wrong_count >= questions:
+        if quiz['config']['short_circuit'] or right_count + wrong_count >= questions:
             quiz['status'] = status
 
     def reset_quiz(self, project):

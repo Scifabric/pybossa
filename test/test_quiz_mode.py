@@ -15,7 +15,8 @@ class QuizTest(web.Helper):
             'enabled':True,
             'questions':10,
             'passing':7,
-            'completion_mode': completion_mode
+            'completion_mode': completion_mode,
+            'short_circuit': (completion_mode == 'short_circuit')
         }
 
         project = ProjectFactory.create(
@@ -242,7 +243,6 @@ class TestQuizUpdate(QuizTest):
                 }
             }
         )
-        import pdb; pdb.set_trace()
         user.reset_quiz(project)
         quiz = user.get_quiz_for_project(project)
         assert quiz == {
@@ -286,7 +286,6 @@ class TestQuizUpdate(QuizTest):
                 task_run_url,
                 data=json.dumps(task_run_data)
             )
-        import pdb; pdb.set_trace()
         for _ in range(quiz['questions'] - 1):
             submit_wrong_answer()
             updated_quiz = user.get_quiz_for_project(project)

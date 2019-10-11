@@ -207,6 +207,7 @@ class Project(db.Model, DomainObject):
                 'enabled': False,
                 'passing': 0,
                 'questions': 0,
+                'short_circuit': True,
                 'completion_mode': 'short_circuit'
             }
         )
