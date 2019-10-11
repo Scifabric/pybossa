@@ -246,7 +246,7 @@ class TestQuizUpdate(QuizTest):
         user.reset_quiz(project)
         quiz = user.get_quiz_for_project(project)
         assert quiz == {
-            'status': 'in_progress',
+            'status': 'not_started',
             'result': {
                 'right': 0,
                 'wrong': 0
