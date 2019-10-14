@@ -132,6 +132,23 @@ def setup_theme(app):
     app.template_folder = os.path.join('themes', theme, 'templates')
     app.static_folder = os.path.join('themes', theme, 'static')
 
+    # Update static_url_path if set in settings
+    if app.config.get('STATIC_URL_PATH'):
+        app.static_url_path = app.config['STATIC_URL_PATH']
+
+        # Remove the old rule from Map._rules.
+        for rule in app.url_map.iter_rules('static'):
+            app.url_map._rules.remove(rule)  # There is probably only one.
+
+        # Remove the old rule from Map._rules_by_endpoint.
+        app.url_map._rules_by_endpoint['static'] = []
+
+        # Add the new rule.
+        app.add_url_rule('{static_url_path}/<path:filename>'.format(static_url_path=app.static_url_path),
+                    endpoint='static',
+                    view_func=app.send_static_file)
+
+
 
 def setup_uploader(app):
     """Setup uploader."""
@@ -322,6 +339,14 @@ def setup_blueprints(app):
     from rq_dashboard import RQDashboard
     RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
                 redis_conn=sentinel.master)
+
+    if app.config.get('STATIC_URL_PATH'):
+        from flask import send_from_directory
+
+        @app.route('/static/<path:path>')
+        def send_static(path):
+            return send_from_directory(app.static_folder, path)
+
 
 
 def setup_external_services(app):
