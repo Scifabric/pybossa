@@ -9367,6 +9367,23 @@ class TestWebQuizModeUpdate(web.Helper):
         assert project.get_quiz()['short_circuit'] is True
 
     @with_context
+    def test_reset_settings(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
+        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
+        assert admin.get_quiz_not_started(project)
+        quiz['completion_mode'] ='all_questions'
+        quiz['users'] = [{'id': admin.id, 'quiz': {'config': {'enabled': False, 'reset': True, 'completion_mode': 'short_circuit'}}}]
+        self.update_project(project, quiz)
+        updated_admin = user_repo.get(admin.id)
+        assert updated_admin.get_quiz_not_started(project)
+        new_quiz = updated_admin.get_quiz_for_project(project)
+        assert new_quiz['config']['completion_mode'] == quiz['completion_mode'], new_quiz
+        assert new_quiz['config']['enabled'] == quiz['users'][0]['quiz']['config']['enabled'], new_quiz
+
+    @with_context
     def test_reset(self):
         admin = UserFactory.create()
         self.signin_user(admin)
