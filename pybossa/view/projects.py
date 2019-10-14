@@ -3228,8 +3228,6 @@ def process_quiz_mode_request(project):
                 if u['quiz']['config']['enabled']:
                     quiz['status'] = 'in_progress'
                 quiz['config']['enabled'] = u['quiz']['config']['enabled']
-                quiz['config']['completion_mode'] = u['quiz']['config']['completion_mode']
-                quiz['config']['short_circuit'] = (quiz['config']['completion_mode'] == 'short_circuit')
                 user_repo.update(user)
 
         flash(gettext('Configuration updated successfully'), 'success')
