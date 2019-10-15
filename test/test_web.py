@@ -9384,6 +9384,18 @@ class TestWebQuizModeUpdate(web.Helper):
         assert new_quiz['config']['enabled'] == quiz['users'][0]['quiz']['config']['enabled'], new_quiz
 
     @with_context
+    def test_reset_exception(self):
+        admin = UserFactory.create()
+        self.signin_user(admin)
+        quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
+        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
+        assert admin.get_quiz_not_started(project)
+        quiz['users'] = [{ 'quiz': {'config': {'enabled': True, 'reset': True}}}]
+        res = self.update_project(project, quiz)
+        assert 'An error occurred' in res.data, res.data
+
+    @with_context
     def test_reset(self):
         admin = UserFactory.create()
         self.signin_user(admin)
