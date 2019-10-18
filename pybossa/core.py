@@ -532,7 +532,9 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if (current_user and current_user.is_authenticated()
+        if (util.redis_cache_is_enabled()
+            and current_user
+            and current_user.is_authenticated()
             and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
