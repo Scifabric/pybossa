@@ -326,6 +326,8 @@ class APIBase(MethodView):
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             content_type = request.headers.get('Content-Type')
+            if content_type is None:
+                content_type = []
             if (cls_name == 'TaskRun'
                     and 'multipart/form-data' in content_type
                     and data):
