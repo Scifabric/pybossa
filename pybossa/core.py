@@ -132,7 +132,11 @@ def setup_theme(app):
     """Configure theme for PYBOSSA app."""
     theme = app.config['THEME']
     app.template_folder = os.path.join('themes', theme, 'templates')
-    app.static_folder = os.path.join('themes', theme, 'static')
+    theme_static_folder = app.config.get('THEME_STATIC_FOLDER')
+    if theme_static_folder and os.path.isdir(theme_static_folder):
+        app.static_folder = theme_static_folder
+    else:
+        app.static_folder = os.path.join('themes', theme, 'static')
 
 
 def setup_uploader(app):
