@@ -28,7 +28,9 @@ allowed_mime_types = ['application/pdf',
                       'image/bmp',
                       'image/x-ms-bmp',
                       'image/gif',
-                      'application/zip']
+                      'application/zip',
+                      'application/vnd.ms-excel',
+                      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
 
 
 DEFAULT_CONN = 'S3_DEFAULT'
