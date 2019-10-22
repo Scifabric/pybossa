@@ -503,9 +503,8 @@ def publish_channel(sentinel, project_short_name, data, type, private=True):
     msg = dict(type=type, data=data)
     sentinel.master.publish(channel, json.dumps(msg))
 
+
 # See https://github.com/flask-restful/flask-restful/issues/332#issuecomment-63155660
-
-
 def fuzzyboolean(value):
     if type(value) == bool:
         return value
