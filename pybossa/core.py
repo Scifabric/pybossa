@@ -529,6 +529,7 @@ def setup_error_handlers(app):
     """Setup error handlers."""
     @app.errorhandler(400)
     def _bad_request(e):
+        app.logger.exception('Bad request')
         response = dict(template='400.html', code=400,
                         description=BADREQUEST)
         return handle_content_type(response)
@@ -541,6 +542,7 @@ def setup_error_handlers(app):
 
     @app.errorhandler(500)
     def _server_error(e):  # pragma: no cover
+        app.logger.exception('An error occurred')
         response = dict(template='500.html', code=500,
                         description=INTERNALSERVERERROR)
         return handle_content_type(response)
