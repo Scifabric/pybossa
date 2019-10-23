@@ -224,16 +224,6 @@ def pro_features(owner=None):
                                           owner)
     return pro
 
-def get_json_multiDict(data):
-    result = MultiDict()
-    for field_name, value in six.iteritems(data):
-        if value is None:
-            continue
-        if not isinstance(value, list):
-            value = [value]
-        result.setlist(field_name, value)
-    return result
-
 
 @blueprint.route('/search/', defaults={'page': 1})
 @blueprint.route('/search/page/<int:page>/')
