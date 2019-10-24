@@ -67,6 +67,8 @@ class TaskAPI(APIBase):
             if gold_task or (old.n_answers < new.n_answers and
                 n_taskruns < new.n_answers):
                 new.state = 'ongoing'
+            if not gold_tasks and (n_taskruns >= new.n_answers):
+                new.state = 'completed'
         new.calibration = int(gold_task)
         new.exported = gold_task
 
