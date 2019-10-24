@@ -7706,6 +7706,50 @@ class TestWeb(web.Helper):
         assert not t.expiration
 
     @with_context
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
+    def test_task_gold_with_files_in_form(self, set_content):
+        """Test WEB when making a task gold with files"""
+
+        host = 's3.storage.com'
+        bucket = 'test_bucket'
+        patch_config = {
+            'S3_TASKRUN': {
+                'host': host,
+                'auth_headers': [('a', 'b')]
+            },
+            'ENABLE_ENCRYPTION': False,
+            'S3_BUCKET': 'test_bucket',
+        }
+
+        with patch.dict(self.flask_app.config, patch_config):
+            project = ProjectFactory.create()
+            task = TaskFactory.create(project=project)
+
+            data = dict(
+                project_id=project.id,
+                task_id=task.id,
+                info={'field': 'value'}
+            )
+            datajson = json.dumps(data)
+
+            url = '/api/project/%s/taskgold?api_key=%s' % (project.id, project.owner.api_key)
+
+            form = {
+                    'request_json': datajson,
+                    'test__upload_url': (StringIO('Hi there'), 'hello.txt')
+                }
+            success = self.app.post(url, content_type='multipart/form-data',
+                                        data=form)
+
+            assert success.status_code == 200, success.data
+            set_content.s()
+            res = json.loads(success.data)
+
+            t = task_repo.get_task(task.id)
+            expected_url = u'https://s3.storage.com/test_bucket/%s/%s/%s/hello.txt' % (project.id, task.id, project.owner.id)
+            assert task.gold_answers['test__upload_url'] == expected_url
+
+    @with_context
     @patch('pybossa.task_creator_helper.url_for', return_value='testURL')
     @patch('pybossa.task_creator_helper.upload_json_data')
     def test_task_gold_priv(self, mock, mock2):

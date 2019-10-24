@@ -456,16 +456,13 @@ def task_gold(project_id=None):
         is_gold_access = (current_user.subadmin and current_user.id in project.owners_ids) or current_user.admin
         if project is None or not is_gold_access:
             raise Forbidden
-
         if request.method == 'POST':
-            task_data = request.json
+            task_data = json.loads(request.form['request_json']) if 'request_json' in request.form else request.json
             task_id = task_data['task_id']
             task = task_repo.get_task(task_id)
             if task.project_id != project_id:
                 raise Forbidden
-
             preprocess_task_run(project_id, task_id, task_data)
-
             info = task_data['info']
             set_gold_answers(task, info)
             task_repo.update(task)
