@@ -2798,7 +2798,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        msg = '<a class="label label-success" target="_blank" href="/project/sampleapp/task/1">#1</a>'
+        msg = '<a class="label label-success" target="_blank" href="/project/sampleapp/task/1?mode=read_only">#1</a>'
         assert msg in res.data, res.data
         assert re.search('10\s+of\s+10', res.data), res.data
         dom = BeautifulSoup(res.data)
@@ -2904,7 +2904,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        msg = '<a class="label label-info" target="_blank" href="/project/sampleapp/task/1">#1</a>'
+        msg = '<a class="label label-info" target="_blank" href="/project/sampleapp/task/1?mode=read_only">#1</a>'
         assert msg in res.data, res.data
         assert re.search('0\s+of\s+10', res.data), res.data
 
