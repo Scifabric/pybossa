@@ -457,10 +457,7 @@ def task_gold(project_id=None):
         if project is None or not is_gold_access:
             raise Forbidden
         if request.method == 'POST':
-            if 'request_json' in request.form:
-                task_data = json.loads(request.form['request_json'])
-            else:
-                task_data = request.json
+            task_data = json.loads(request.form['request_json']) if 'request_json' in request.form else request.json
             task_id = task_data['task_id']
             task = task_repo.get_task(task_id)
             if task.project_id != project_id:
