@@ -2798,7 +2798,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        msg = '<a class="label label-success" target="_blank" href="/project/sampleapp/task/1">#1</a>'
+        msg = '<a class="label label-success" target="_blank" href="/project/sampleapp/task/1?mode=read_only">#1</a>'
         assert msg in res.data, res.data
         assert re.search('10\s+of\s+10', res.data), res.data
         dom = BeautifulSoup(res.data)
@@ -2904,7 +2904,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/tasks/browse' % (project.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        msg = '<a class="label label-info" target="_blank" href="/project/sampleapp/task/1">#1</a>'
+        msg = '<a class="label label-info" target="_blank" href="/project/sampleapp/task/1?mode=read_only">#1</a>'
         assert msg in res.data, res.data
         assert re.search('0\s+of\s+10', res.data), res.data
 
@@ -7704,6 +7704,50 @@ class TestWeb(web.Helper):
         assert t.exported == True, t.exported
         assert t.gold_answers == {'ans1': 'test'}, t.gold_answers
         assert not t.expiration
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
+    def test_task_gold_with_files_in_form(self, set_content):
+        """Test WEB when making a task gold with files"""
+
+        host = 's3.storage.com'
+        bucket = 'test_bucket'
+        patch_config = {
+            'S3_TASKRUN': {
+                'host': host,
+                'auth_headers': [('a', 'b')]
+            },
+            'ENABLE_ENCRYPTION': False,
+            'S3_BUCKET': 'test_bucket',
+        }
+
+        with patch.dict(self.flask_app.config, patch_config):
+            project = ProjectFactory.create()
+            task = TaskFactory.create(project=project)
+
+            data = dict(
+                project_id=project.id,
+                task_id=task.id,
+                info={'field': 'value'}
+            )
+            datajson = json.dumps(data)
+
+            url = '/api/project/%s/taskgold?api_key=%s' % (project.id, project.owner.api_key)
+
+            form = {
+                    'request_json': datajson,
+                    'test__upload_url': (StringIO('Hi there'), 'hello.txt')
+                }
+            success = self.app.post(url, content_type='multipart/form-data',
+                                        data=form)
+
+            assert success.status_code == 200, success.data
+            set_content.s()
+            res = json.loads(success.data)
+
+            t = task_repo.get_task(task.id)
+            expected_url = u'https://s3.storage.com/test_bucket/%s/%s/%s/hello.txt' % (project.id, task.id, project.owner.id)
+            assert task.gold_answers['test__upload_url'] == expected_url
 
     @with_context
     @patch('pybossa.task_creator_helper.url_for', return_value='testURL')
