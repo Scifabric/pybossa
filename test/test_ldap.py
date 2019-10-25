@@ -76,7 +76,6 @@ class TestLDAP(Test):
             assert data['flash'] == msg, data
             assert data['status'] == 'info', data
 
-
     @with_context
     @patch('pybossa.view.account._create_account')
     @patch('pybossa.view.account.ldap')
@@ -109,10 +108,11 @@ class TestLDAP(Test):
     def test_twitter_no_login(self, mock_twitter, url_for_mock):
         """Test Twitter no_login arg allows using Twitter importer."""
         url = '/twitter/?no_login=1'
-        mock_twitter.authorize.return_value = Response(302)
+        mock_twitter.authorize.return_value = "OK"
         url_for_mock.return_value = 'url'
         with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
             res = self.app.get(url)
+            assert res.data == 'OK'
             assert mock_twitter.authorize.called_with('url')
 
     @with_context
