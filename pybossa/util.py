@@ -45,7 +45,8 @@ import pycountry
 
 
 def redis_cache_is_enabled():
-    return os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED', 0) != 1
+    return os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED', '0') != '1'
+
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -63,9 +64,11 @@ def form_to_json(form):
     tmp['csrf'] = generate_csrf()
     return tmp
 
+
 def user_to_json(user):
     """Return a user in JSON format."""
     return user.dictize()
+
 
 def hash_last_flash_message():
     """Base64 encode the last flash message"""
@@ -76,6 +79,7 @@ def hash_last_flash_message():
         data['status'] = message_and_status[0]
     json_data = json.dumps(data)
     return base64.b64encode(json_data)
+
 
 def handle_content_type(data):
     """Return HTML or JSON based on request type."""
@@ -129,6 +133,7 @@ def handle_content_type(data):
         else:
             return render_template(template, **data)
 
+
 def redirect_content_type(url, status=None):
     data = dict(next=url)
     if status is not None:
@@ -144,12 +149,12 @@ def url_for_app_type(endpoint, _hash_last_flash=False, **values):
     """Generate a URL for an SPA, or otherwise."""
     spa_server_name = current_app.config.get('SPA_SERVER_NAME')
     if spa_server_name:
-      values.pop('_external', None)
-      values.pop('_scheme', None)
-      if _hash_last_flash:
-          values['flash'] = hash_last_flash_message()
-          return spa_server_name + url_for(endpoint, **values)
-      return spa_server_name + url_for(endpoint, **values)
+        values.pop('_external', None)
+        values.pop('_scheme', None)
+        if _hash_last_flash:
+            values['flash'] = hash_last_flash_message()
+            return spa_server_name + url_for(endpoint, **values)
+        return spa_server_name + url_for(endpoint, **values)
     return url_for(endpoint, **values)
 
 
@@ -365,7 +370,6 @@ def get_user_signup_method(user):
         return (msg, 'local')
 
 
-
 def get_port():
     """Get port."""
     import os
@@ -447,9 +451,9 @@ def rank(projects, order_by=None, desc=False):
         return points
 
     if order_by:
-      projects.sort(key=lambda x: x[str(order_by)], reverse=desc)
+        projects.sort(key=lambda x: x[str(order_by)], reverse=desc)
     else:
-      projects.sort(key=earned_points, reverse=True)
+        projects.sort(key=earned_points, reverse=True)
     return projects
 
 
@@ -498,6 +502,7 @@ def publish_channel(sentinel, project_short_name, data, type, private=True):
         channel = "channel_%s_%s" % ("public", project_short_name)
     msg = dict(type=type, data=data)
     sentinel.master.publish(channel, json.dumps(msg))
+
 
 # See https://github.com/flask-restful/flask-restful/issues/332#issuecomment-63155660
 def fuzzyboolean(value):

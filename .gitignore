@@ -4,7 +4,6 @@
 *.pyc
 *.db
 settings_local.py
-env/
 doc/_build
 *.un~
 *.wsgi
@@ -44,7 +43,14 @@ coverage.xml
 htmlcov/*
 pybossa/themes/*
 .vscode/
-env3/
 *.bak
 *.orig
 tags
+
+## Virtual environments
+env/
+env3/
+venv/
+venv3
+.venv/
+.venv3/
