@@ -104,10 +104,10 @@ class APIBase(MethodView):
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
         if caching.get(cls_name):
-           if cls_name != 'Category':
-              caching.get(cls_name)['refresh'](oid)
-           else:
-              caching.get(cls_name)['refresh']
+            if cls_name != 'Category':
+                caching.get(cls_name)['refresh'](oid)
+            else:
+                caching.get(cls_name)['refresh']
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -187,7 +187,8 @@ class APIBase(MethodView):
                 obj['task_runs'] = []
                 obj['result'] = None
                 task_runs = task_repo.filter_task_runs_by(task_id=item.id)
-                results = result_repo.filter_by(task_id=item.id, last_version=True)
+                results = result_repo.filter_by(
+                    task_id=item.id, last_version=True)
                 for tr in task_runs:
                     obj['task_runs'].append(tr.dictize())
                 for r in results:
@@ -195,7 +196,8 @@ class APIBase(MethodView):
 
             if item.__class__.__name__ == 'TaskRun':
                 tasks = task_repo.filter_tasks_by(id=item.task_id)
-                results = result_repo.filter_by(task_id=item.task_id, last_version=True)
+                results = result_repo.filter_by(
+                    task_id=item.task_id, last_version=True)
                 obj['task'] = None
                 obj['result'] = None
                 for t in tasks:
@@ -215,7 +217,8 @@ class APIBase(MethodView):
         stats = request.args.get('stats')
         if stats:
             if item.__class__.__name__ == 'Project':
-                stats = project_stats_repo.filter_by(project_id=item.id, limit=1)
+                stats = project_stats_repo.filter_by(
+                    project_id=item.id, limit=1)
                 obj['stats'] = stats[0].dictize() if stats else {}
 
         links, link = self.hateoas.create_links(item)
@@ -290,7 +293,8 @@ class APIBase(MethodView):
         except (ValueError, TypeError):
             offset = 0
         try:
-            orderby = request.args.get('orderby') if request.args.get('orderby') else 'id'
+            orderby = request.args.get(
+                'orderby') if request.args.get('orderby') else 'id'
         except (ValueError, TypeError):
             orderby = 'updated'
         return limit, offset, orderby
@@ -322,6 +326,8 @@ class APIBase(MethodView):
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             content_type = request.headers.get('Content-Type')
+            if content_type is None:
+                content_type = []
             if (cls_name == 'TaskRun'
                     and 'multipart/form-data' in content_type
                     and data):
@@ -488,7 +494,10 @@ class APIBase(MethodView):
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
         content_type = 'multipart/form-data'
-        if (content_type in request.headers.get('Content-Type') and
+        request_headers = request.headers.get('Content-Type')
+        if request_headers is None:
+            request_headers = []
+        if (content_type in request_headers and
                 cls_name in self.allowed_classes_upload):
             tmp = dict()
             for key in request.form.keys():

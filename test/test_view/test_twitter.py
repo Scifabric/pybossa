@@ -44,7 +44,8 @@ class TestTwitter(Test):
         user_data = dict(user_id=1, screen_name='twitter')
         initial_token = dict(oauth_token='token', oauth_token_secret='secret')
         manage_user(initial_token, user_data)
-        updated_token = dict(oauth_token='token2', oauth_token_secret='secret2')
+        updated_token = dict(oauth_token='token2',
+                             oauth_token_secret='secret2')
         user = manage_user(updated_token, user_data)
         assert user.email_addr == user_data['screen_name'], user
         assert user.name == user_data['screen_name'], user
@@ -177,7 +178,7 @@ class TestTwitter(Test):
     @with_context
     @patch('pybossa.view.twitter.twitter.oauth')
     def test_twitter_signin_with_no_login_param(self, oauth):
-        oauth.authorize.return_value = Response(302)
+        oauth.authorize.return_value = "OK"
         self.app.get('/twitter/?no_login=1')
 
         oauth.authorize.assert_called_once_with(
@@ -191,8 +192,8 @@ class TestTwitter(Test):
         oauth.authorized_response.return_value = {
             'oauth_token': 'token',
             'oauth_token_secret': 'secret'
-            }
-        manage_user_no_login.return_value = Response(302)
+        }
+        manage_user_no_login.return_value = "OK"
         self.app.get('/twitter/oauth-authorized?no_login=1')
 
         manage_user_no_login.assert_called_once_with(
@@ -209,8 +210,8 @@ class TestTwitter(Test):
             'oauth_token_secret': 'secret',
             'screen_name': 'john_doe',
             'user_id': 1
-            }
-        manage_user_no_login.return_value = Response(302)
+        }
+        manage_user_no_login.return_value = "OK"
 
         assert_not_raises(Exception, self.app.get, '/twitter/oauth-authorized')
 
@@ -218,10 +219,11 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.current_user')
     @patch('pybossa.view.twitter.redirect', return_value=True)
     def test_manage_user_no_login_stores_twitter_token_in_current_user_info(
-        self, redirect, current_user):
+            self, redirect, current_user):
         user = UserFactory.create(info={})
         current_user.id = user.id
-        token_and_secret = {'oauth_token_secret': 'secret', 'oauth_token': 'token'}
+        token_and_secret = {
+            'oauth_token_secret': 'secret', 'oauth_token': 'token'}
         next_url = '/'
 
         manage_user_no_login(token_and_secret, next_url)

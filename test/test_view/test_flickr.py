@@ -20,16 +20,16 @@ import json
 from flask import Response, session
 from default import flask_app, with_context
 
+
 class TestFlickrOauth(object):
 
     @with_context
     @patch('pybossa.view.flickr.flickr.oauth')
     def test_flickr_login_specifies_callback_and_read_permissions(self, oauth):
-        oauth.authorize.return_value = Response(302)
+        oauth.authorize.return_value = "OK"
         flask_app.test_client().get('/flickr/')
         oauth.authorize.assert_called_with(
             callback='/flickr/oauth-authorized', perms='read')
-
 
     @with_context
     def test_logout_removes_token_and_user_from_session(self):
@@ -46,15 +46,13 @@ class TestFlickrOauth(object):
             assert 'flickr_token' not in session
             assert 'flickr_user' not in session
 
-
     @with_context
     @patch('pybossa.view.flickr.redirect')
     def test_logout_redirects_to_url_specified_by_next_param(self, redirect):
-        redirect.return_value = Response(302)
+        redirect.return_value = "OK"
         flask_app.test_client().get('/flickr/revoke-access?next=http://mynext_url')
 
         redirect.assert_called_with('http://mynext_url')
-
 
     @with_context
     @patch('pybossa.view.flickr.flickr.oauth')
@@ -62,7 +60,7 @@ class TestFlickrOauth(object):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
-                     'oauth_token':u'token',
+                     'oauth_token': u'token',
                      'user_nsid': u'user'}
         oauth.authorized_response.return_value = fake_resp
         expected_token = {
@@ -77,7 +75,6 @@ class TestFlickrOauth(object):
             assert session['flickr_token'] == expected_token, session['flickr_token']
             assert session['flickr_user'] == expected_user, session['flickr_user']
 
-
     @with_context
     @patch('pybossa.view.flickr.flickr')
     @patch('pybossa.view.flickr.redirect')
@@ -86,14 +83,13 @@ class TestFlickrOauth(object):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
-                     'oauth_token':u'token',
+                     'oauth_token': u'token',
                      'user_nsid': u'user'}
         flickr.authorized_response.return_value = fake_resp
-        redirect.return_value = Response(302)
+        redirect.return_value = "OK"
         flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
 
         redirect.assert_called_with('http://next')
-
 
     @with_context
     @patch('pybossa.view.flickr.flickr')
@@ -101,7 +97,7 @@ class TestFlickrOauth(object):
     def test_oauth_authorized_redirects_to_url_next_param_on_user_no_authorizing(
             self, redirect, flickr):
         flickr.authorized_response.return_value = None
-        redirect.return_value = Response(302)
+        redirect.return_value = "OK"
         flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
 
         redirect.assert_called_with('http://next')
