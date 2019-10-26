@@ -60,8 +60,7 @@ def create_app(run_as_server=True):
     if app.config.get('SENTRY_DSN'):  # pragma: no cover
         Sentry(app)
     if run_as_server:  # pragma: no cover
-        if util.redis_cache_is_enabled():
-            setup_scheduled_jobs(app)
+        setup_scheduled_jobs(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -97,8 +96,10 @@ def configure_app(app):
     else:
         config_path = os.path.abspath(os.environ.get('PYBOSSA_SETTINGS'))
 
-    config_upref_mdata = os.path.join(os.path.dirname(config_path), 'settings_upref_mdata.py')
-    app.config.upref_mdata = True if os.path.exists(config_upref_mdata) else False
+    config_upref_mdata = os.path.join(
+        os.path.dirname(config_path), 'settings_upref_mdata.py')
+    app.config.upref_mdata = True if os.path.exists(
+        config_upref_mdata) else False
 
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
@@ -118,6 +119,7 @@ def setup_json_serializer(app):
 
 def setup_cors(app):
     cors.init_app(app, resources=app.config.get('CORS_RESOURCES'))
+
 
 def setup_sse(app):
     if app.config['SSE']:
@@ -249,7 +251,7 @@ def setup_logging(app):
         file_handler.setFormatter(Formatter(
             '%(name)s:%(levelname)s:[%(asctime)s] %(message)s '
             '[in %(pathname)s:%(lineno)d]'
-            ))
+        ))
         file_handler.setLevel(log_level)
         app.logger.addHandler(file_handler)
         logger = logging.getLogger('pybossa')
@@ -280,7 +282,7 @@ def setup_babel(app):
         else:
             lang = request.cookies.get('language')
         if (lang is None or lang == '' or
-            lang.lower() not in locales):
+                lang.lower() not in locales):
             lang = request.accept_languages.best_match(locales)
         if (lang is None or lang == '' or
                 lang.lower() not in locales):
@@ -435,6 +437,7 @@ def setup_twitter_importer(app):
         log_message = 'Twitter importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
+
 def setup_youtube_importer(app):
     try:  # pragma: no cover
         if app.config['YOUTUBE_API_SERVER_KEY']:
@@ -449,6 +452,7 @@ def setup_youtube_importer(app):
         print "Youtube importer not available"
         log_message = 'Youtube importer not available: %s' % str(inst)
         app.logger.info(log_message)
+
 
 def url_for_other_page(page):
     """Setup url for other pages."""
@@ -528,14 +532,11 @@ def setup_hooks(app):
             except TypeError:
                 abort(400)
 
-
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if (util.redis_cache_is_enabled()
-            and current_user
-            and current_user.is_authenticated()
-            and current_user.admin):
+        if (current_user and current_user.is_authenticated()
+                and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
                 notify_admin = True
@@ -615,7 +616,7 @@ def setup_jinja2_filters(app):
         return humanize.intword(obj)
 
     @app.template_filter('disqus_sso')
-    def _disqus_sso(obj): # pragma: no cover
+    def _disqus_sso(obj):  # pragma: no cover
         return get_disqus_sso(obj)
 
 
@@ -716,18 +717,20 @@ def setup_ldap(app):
     if app.config.get('LDAP_HOST'):
         ldap.init_app(app)
 
+
 def setup_profiler(app):
     if app.config.get('FLASK_PROFILER'):
         flask_profiler.init_app(app)
+
 
 def setup_upref_mdata(app):
     """Setup user preference and metadata choices for user accounts"""
     global upref_mdata_choices
     upref_mdata_choices = dict(languages=[], locations=[],
-                                timezones=[], user_types=[])
+                               timezones=[], user_types=[])
     if app.config.upref_mdata:
         from settings_upref_mdata import (upref_languages, upref_locations,
-                mdata_timezones, mdata_user_types)
+                                          mdata_timezones, mdata_user_types)
         upref_mdata_choices['languages'] = upref_languages()
         upref_mdata_choices['locations'] = upref_locations()
         upref_mdata_choices['timezones'] = mdata_timezones()

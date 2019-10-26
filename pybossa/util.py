@@ -45,7 +45,7 @@ import pycountry
 
 
 def redis_cache_is_enabled():
-    return os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED', '0') != '1'
+    return os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None
 
 
 def last_flashed_message():
@@ -85,7 +85,7 @@ def handle_content_type(data):
     """Return HTML or JSON based on request type."""
     from pybossa.model.project import Project
     if (request.headers.get('Content-Type') == 'application/json' or
-        request.args.get('response_format') == 'json'):
+            request.args.get('response_format') == 'json'):
         message_and_status = last_flashed_message()
         if message_and_status:
             data['flash'] = message_and_status[1]
@@ -96,7 +96,8 @@ def handle_content_type(data):
             if isinstance(data[item], Pagination):
                 data[item] = data[item].to_json()
             if (item == 'announcements'):
-                data[item] = [announcement.to_public_json() for announcement in data[item]]
+                data[item] = [announcement.to_public_json()
+                              for announcement in data[item]]
             if (item == 'blogposts'):
                 data[item] = [blog.to_public_json() for blog in data[item]]
             if (item == 'categories'):
@@ -139,7 +140,7 @@ def redirect_content_type(url, status=None):
     if status is not None:
         data['status'] = status
     if (request.headers.get('Content-Type') == 'application/json' or
-        request.args.get('response_format') == 'json'):
+            request.args.get('response_format') == 'json'):
         return handle_content_type(data)
     else:
         return redirect(url)
@@ -464,7 +465,8 @@ def _last_activity_points(project):
     updated_datetime = updated_datetime.split('.')[0]
     last_activity_datetime = last_activity_datetime.split('.')[0]
     updated = datetime.strptime(updated_datetime, '%Y-%m-%dT%H:%M:%S')
-    last_activity = datetime.strptime(last_activity_datetime, '%Y-%m-%dT%H:%M:%S')
+    last_activity = datetime.strptime(
+        last_activity_datetime, '%Y-%m-%dT%H:%M:%S')
     most_recent = max(updated, last_activity)
 
     days_since_modified = (datetime.utcnow() - most_recent).days
@@ -620,8 +622,8 @@ def check_password_strength(
     pwd_len = len(password)
     if pwd_len < min_len or pwd_len > max_len:
         message = lazy_gettext(
-                    u'Password must be between {0} and {1} characters'
-                    .format(min_len, max_len))
+            u'Password must be between {0} and {1} characters'
+            .format(min_len, max_len))
         return False, message
 
     valid = all(re.search(ch, password) for ch in required_chars)
