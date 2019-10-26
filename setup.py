@@ -35,7 +35,7 @@ requirements = [
     "nose-cov",
     "mock",
     "pyrax>=1.9.6, <2.0",
-    "pillow>=3.3.2, <3.3.3",
+    "pillow>=6.2.0, <6.2.1",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
@@ -69,12 +69,12 @@ requirements = [
     "Faker",
     "Werkzeug>=0.15.3, <0.15.4",
     "keyring>=13.2.1, <13.2.2",
-    "iiif-prezi>=0.2.9, <1.0.0"
+    "iiif-prezi>=0.3.0, <0.3.1"
 ]
 
 setup(
     name='pybossa',
-    version='2.12.0',
+    version='2.13.1',
     packages=find_packages(),
     install_requires=requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
