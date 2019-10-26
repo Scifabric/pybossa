@@ -23,29 +23,26 @@ try:
 except ImportError:  # pragma: no cover
     import pickle
 
-from pybossa import util
-
 
 FEED_KEY = 'pybossa_feed'
 
 
 def update_feed(obj):
     """Add domain object to update feed in Redis."""
-    if util.redis_cache_is_enabled():
-        pipeline = sentinel.master.pipeline()
-        serialized_object = pickle.dumps(obj)
-        pipeline.zadd(FEED_KEY, time(), serialized_object)
-        pipeline.execute()
+    pipeline = sentinel.master.pipeline()
+    serialized_object = pickle.dumps(obj)
+    pipeline.zadd(FEED_KEY, time(), serialized_object)
+    pipeline.execute()
+
 
 def get_update_feed():
     """Return update feed list."""
     feed = []
-    if util.redis_cache_is_enabled():
-        data = sentinel.slave.zrevrange(FEED_KEY, 0, 99, withscores=True)
-        for u in data:
-            tmp = pickle.loads(u[0])
-            tmp['updated'] = u[1]
-            if tmp.get('info') and type(tmp.get('info')) == unicode:
-                tmp['info'] = json.loads(tmp['info'])
-            feed.append(tmp)
+    data = sentinel.slave.zrevrange(FEED_KEY, 0, 99, withscores=True)
+    for u in data:
+        tmp = pickle.loads(u[0])
+        tmp['updated'] = u[1]
+        if tmp.get('info') and type(tmp.get('info')) == unicode:
+            tmp['info'] = json.loads(tmp['info'])
+        feed.append(tmp)
     return feed
