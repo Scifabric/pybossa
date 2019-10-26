@@ -60,8 +60,7 @@ def create_app(run_as_server=True):
     if app.config.get('SENTRY_DSN'):  # pragma: no cover
         Sentry(app)
     if run_as_server:  # pragma: no cover
-        if util.redis_cache_is_enabled():
-            setup_scheduled_jobs(app)
+        setup_scheduled_jobs(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -536,9 +535,7 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if (util.redis_cache_is_enabled()
-            and current_user
-            and current_user.is_authenticated()
+        if (current_user and current_user.is_authenticated()
                 and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
