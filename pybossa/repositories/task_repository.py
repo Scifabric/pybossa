@@ -269,6 +269,7 @@ class TaskRepository(Repository):
     def delete_taskruns_from_project(self, project):
         sql = text('''
                    DELETE FROM task_run WHERE project_id=:project_id;
+                   UPDATE task SET status='ongoing' WHERE project_id=:project_id
                    ''')
         self.db.session.execute(sql, dict(project_id=project.id))
         self.db.session.commit()
