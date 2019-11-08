@@ -104,8 +104,6 @@ def check_contributing_state(project, user_id=None, user_ip=None,
     Depending on whether the project is completed or not and the user can
     contribute more to it or not.
     """
-    # print("*******")
-    # print(n_available_tasks_for_user(project, user_id=user_id))
     project_id = project['id'] if type(project) == dict else project.id
     published = project['published'] if type(project) == dict else project.published
     states = ('completed', 'draft', 'publish', 'can_contribute', 'cannot_contribute')
@@ -119,7 +117,6 @@ def check_contributing_state(project, user_id=None, user_ip=None,
             return states[1]
         return states[2]
     if n_available_tasks_for_user(project, user_id=user_id) > 0:
-    # if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0
         return states[3]
     return states[4]
 
