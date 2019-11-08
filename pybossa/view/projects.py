@@ -69,7 +69,7 @@ from pybossa.jobs import (webhook, send_mail,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT,
                           mail_project_report)
-from pybossa.forms.dynamic_forms import dynamic_project_form
+from pybossa.forms.dynamic_forms import dynamic_project_form, dynamic_clone_project_form
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
 from pybossa.importers import BulkImportException
@@ -428,6 +428,70 @@ def new():
     return redirect_content_type(url_for('.update',
                                          short_name=project.short_name))
 
+
+def clone_project(project, form):
+    is_admin_or_owner = (current_user.admin or
+                (current_user.subadmin and
+                    current_user.id in project.owners_ids))
+
+    proj_dict = project.dictize()
+    proj_dict.pop('secret_key', None)
+    proj_dict.pop('id', None)
+    proj_dict['info'].pop('passwd_hash', None)
+
+    if  bool(data_access_levels) and not form['copy_users']:
+        proj_dict['info'].pop('project_users', None)
+
+    if not is_admin_or_owner:
+        proj_dict['info'].pop('ext_config', None)
+
+    proj_dict['owners_ids'] = project.owners_ids if is_admin_or_owner else [current_user.id]
+    proj_dict['short_name'] = form['short_name']
+    proj_dict['name'] = form['name']
+
+    new_project = Project(**proj_dict)
+    new_project.set_password(form['password'])
+
+    return new_project
+
+
+@blueprint.route('/<short_name>/clone',  methods=['GET', 'POST'])
+@login_required
+@admin_or_subadmin_required
+def clone(short_name):
+
+    project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
+    ensure_authorized_to('read', project)
+    form = dict(name = project.short_name,
+                short_name = project.short_name,
+                password = '',
+                copy_users= False)
+
+    form = dynamic_clone_project_form(ProjectCommonForm, None, data_access_levels, obj=project)
+
+    if request.method == 'POST':
+        ensure_authorized_to('create', Project)
+
+        form = dynamic_clone_project_form(ProjectCommonForm, request.form, data_access_levels)
+
+        if not form.validate():
+            flash(gettext('Please correct the errors'), 'error')
+        else:
+            new_project = clone_project(project, form.data)
+            project_repo.save(new_project)
+            flash(gettext('Project cloned!'), 'success')
+            return redirect_content_type(url_for('.details', short_name=new_project.short_name))
+
+    return handle_content_type(dict(
+        template='/projects/clone_project.html',
+        action_url=url_for('project.clone', short_name=project.short_name),
+        form=form,
+        project=project_sanitized
+    ))
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
