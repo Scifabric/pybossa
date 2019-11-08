@@ -473,15 +473,18 @@ def clone(short_name):
         else:
             new_project = clone_project(project, form.data)
             project_repo.save(new_project)
+            new_project, owner_sanitized = sanitize_project_owner(new_project,
+                                                                owner,
+                                                                current_user,
+                                                                ps)
             flash(gettext('Project cloned!'), 'success')
-            auditlogger.log_event(
-            project,
-            current_user,
-            'clone',
-            'project.clone',
-            json.dumps(project.dictize()),
-            json.dumps(new_project.dictize()))
-            return redirect_content_type(url_for('.details', short_name=new_project.short_name))
+            auditlogger.log_event(  project,
+                                    current_user,
+                                    'clone',
+                                    'project.clone',
+                                    json.dumps(project_sanitized),
+                                    json.dumps(new_project))
+            return redirect_content_type(url_for('.details', short_name=new_project['short_name']))
 
     ensure_authorized_to('read', project)
     form = dynamic_clone_project_form(ProjectCommonForm, None, data_access_levels, obj=project)
