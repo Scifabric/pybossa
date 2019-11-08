@@ -610,11 +610,11 @@ class TestAdmin(web.Helper):
         # The user is redirected to '/admin/' if no format is specified
         res = self.app.get('/admin/users/export', follow_redirects=True)
         assert 'Featured Projects' in res.data, res.data
-        assert 'Administrators' in res.data, res.data
+        assert 'Admins' in res.data, res.data
         res = self.app.get('/admin/users/export?firmit=',
                            follow_redirects=True)
         assert 'Featured Projects' in res.data, res.data
-        assert 'Administrators' in res.data, res.data
+        assert 'Admins' in res.data, res.data
         # A 415 error is raised if the format is not supported (is not either
         # json or csv)
         res = self.app.get('/admin/users/export?format=bad',
