@@ -30,13 +30,13 @@ from pybossa.data_access import get_data_access_db_clause_for_task_assignment
 session = db.slave_session
 
 
-def n_available_tasks(project_id, user_id=None, user_ip=None):
+def n_available_tasks(project_id, user_id=None):
     """Return the number of tasks for a given project a user can contribute to.
 
     based on the completion of the project tasks, and previous task_runs
     submitted by the user.
     """
-    if user_id and not user_ip:
+    if user_id:
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
                         AND state !='enrich'
@@ -44,15 +44,8 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
         result = session.execute(query, dict(project_id=project_id,
                                              user_id=user_id))
     else:
-        if not user_ip:
-            user_ip = '127.0.0.1'
-        query = text('''SELECT COUNT(*) AS n_tasks FROM task
-                        WHERE project_id=:project_id AND state !='completed'
-                        AND state !='enrich'
-                        AND calibration = 0;''')
-
-        result = session.execute(query, dict(project_id=project_id,
-                                             user_ip=user_ip))
+        current_app.logger.exception('invalid user_id')
+        return 0
     n_tasks = 0
     for row in result:
         n_tasks = row.n_tasks
