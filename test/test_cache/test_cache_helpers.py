@@ -26,23 +26,45 @@ from pybossa.cache.project_stats import update_stats
 class TestHelpersCache(Test):
 
     @with_context
-    def test_n_available_tasks_no_tasksuser(self):
+    def test_n_available_tasks_no_user(self):
         """Test n_available_tasks returns 0 for user if the project
         has no tasks"""
         project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=2)
 
-        n_available_tasks = helpers.n_available_tasks(project.id, user_id=1)
+        n_available_tasks = helpers.n_available_tasks(project)
 
         assert n_available_tasks == 0, n_available_tasks
 
     @with_context
-    def test_n_available_tasks_no_taskruns_user(self):
+    def test_n_available_tasks_non_admin_user(self):
+        """Test n_available_tasks returns 0 for user if the project
+        has no tasks"""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=2)
+
+        n_available_tasks = helpers.n_available_tasks(project, user_id=9999)
+
+        assert n_available_tasks == 0, n_available_tasks
+
+    @with_context
+    def test_n_available_tasks_no_tasks(self):
+        """Test n_available_tasks returns 0 for user if the project
+        has no tasks"""
+        project = ProjectFactory.create()
+
+        n_available_tasks = helpers.n_available_tasks(project, user_id=1)
+
+        assert n_available_tasks == 0, n_available_tasks
+
+    @with_context
+    def test_n_available_tasks_no_taskruns(self):
         """Test n_available_tasks returns 1 for authenticated user
         if there are no taskruns"""
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
 
-        n_available_tasks = helpers.n_available_tasks(project.id, user_id=1)
+        n_available_tasks = helpers.n_available_tasks(project, user_id=1)
 
         assert n_available_tasks == 1, n_available_tasks
 
@@ -53,7 +75,7 @@ class TestHelpersCache(Test):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, state='completed')
 
-        n_available_tasks = helpers.n_available_tasks(project.id, user_id=1)
+        n_available_tasks = helpers.n_available_tasks(project, user_id=1)
 
         assert n_available_tasks == 0, n_available_tasks
 
@@ -61,12 +83,12 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_all_tasks_answered_by_user(self):
         """Test n_available_tasks returns 0 for user if he has
         submitted taskruns for all the tasks"""
-        project = ProjectFactory.create()
-        task = TaskFactory.create(project=project, n_answers=2)
         user = UserFactory.create()
+        project = ProjectFactory.create(owner_id=user.id)
+        task = TaskFactory.create(project=project, n_answers=2)
         taskrun = TaskRunFactory.create(task=task, user=user)
 
-        n_available_tasks = helpers.n_available_tasks(project.id, user_id=user.id)
+        n_available_tasks = helpers.n_available_tasks(project, user_id=user.id)
 
         assert task.state != 'completed', task.state
         assert n_available_tasks == 1, n_available_tasks
@@ -75,13 +97,13 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_some_tasks_answered_by_user(self):
         """Test n_available_tasks returns 1 for user if he has
         submitted taskruns for one of the tasks but there is still another task"""
-        project = ProjectFactory.create()
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner_id=user.id)
         answered_task = TaskFactory.create(project=project)
         available_task = TaskFactory.create(project=project)
-        user = UserFactory.create()
         taskrun = TaskRunFactory.create(task=answered_task, user=user)
 
-        n_available_tasks = helpers.n_available_tasks(project.id, user_id=user.id)
+        n_available_tasks = helpers.n_available_tasks(project, user_id=user.id)
         assert n_available_tasks == 2, n_available_tasks
 
     @with_context
@@ -90,10 +112,9 @@ class TestHelpersCache(Test):
         user has submitted taskruns for the task but he hasn't"""
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project)
-        user = UserFactory.create()
         taskrun = TaskRunFactory.create(task=task)
 
-        n_available_tasks = helpers.n_available_tasks(project.id, user_id=user.id)
+        n_available_tasks = helpers.n_available_tasks(project, user_id=1)
         assert n_available_tasks == 1, n_available_tasks
 
     @with_context

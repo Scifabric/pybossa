@@ -853,7 +853,7 @@ def update(short_name):
 def details(short_name):
 
     project, owner, ps = project_by_shortname(short_name)
-    num_available_tasks = n_available_tasks(project.id, current_user.id)
+    num_available_tasks = n_available_tasks(project, current_user.id)
     num_completed_tasks_by_user = n_completed_tasks_by_user(project.id, current_user.id)
     oldest_task = oldest_available_task(project.id, current_user.id)
     num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
