@@ -256,7 +256,9 @@ def n_remaining_task_runs(project_id):
                              FROM task_run
                              GROUP BY task_id) AS t
                   ON task.id = t.task_id
-                  WHERE task.project_id=:project_id AND task.state = 'ongoing';''')
+                  WHERE task.project_id=:project_id
+                  AND calibration = 0
+                  AND task.state = 'ongoing';''')
     return session.execute(sql, dict(project_id=project_id)).scalar() or 0
 
 

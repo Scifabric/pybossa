@@ -40,9 +40,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
                         AND state !='enrich'
-                        AND id NOT IN
-                        (SELECT task_id FROM task_run WHERE
-                        project_id=:project_id AND user_id=:user_id);''')
+                        AND calibration = 0;''')
         result = session.execute(query, dict(project_id=project_id,
                                              user_id=user_id))
     else:
@@ -51,9 +49,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
                         AND state !='enrich'
-                        AND id NOT IN
-                        (SELECT task_id FROM task_run WHERE
-                        project_id=:project_id AND user_ip=:user_ip);''')
+                        AND calibration = 0;''')
 
         result = session.execute(query, dict(project_id=project_id,
                                              user_ip=user_ip))
@@ -108,6 +104,8 @@ def check_contributing_state(project, user_id=None, user_ip=None,
     Depending on whether the project is completed or not and the user can
     contribute more to it or not.
     """
+    # print("*******")
+    # print(n_available_tasks_for_user(project, user_id=user_id))
     project_id = project['id'] if type(project) == dict else project.id
     published = project['published'] if type(project) == dict else project.published
     states = ('completed', 'draft', 'publish', 'can_contribute', 'cannot_contribute')
@@ -120,7 +118,8 @@ def check_contributing_state(project, user_id=None, user_ip=None,
         if has_no_presenter(project) or _has_no_tasks(project_id):
             return states[1]
         return states[2]
-    if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0:
+    if n_available_tasks_for_user(project, user_id=user_id) > 0:
+    # if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0
         return states[3]
     return states[4]
 
@@ -181,7 +180,8 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     if user_id is None or user_id <= 0:
         return n_tasks
     assign_user = json.dumps({'assign_user': [cached_users.get_user_email(user_id)]}) if user_id else None
-    scheduler = project.info.get('sched', 'default')
+    scheduler = project.get('sched', 'default') if type(project) == dict else project.info.get('sched', 'default')
+    project_id = project['id'] if type(project) == dict else project.id
     if scheduler != Schedulers.user_pref:
         sql = '''
                SELECT COUNT(*) AS n_tasks FROM task
@@ -204,7 +204,7 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                '''.format(user_pref_list, allowed_task_levels_clause)
     sqltext = text(sql)
     try:
-        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id, assign_user=assign_user))
+        result = session.execute(sqltext, dict(project_id=project_id, user_id=user_id, assign_user=assign_user))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None
