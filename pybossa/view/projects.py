@@ -447,10 +447,10 @@ def clone_project(project, form):
     proj_dict['owners_ids'] = project.owners_ids if is_admin_or_subadmin_and_owner else [current_user.id]
     proj_dict['short_name'] = form['short_name']
     proj_dict['name'] = form['name']
-    replaceament = 'pybossa.run("%s")' % proj_dict['short_name']
+    replacement = 'pybossa.run("%s")' % proj_dict['short_name']
     pybossa_re = "(pybossa\.run\(\s*)(['\"]\S+['\"]\))"
     proj_dict['info']['task_presenter'] = re.sub(pybossa_re,
-                                                 replaceament,
+                                                 replacement,
                                                  proj_dict['info'].get('task_presenter', ''))
 
     new_project = Project(**proj_dict)
