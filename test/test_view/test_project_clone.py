@@ -80,9 +80,11 @@ class TestProjectClone(Helper):
         admin = UserFactory.create()
         user2 = UserFactory.create()
         assign_users = [admin.id, user2.id]
+        task_presenter = 'test; pybossa.run("oldname"); test;'
         project = ProjectFactory.create(id=40,
                                         short_name='oldname',
-                                        info={'project_users': assign_users},
+                                        info={'task_presenter': task_presenter,
+                                              'project_users': assign_users},
                                         owner=admin)
 
         with patch.dict(data_access_levels, self.patch_data_access_levels):
@@ -90,7 +92,10 @@ class TestProjectClone(Helper):
             url = '/project/%s/clone?api_key=%s' % (project.short_name, project.owner.api_key)
             res = self.app.post(url, data=data)
             new_project = project_repo.get(1)
+            task_presenter_expected = 'test; pybossa.run("newproj"); test;'
+
             assert new_project.get_project_users() == assign_users, new_project.get_project_users()
+            assert new_project.info['task_presenter'] == task_presenter_expected, new_project.info['task_presenter']
 
 
 
