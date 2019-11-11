@@ -46,6 +46,19 @@ def dynamic_project_form(class_type, form_data, data_access_levels, products=Non
 
     return ProjectFormExtraInputs(form_data, obj=obj)
 
+def dynamic_clone_project_form(class_type, form_data, data_access_levels, obj=None):
+
+    class ProjectCloneFormExtraInputs(class_type):
+        def __init__(self, *args, **kwargs):
+            class_type.__init__(self, *args, **kwargs)
+        pass
+
+    if data_access_levels:
+        ProjectCloneFormExtraInputs.copy_users = BooleanField(
+            lazy_gettext('Keep same list of assigned users'))
+
+    return ProjectCloneFormExtraInputs(form_data, obj=obj)
+
 def set_product_subproduct_choices(form, config_products):
     config_products = config_products or {}
     products = list(config_products.keys())
