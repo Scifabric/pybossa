@@ -98,7 +98,10 @@ class ProjectCommonForm(Form):
                         pb_validator.CheckPasswordStrength(
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)],
-                    render_kw={'placeholder': 'Password must contain at least one uppercase, one lowercase, one numeric character.'})
+                    render_kw={'placeholder': 'Minimum length {} characters, 1 uppercase, 1 lowercase and 1 numeric.'.format(PROJECT_PWD_MIN_LEN)})
+
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
 
 class ProjectForm(ProjectCommonForm):
 
@@ -113,9 +116,6 @@ class ProjectForm(ProjectCommonForm):
 
     kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2,
         validators=[validators.Required(), NumberRange(Decimal('0.1'), 120)])
-
-    def __init__(self, *args, **kwargs):
-        Form.__init__(self, *args, **kwargs)
 
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())

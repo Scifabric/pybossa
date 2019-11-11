@@ -469,9 +469,10 @@ def clone(short_name):
                                                                 owner,
                                                                 current_user,
                                                                 ps)
+    ensure_authorized_to('read', project)
+    form = dynamic_clone_project_form(ProjectCommonForm, request.form or None, data_access_levels, obj=project)
     if request.method == 'POST':
         ensure_authorized_to('create', Project)
-        form = dynamic_clone_project_form(ProjectCommonForm, request.form, data_access_levels)
         if not form.validate():
             flash(gettext('Please correct the errors'), 'error')
         else:
@@ -490,8 +491,6 @@ def clone(short_name):
                                     json.dumps(new_project))
             return redirect_content_type(url_for('.details', short_name=new_project['short_name']))
 
-    ensure_authorized_to('read', project)
-    form = dynamic_clone_project_form(ProjectCommonForm, None, data_access_levels, obj=project)
     return handle_content_type(dict(
         template='/projects/clone_project.html',
         action_url=url_for('project.clone', short_name=project.short_name),
