@@ -63,7 +63,7 @@ def set_product_subproduct_choices(form, config_products):
     config_products = config_products or {}
     products = list(config_products.keys())
     choices = [("", "")]
-    form.product.choices = choices + [(p, p) for p in products]
+    form.product.choices = sorted(choices + [(p, p) for p in products])
     product = form.product.data
     if product:
         subproducts = config_products.get(product, [])

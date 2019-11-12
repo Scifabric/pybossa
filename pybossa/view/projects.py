@@ -358,15 +358,17 @@ def project_cat_index(category, page):
 def new():
     ensure_authorized_to('create', Project)
 
-    form = dynamic_project_form(ProjectForm, request.body, data_access_levels,
-                                products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+    # Sort list of subproducts (value) for each product (key).
+    prodsubprods = {key:sorted(value) for key, value in current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).items()}
+
+    form = dynamic_project_form(ProjectForm, request.body, data_access_levels, prodsubprods)
 
     def respond(errors):
         response = dict(template='projects/new.html',
                         project=None,
                         title=gettext("Create a Project"),
                         form=form, errors=errors,
-                        prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+                        prodsubprods=prodsubprods)
         return handle_content_type(response)
 
     def _description_from_long_description():
@@ -758,6 +760,9 @@ def update(short_name):
 
     pro = pro_features()
 
+    # Sort list of subproducts (value) for each product (key).
+    prodsubprods = {key:sorted(value) for key, value in current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).items()}
+
     title = project_title(project, "Update")
     if request.method == 'GET':
         sync = project.info.get('sync')
@@ -768,7 +773,7 @@ def update(short_name):
         project.kpi = project.info.get('kpi')
         ensure_amp_config_applied_to_project(project, project.info.get('annotation_config', {}))
         form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
-                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+                                    products=prodsubprods)
         ensure_data_access_assignment_to_form(project.info, form)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
@@ -783,7 +788,7 @@ def update(short_name):
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
         form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels,
-                                    products=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+                                    products=prodsubprods)
 
         categories = cached_cat.get_all()
         categories = sorted(categories,
@@ -844,7 +849,7 @@ def update(short_name):
                     pro_features=pro,
                     sync_enabled=sync_enabled,
                     private_instance=bool(data_access_levels),
-                    prodsubprods=current_app.config.get('PRODUCTS_SUBPRODUCTS', {}))
+                    prodsubprods=prodsubprods)
     return handle_content_type(response)
 
 
