@@ -440,6 +440,8 @@ def clone_project(project, form):
     proj_dict.pop('secret_key', None)
     proj_dict.pop('id', None)
     proj_dict['info'].pop('passwd_hash', None)
+    proj_dict['info'].pop('quiz', None)
+    proj_dict['info'].pop('enrichments', None)
 
     if  bool(data_access_levels) and not form.get('copy_users', False):
         proj_dict['info'].pop('project_users', None)

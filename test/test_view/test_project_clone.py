@@ -84,6 +84,8 @@ class TestProjectClone(Helper):
         project = ProjectFactory.create(id=40,
                                         short_name='oldname',
                                         info={'task_presenter': task_presenter,
+                                              'quiz': {'test': 123},
+                                              'enrichments': [{'test': 123}],
                                               'project_users': assign_users},
                                         owner=admin)
 
@@ -96,6 +98,8 @@ class TestProjectClone(Helper):
 
             assert new_project.get_project_users() == assign_users, new_project.get_project_users()
             assert new_project.info['task_presenter'] == task_presenter_expected, new_project.info['task_presenter']
+            assert new_project.info.get('enrichments') == None, new_project.info.get('enrichments')
+            assert new_project.info.get('quiz') == None, new_project.info.get('quiz')
 
 
 
