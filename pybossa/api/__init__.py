@@ -314,7 +314,7 @@ def user_progress(project_id=None, short_name=None):
             query_attrs = dict(project_id=project.id)
             query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
-            num_available_tasks = n_available_tasks(project.id, current_user.id)
+            num_available_tasks = n_available_tasks(project.id, include_gold_task=True)
             num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
             response = dict(
                 done=taskrun_count,

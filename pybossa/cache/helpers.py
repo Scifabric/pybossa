@@ -30,33 +30,20 @@ from pybossa.data_access import get_data_access_db_clause_for_task_assignment
 session = db.slave_session
 
 
-def n_available_tasks(project_id, user_id=None, user_ip=None):
+def n_available_tasks(project_id, include_gold_task=False):
     """Return the number of tasks for a given project a user can contribute to.
-
-    based on the completion of the project tasks, and previous task_runs
-    submitted by the user.
+    based on the completion of the project tasks,
     """
-    if user_id and not user_ip:
+    if include_gold_task:
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
-                        AND state !='enrich'
-                        AND id NOT IN
-                        (SELECT task_id FROM task_run WHERE
-                        project_id=:project_id AND user_id=:user_id);''')
-        result = session.execute(query, dict(project_id=project_id,
-                                             user_id=user_id))
+                        AND state !='enrich';''')
     else:
-        if not user_ip:
-            user_ip = '127.0.0.1'
         query = text('''SELECT COUNT(*) AS n_tasks FROM task
                         WHERE project_id=:project_id AND state !='completed'
                         AND state !='enrich'
-                        AND id NOT IN
-                        (SELECT task_id FROM task_run WHERE
-                        project_id=:project_id AND user_ip=:user_ip);''')
-
-        result = session.execute(query, dict(project_id=project_id,
-                                             user_ip=user_ip))
+                        AND calibration = 0;''')
+    result = session.execute(query, dict(project_id=project_id))
     n_tasks = 0
     for row in result:
         n_tasks = row.n_tasks
@@ -120,7 +107,7 @@ def check_contributing_state(project, user_id=None, user_ip=None,
         if has_no_presenter(project) or _has_no_tasks(project_id):
             return states[1]
         return states[2]
-    if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0:
+    if n_available_tasks_for_user(project, user_id=user_id) > 0:
         return states[3]
     return states[4]
 
@@ -181,7 +168,8 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     if user_id is None or user_id <= 0:
         return n_tasks
     assign_user = json.dumps({'assign_user': [cached_users.get_user_email(user_id)]}) if user_id else None
-    scheduler = project.info.get('sched', 'default')
+    scheduler = project.get('sched', 'default') if type(project) == dict else project.info.get('sched', 'default')
+    project_id = project['id'] if type(project) == dict else project.id
     if scheduler != Schedulers.user_pref:
         sql = '''
                SELECT COUNT(*) AS n_tasks FROM task
@@ -204,7 +192,7 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                '''.format(user_pref_list, allowed_task_levels_clause)
     sqltext = text(sql)
     try:
-        result = session.execute(sqltext, dict(project_id=project.id, user_id=user_id, assign_user=assign_user))
+        result = session.execute(sqltext, dict(project_id=project_id, user_id=user_id, assign_user=assign_user))
     except Exception as e:
         current_app.logger.exception('Exception in get_user_pref_task {0}, sql: {1}'.format(str(e), str(sqltext)))
         return None
