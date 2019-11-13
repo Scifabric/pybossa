@@ -178,7 +178,7 @@ def n_completed_tasks(project_id):
 @memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_results(project_id):
     """Return number of results of a project."""
-    return 0;
+    return 0
 
     query = text('''
                  SELECT COUNT(id) AS ct FROM result
@@ -263,8 +263,16 @@ def n_remaining_task_runs(project_id):
 
 
 def n_expected_task_runs(project_id):
-    """Return total number of expected task_runs of a project."""
-    return n_task_runs(project_id) + n_remaining_task_runs(project_id)
+    """Return total number of expected task_runs of a project (exclude gold task)."""
+    sql = text('''SELECT SUM(n_answers) AS n_task_runs FROM task
+                        WHERE project_id=:project_id
+                        AND calibration = 0;''')
+
+    results = session.execute(sql, dict(project_id=project_id))
+    n_task_runs = 0
+    for row in results:
+        n_task_runs = row.n_task_runs
+    return n_task_runs
 
 
 def overall_progress(project_id):
