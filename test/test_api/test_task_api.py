@@ -856,8 +856,7 @@ class TestTaskAPI(TestAPI):
         assert_equal(task.state, 'ongoing')
         assert task.id == out['id'], out
 
-        task.state = 'completed'
-        task_repo.update(task)
+        TaskRunFactory.create_batch(2, task=task)
 
         data = {'n_answers': 1}
         datajson = json.dumps(data)
@@ -1179,4 +1178,3 @@ class TestTaskAPI(TestAPI):
 
         url = tasks.upload_gold_data(task, 1, {'ans1': 'test'})
         assert url == 'testURL', url
-
