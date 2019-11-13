@@ -885,12 +885,12 @@ def check_password_strength(
     pwd_len = len(password)
     if min_len and pwd_len < min_len:
         return False, lazy_gettext(
-            u'Password must be longer than {} characters'.format(min_len)
+            u'Password must have a minimum of {} characters'.format(min_len)
         )
 
     if max_len and pwd_len > max_len:
         return False, lazy_gettext(
-            u'Password must be shorter than {} characters'.format(max_len)
+            u'Password must not exceed {} characters'.format(max_len)
         )
 
     valid = all(re.search(ch, password) for ch in required_chars)
