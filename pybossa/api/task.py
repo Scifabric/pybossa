@@ -62,11 +62,14 @@ class TaskAPI(APIBase):
 
     def _update_attribute(self, new, old):
         gold_task = bool(new.gold_answers)
-        if (new.state == 'completed'):
-            n_taskruns = len(new.task_runs)
+        n_taskruns = len(new.task_runs)
+        if new.state == 'completed':
             if gold_task or (old.n_answers < new.n_answers and
                 n_taskruns < new.n_answers):
                 new.state = 'ongoing'
+        if new.state == 'ongoing':
+            if not gold_task and (n_taskruns >= new.n_answers):
+                new.state = 'completed'
         new.calibration = int(gold_task)
         new.exported = gold_task
 
