@@ -856,7 +856,7 @@ class TestTaskAPI(TestAPI):
         assert_equal(task.state, 'ongoing')
         assert task.id == out['id'], out
 
-        TaskRunFactory.create_batch(2, task=task)
+        TaskRunFactory.create_batch(1, task=task)
 
         data = {'n_answers': 1}
         datajson = json.dumps(data)
