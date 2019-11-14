@@ -265,8 +265,8 @@ def n_remaining_task_runs(project_id):
 def n_expected_task_runs(project_id):
     """Return total number of expected task_runs of a project (exclude gold task)."""
     sql = text('''SELECT SUM(n_answers) AS n_task_runs FROM task
-                        WHERE project_id=:project_id
-                        AND calibration = 0;''')
+                  WHERE project_id=:project_id
+                  AND calibration = 0;''')
 
     results = session.execute(sql, dict(project_id=project_id))
     n_task_runs = 0
