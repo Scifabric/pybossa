@@ -32,9 +32,9 @@ session = db.slave_session
 def n_gold_tasks(project_id):
     """Return the number of gold tasks for a given project"""
     query = text('''SELECT COUNT(*) AS n_gold_tasks FROM task
-                WHERE project_id=:project_id
-                AND state !='enrich'
-                AND calibration = 1;''')
+                    WHERE project_id=:project_id
+                    AND state !='enrich'
+                    AND calibration = 1;''')
     result = session.execute(query, dict(project_id=project_id))
     num_gold_tasks = 0
     for row in result:
