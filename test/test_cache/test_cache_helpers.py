@@ -26,6 +26,38 @@ from pybossa.cache.project_stats import update_stats
 class TestHelpersCache(Test):
 
     @with_context
+    def test_n_gold_tasks_no_tasks(self):
+        """Test n_gold_tasks returns 0 for user if the project
+        has no tasks"""
+        project = ProjectFactory.create()
+
+        n_gold_tasks = helpers.n_gold_tasks(project.id)
+
+        assert n_gold_tasks == 0, n_gold_tasks
+
+    @with_context
+    def test_n_gold_tasks_no_gold_tasks(self):
+        """Test n_gold_tasks returns 0 for user if the project
+        has no gold tasks"""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+
+        n_gold_tasks = helpers.n_gold_tasks(project.id)
+
+        assert n_gold_tasks == 0, n_gold_tasks
+
+    @with_context
+    def test_n_gold_tasks_gold_tasks(self):
+        """Test n_gold_tasks returns 1 for user if the project
+        has 1 gold tasks"""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, calibration=1)
+
+        n_gold_tasks = helpers.n_gold_tasks(project.id)
+
+        assert n_gold_tasks == 1, n_gold_tasks
+
+    @with_context
     def test_n_available_tasks_no_tasks(self):
         """Test n_available_tasks returns 0 for user if the project
         has no tasks"""

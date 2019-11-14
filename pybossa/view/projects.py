@@ -82,7 +82,7 @@ from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
 from pybossa.forms.admin_view_forms import *
-from pybossa.cache.helpers import n_available_tasks, oldest_available_task, n_completed_tasks_by_user
+from pybossa.cache.helpers import n_gold_tasks, n_available_tasks, oldest_available_task, n_completed_tasks_by_user
 from pybossa.cache.helpers import n_available_tasks_for_user, latest_submission_task_date
 from pybossa.util import crossdomain
 from pybossa.error import ErrorStatus
@@ -867,6 +867,7 @@ def details(short_name):
     latest_submission_date = latest_submission_task_date(project.id)
     num_remaining_task_runs = cached_projects.n_remaining_task_runs(project.id)
     num_expected_task_runs = cached_projects.n_expected_task_runs(project.id)
+    num_gold_tasks = n_gold_tasks(project.id)
 
     # all projects require password check
     redirect_to_password = _check_if_redirect_to_password(project)
@@ -885,13 +886,14 @@ def details(short_name):
     template_args = {"project": project_sanitized,
                      "title": title,
                      "owner":  owner_sanitized,
-                     "n_tasks": ps.n_tasks,
+                     "n_tasks": ps.n_tasks - num_gold_tasks,
                      "n_task_runs": ps.n_task_runs,
                      "overall_progress": ps.overall_progress,
                      "last_activity": ps.last_activity,
                      "n_completed_tasks": ps.n_completed_tasks,
                      "num_expected_task_runs": num_expected_task_runs,
                      "num_remaining_task_runs": num_remaining_task_runs,
+                     "num_gold_tasks": num_gold_tasks,
                      "n_volunteers": ps.n_volunteers,
                      "pro_features": pro,
                      "n_available_tasks": num_available_tasks,

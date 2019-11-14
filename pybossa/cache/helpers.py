@@ -29,6 +29,17 @@ from pybossa.data_access import get_data_access_db_clause_for_task_assignment
 
 session = db.slave_session
 
+def n_gold_tasks(project_id):
+    """Return the number of gold tasks for a given project"""
+    query = text('''SELECT COUNT(*) AS n_gold_tasks FROM task
+                    WHERE project_id=:project_id
+                    AND state !='enrich'
+                    AND calibration = 1;''')
+    result = session.execute(query, dict(project_id=project_id))
+    num_gold_tasks = 0
+    for row in result:
+        num_gold_tasks = row.n_gold_tasks
+    return num_gold_tasks
 
 def n_available_tasks(project_id, include_gold_task=False):
     """Return the number of tasks for a given project a user can contribute to.
