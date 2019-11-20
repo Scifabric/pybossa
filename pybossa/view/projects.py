@@ -437,6 +437,7 @@ def clone_project(project, form):
                     current_user.id in project.owners_ids))
 
     proj_dict = project.dictize()
+    proj_dict['info'] = deepcopy(proj_dict['info'])
     proj_dict.pop('secret_key', None)
     proj_dict.pop('id', None)
     proj_dict['info'].pop('passwd_hash', None)
@@ -459,6 +460,7 @@ def clone_project(project, form):
 
     new_project = Project(**proj_dict)
     new_project.set_password(form['password'])
+    project_repo.save(new_project)
 
     return new_project
 
@@ -481,7 +483,6 @@ def clone(short_name):
             flash(gettext('Please correct the errors'), 'error')
         else:
             new_project = clone_project(project, form.data)
-            project_repo.save(new_project)
             new_project, owner_sanitized = sanitize_project_owner(new_project,
                                                                 owner,
                                                                 current_user,
