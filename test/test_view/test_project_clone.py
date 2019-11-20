@@ -86,7 +86,8 @@ class TestProjectClone(Helper):
                                         info={'task_presenter': task_presenter,
                                               'quiz': {'test': 123},
                                               'enrichments': [{'test': 123}],
-                                              'project_users': assign_users},
+                                              'project_users': assign_users,
+                                              'passwd_hash': 'testpass'},
                                         owner=admin)
 
         with patch.dict(data_access_levels, self.patch_data_access_levels):
@@ -94,8 +95,9 @@ class TestProjectClone(Helper):
             url = '/project/%s/clone?api_key=%s' % (project.short_name, project.owner.api_key)
             res = self.app.post(url, data=data)
             new_project = project_repo.get(1)
+            old_project = project_repo.get(40)
             task_presenter_expected = 'test; pybossa.run("newproj"); test;'
-
+            assert old_project.info['passwd_hash'] == 'testpass', old_project.info['passwd_hash']
             assert new_project.get_project_users() == assign_users, new_project.get_project_users()
             assert new_project.info['task_presenter'] == task_presenter_expected, new_project.info['task_presenter']
             assert new_project.info.get('enrichments') == None, new_project.info.get('enrichments')
