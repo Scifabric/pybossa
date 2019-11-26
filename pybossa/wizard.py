@@ -96,9 +96,6 @@ class Wizard(object):
         if not enable:
             return ''
 
-        if 'published' in href_config['args']:
-            return url_for(href_config['url_for'], short_name=self.project['short_name'], published=self.project['id'])
-
         if 'short_name' in href_config['args']:
             return url_for(href_config['url_for'], short_name=self.project['short_name'])
 
