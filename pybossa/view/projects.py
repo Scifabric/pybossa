@@ -446,7 +446,7 @@ def clone_project(project, form):
     if  bool(data_access_levels) and not form.get('copy_users', False):
         proj_dict['info'].pop('project_users', None)
 
-    if not is_admin_or_subadmin_and_owner:
+    if current_user.id not in project.owners_ids:
         proj_dict['info'].pop('ext_config', None)
 
     proj_dict['owner_id'] = current_user.id
