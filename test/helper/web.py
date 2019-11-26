@@ -285,12 +285,6 @@ class Helper(Test):
             return self.app.get("/project/%s/update" % short_name,
                                 follow_redirects=True)
 
-    def get_csrf(self, endpoint):
-        """Return csrf token for endpoint."""
-        res = self.app.get(endpoint,
-                           content_type='application/json')
-        csrf = json.loads(res.data).get('form').get('csrf')
-        return csrf
 
     def check_cookie(self, response, name):
         # Checks for existence of a cookie and verifies the value of it

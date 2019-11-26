@@ -296,6 +296,12 @@ class Test(object):
         cookie = signer.dumps([get_user_id_or_ip(user)])
         self.app.set_cookie('/', '%spswd' % project.short_name, cookie)
 
+    def get_csrf(self, endpoint):
+        """Return csrf token for endpoint."""
+        res = self.app.get(endpoint,
+                           content_type='application/json')
+        csrf = json.loads(res.data).get('form').get('csrf')
+        return csrf
 
 def get_user_id_or_ip(user):
     if not user:

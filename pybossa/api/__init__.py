@@ -58,6 +58,7 @@ from pybossa.api.performance_stats import PerformanceStatsAPI
 from user import UserAPI
 from token import TokenAPI
 from result import ResultAPI
+from rq import Queue
 from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
 from pybossa.core import project_repo, task_repo, user_repo
@@ -70,6 +71,7 @@ from pybossa.cache.helpers import (n_available_tasks, n_available_tasks_for_user
     n_unexpired_gold_tasks)
 from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
                            has_lock, release_lock, Schedulers, get_locks)
+from pybossa.jobs import send_mail
 from pybossa.api.project_by_name import ProjectByNameAPI
 from pybossa.api.pwd_manager import get_pwd_manager
 from pybossa.data_access import data_access_levels
@@ -82,6 +84,7 @@ import requests
 blueprint = Blueprint('api', __name__)
 
 error = ErrorStatus()
+mail_queue = Queue('email', connection=sentinel.master)
 
 
 @blueprint.route('/')
@@ -374,6 +377,48 @@ def get_disqus_sso_api():
     except MethodNotAllowed as e:
         e.message = "Disqus keys are missing"
         return error.format_exception(e, target='DISQUS_SSO', action='GET')
+
+
+@jsonpify
+@blueprint.route('/project/<short_name>/chat', methods=['POST'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def chat_notify(short_name):
+    """Email project owners upon a user initiating a chat session."""
+    if not current_user.is_authenticated:
+        return abort(401)
+
+    data = request.json
+    project = project_repo.get_by_shortname(short_name)
+    if not project:
+        return abort(400)
+
+    data = request.json
+    subject = u'Chat session started for project {} by {}'.format(short_name, current_user.email_addr)
+    success_body = (
+        u'A user has started a chat session on a project that you an owner/co-owner for.\n\n'
+        '    Project Short Name: {short_name}\n'
+        '    User requesting assistance: {user}\n'
+        '    Message: {message}\n\n'
+        'Slack Url\n'
+        '{url}\n'
+        )
+
+    body = success_body.format(
+        short_name=project.short_name,
+        user=current_user.email_addr,
+        message=data.get('message'),
+        url=current_app.config.get('CHAT_URL', None))
+
+    # Get email addresses for all owners of the project.
+    recipients = [user.email_addr for user in user_repo.get_users(project.owners_ids)]
+
+    # Send email.
+    email = dict(recipients=recipients,
+                 subject=subject,
+                 body=body)
+    mail_queue.enqueue(send_mail, email)
+
+    return Response(json.dumps({'success': True}), 200, mimetype="application/json")
 
 
 @jsonpify
