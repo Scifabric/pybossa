@@ -432,8 +432,6 @@ def new():
 
 
 def clone_project(project, form):
-    is_admin_or_subadmin_and_owner = ((current_user.admin or current_user.subadmin) and
-                current_user.id in project.owners_ids)
 
     proj_dict = project.dictize()
     proj_dict['info'] = deepcopy(proj_dict['info'])
