@@ -432,9 +432,6 @@ def new():
 
 
 def clone_project(project, form):
-    is_admin_or_subadmin_and_owner = (current_user.admin or
-                (current_user.subadmin and
-                    current_user.id in project.owners_ids))
 
     proj_dict = project.dictize()
     proj_dict['info'] = deepcopy(proj_dict['info'])
@@ -447,9 +444,11 @@ def clone_project(project, form):
     if  bool(data_access_levels) and not form.get('copy_users', False):
         proj_dict['info'].pop('project_users', None)
 
-    if not is_admin_or_subadmin_and_owner:
+    if current_user.id not in project.owners_ids:
         proj_dict['info'].pop('ext_config', None)
-    proj_dict['owners_ids'] = project.owners_ids if is_admin_or_subadmin_and_owner else [current_user.id]
+
+    proj_dict['owner_id'] = current_user.id
+    proj_dict['owners_ids'] = [current_user.id]
     proj_dict['short_name'] = form['short_name']
     proj_dict['name'] = form['name']
     replacement = 'pybossa.run("%s")' % proj_dict['short_name']
@@ -457,7 +456,6 @@ def clone_project(project, form):
     proj_dict['info']['task_presenter'] = re.sub(pybossa_re,
                                                  replacement,
                                                  proj_dict['info'].get('task_presenter', ''))
-
     new_project = Project(**proj_dict)
     new_project.set_password(form['password'])
     project_repo.save(new_project)
