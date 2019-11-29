@@ -395,7 +395,7 @@ def chat_notify(short_name):
     data = request.json
     subject = u'Chat session started for project {} by {}'.format(short_name, current_user.email_addr)
     success_body = (
-        u'A user has started a chat session on a project that you an owner/co-owner for.\n\n'
+        u'A user has started a chat session on a project that you are an owner/co-owner for.\n\n'
         '    Project Short Name: {short_name}\n'
         '    User requesting assistance: {user}\n'
         '    Message: {message}\n\n'
