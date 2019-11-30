@@ -1181,7 +1181,8 @@ class TestTaskrunAPI(TestAPI):
             info='my task result')
         datajson = json.dumps(data)
 
-        self.app.post(url, data=datajson)
+        res = self.app.post(url, data=datajson)
+        print(res.data, 'hola')
 
         result = result_repo.get_by(project_id=project.id, task_id=task.id)
 

@@ -52,7 +52,8 @@ class TaskRunAPI(APIBase):
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
-        self.check_can_post(taskrun.project_id, taskrun.task_id, get_user_id_or_ip())
+        self.check_can_post(taskrun.project_id,
+                            taskrun.task_id, get_user_id_or_ip())
         task = task_repo.get_task(taskrun.task_id)
         guard = ContributionsGuard(sentinel.master)
 
@@ -72,8 +73,8 @@ class TaskRunAPI(APIBase):
         if (task.project_id != taskrun.project_id):
             raise Forbidden('Invalid project_id')
         if taskrun.external_uid:
-            resp = jwt_authorize_project(task.project,
-                                         request.headers.get('Authorization'))
+            request_headers = request.headers.get('Authorization')
+            resp = jwt_authorize_project(task.project, request_headers)
             if type(resp) == Response:
                 msg = json.loads(resp.data)['description']
                 raise Forbidden(msg)
@@ -102,7 +103,10 @@ class TaskRunAPI(APIBase):
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
         content_type = 'multipart/form-data'
-        if (content_type in request.headers.get('Content-Type') and
+        request_headers = request.headers.get('Content-Type')
+        if request_headers is None:
+            request_headers = []
+        if (content_type in request_headers and
                 cls_name in self.allowed_classes_upload):
             data = dict()
             for key in list(request.form.keys()):
