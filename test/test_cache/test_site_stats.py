@@ -159,8 +159,8 @@ class TestSiteStatsCache(Test):
         two_days_ago = (datetime.datetime.utcnow() -
                         datetime.timedelta(2)).isoformat()
 
-        TaskRunFactory.create(project=recently_contributed_project)
-        TaskRunFactory.create(
+        tr = TaskRunFactory.create(project=recently_contributed_project)
+        tr = TaskRunFactory.create(
             project=long_ago_contributed_project, finish_time=two_days_ago)
 
         top5 = stats.get_top5_projects_24_hours()
