@@ -216,7 +216,7 @@ def get_locked_task(project_id, user_id=None, user_ip=None,
            '''.format(user_param))
 
     rows = session.execute(sql, dict(project_id=project_id,
-                                     uid=uid, limit=user_count + 5))
+                                     uid=uid, limit=limit + 5))
 
     for task_id, taskcount, n_answers in rows:
         remaining = n_answers - taskcount

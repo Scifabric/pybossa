@@ -39,8 +39,8 @@ def update_feed(obj):
 
 def get_update_feed():
     """Return update feed list."""
-    data = sentinel.slave.zrevrange(FEED_KEY, 0, 99, withscores=True)
     feed = []
+    data = sentinel.slave.zrevrange(FEED_KEY, 0, 99, withscores=True)
     for u in data:
         tmp = pickle.loads(u[0])
         tmp['updated'] = u[1]

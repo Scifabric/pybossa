@@ -156,10 +156,12 @@ class TestSiteStatsCache(Test):
     def test_get_top5_projects_24_hours_considers_last_24_hours_contributions_only(self):
         recently_contributed_project = ProjectFactory.create()
         long_ago_contributed_project = ProjectFactory.create()
-        two_days_ago = (datetime.datetime.utcnow() -  datetime.timedelta(2)).isoformat()
+        two_days_ago = (datetime.datetime.utcnow() -
+                        datetime.timedelta(2)).isoformat()
 
-        TaskRunFactory.create(project=recently_contributed_project)
-        TaskRunFactory.create(project=long_ago_contributed_project, finish_time=two_days_ago)
+        tr = TaskRunFactory.create(project=recently_contributed_project)
+        tr = TaskRunFactory.create(
+            project=long_ago_contributed_project, finish_time=two_days_ago)
 
         top5 = stats.get_top5_projects_24_hours()
         top5_ids = [top['id'] for top in top5]
@@ -203,10 +205,12 @@ class TestSiteStatsCache(Test):
     def test_get_top5_users_24_hours_considers_last_24_hours_contributions_only(self):
         recently_contributing_user = UserFactory.create()
         long_ago_contributing_user = UserFactory.create()
-        two_days_ago = (datetime.datetime.utcnow() -  datetime.timedelta(2)).isoformat()
+        two_days_ago = (datetime.datetime.utcnow() -
+                        datetime.timedelta(2)).isoformat()
 
         TaskRunFactory.create(user=recently_contributing_user)
-        TaskRunFactory.create(user=long_ago_contributing_user, finish_time=two_days_ago)
+        TaskRunFactory.create(
+            user=long_ago_contributing_user, finish_time=two_days_ago)
 
         top5 = stats.get_top5_users_24_hours()
         top5_ids = [top['id'] for top in top5]

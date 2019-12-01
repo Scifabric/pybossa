@@ -31,6 +31,8 @@ import hashlib
 from functools import wraps
 from pybossa.core import sentinel
 
+from pybossa import util
+
 try:
     import pickle as pickle
 except ImportError:  # pragma: no cover
@@ -80,7 +82,7 @@ def cache(key_prefix, timeout=300):
         @wraps(f)
         def wrapper(*args, **kwargs):
             key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
-            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+            if util.redis_cache_is_enabled():
                 output = sentinel.slave.get(key)
                 if output:
                     return pickle.loads(output)
@@ -88,7 +90,6 @@ def cache(key_prefix, timeout=300):
                 sentinel.master.setex(key, timeout, pickle.dumps(output))
                 return output
             output = f(*args, **kwargs)
-            sentinel.master.setex(key, timeout, pickle.dumps(output))
             return output
         return wrapper
     return decorator
@@ -109,7 +110,7 @@ def memoize(timeout=300):
             key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
             key_to_hash = get_key_to_hash(*args, **kwargs)
             key = get_hash_key(key, key_to_hash)
-            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+            if util.redis_cache_is_enabled():
                 output = sentinel.slave.get(key)
                 if output:
                     return pickle.loads(output)
@@ -117,7 +118,6 @@ def memoize(timeout=300):
                 sentinel.master.setex(key, timeout, pickle.dumps(output))
                 return output
             output = f(*args, **kwargs)
-            sentinel.master.setex(key, timeout, pickle.dumps(output))
             return output
         return wrapper
     return decorator
@@ -130,7 +130,7 @@ def delete_cached(key):
     Returns True if success or no cache is enabled
 
     """
-    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+    if util.redis_cache_is_enabled():
         key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
         return bool(sentinel.master.delete(key))
     return True
@@ -143,7 +143,7 @@ def delete_memoized(function, *args, **kwargs):
     Returns True if success or no cache is enabled
 
     """
-    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+    if util.redis_cache_is_enabled():
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         if args or kwargs:
             key_to_hash = get_key_to_hash(*args, **kwargs)

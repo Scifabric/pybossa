@@ -155,15 +155,15 @@ setup(
     #     'git+git@github.com:Scifabric/pybossa.git@b8ab2ef199e82ca417d470bbed916c7b8dbda4d4#egg=pybossa'
     # ]
     # metadata for upload to PyPI
-    author = 'Scifabric LTD',
-    author_email = 'info@scifabric.com',
-    description = 'Open Source CrowdSourcing framework',
-    long_description = '''PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.''',
-    license = 'AGPLv3',
-    url = 'http://pybossa.com',
-    download_url = 'https://github.com/Scifabric/pybossa',
-    include_package_data = True,
-    classifiers = [
+    author='Scifabric LTD',
+    author_email='info@scifabric.com',
+    description='Open Source CrowdSourcing framework',
+    long_description='''PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.''',
+    license='AGPLv3',
+    url='http://pybossa.com',
+    download_url='https://github.com/Scifabric/pybossa',
+    include_package_data=True,
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Developers',
@@ -172,6 +172,6 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    entry_points = '''
+    entry_points='''
     '''
 )
