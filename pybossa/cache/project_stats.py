@@ -67,7 +67,7 @@ def stats_users(project_id, period=None):
                    task_run.user_ip IS NULL AND
                    task_run.project_id=:project_id AND
                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                   >= NOW() - :period ::INTERVAL
+                   >= NOW() AT TIME ZONE 'utc' - :period ::INTERVAL
                    GROUP BY task_run.user_id ORDER BY n_tasks DESC
                    LIMIT 5;''')\
             .execution_options(stream=True)
@@ -88,7 +88,7 @@ def stats_users(project_id, period=None):
                    task_run.user_ip IS NULL AND
                    task_run.project_id=:project_id AND
                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                   >= NOW() - :period ::INTERVAL
+                   >= NOW() AT TIME ZONE 'utc' - :period ::INTERVAL
                    ;''')
 
     results = session.execute(sql, params)
@@ -111,7 +111,7 @@ def stats_users(project_id, period=None):
                    task_run.user_id IS NULL AND
                    task_run.project_id=:project_id AND
                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                   >= NOW() - :period ::INTERVAL
+                   >= NOW() AT TIME ZONE 'utc' - :period ::INTERVAL
                    GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
             .execution_options(stream=True)
 
@@ -130,7 +130,7 @@ def stats_users(project_id, period=None):
                    task_run.user_id IS NULL AND
                    task_run.project_id=:project_id AND
                    TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                   >= NOW() - :period ::INTERVAL
+                   >= NOW() AT TIME ZONE 'utc' - :period ::INTERVAL
                    ;''')
 
     results = session.execute(sql, params)
@@ -178,7 +178,7 @@ def stats_dates(project_id, period='15 day'):
                (SELECT task_id, COUNT(id) AS ct FROM task_run
                WHERE project_id=:project_id AND
                TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - :period :: INTERVAL
+               >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                GROUP BY task_id) AS log_counts
                ON task.id=log_counts.task_id
                WHERE task.project_id=:project_id ORDER BY id ASC)
@@ -186,7 +186,7 @@ def stats_dates(project_id, period='15 day'):
                from task_run, myquery where task_run.task_id=myquery.id
                and
                TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - :period :: INTERVAL
+               >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                group by myquery.id order by day;
                ''').execution_options(stream=True)
 
@@ -218,7 +218,7 @@ def stats_dates(project_id, period='15 day'):
                     FROM task_run WHERE project_id=:project_id
                     AND user_ip IS NULL AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY d)
                 SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
                ''').execution_options(stream=True)
@@ -237,7 +237,7 @@ def stats_dates(project_id, period='15 day'):
                     FROM task_run WHERE project_id=:project_id
                     AND user_id IS NULL AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY d)
                SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
                ''').execution_options(stream=True)
@@ -278,7 +278,7 @@ def stats_hours(project_id, period='2 week'):
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
@@ -298,7 +298,7 @@ def stats_hours(project_id, period='2 week'):
                     'HH24') AS h, COUNT(id)
                     FROM task_run WHERE project_id=:project_id  AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
@@ -318,7 +318,7 @@ def stats_hours(project_id, period='2 week'):
                     FROM task_run WHERE project_id=:project_id
                     AND user_id IS NULL AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
@@ -339,7 +339,7 @@ def stats_hours(project_id, period='2 week'):
                     FROM task_run WHERE project_id=:project_id
                     AND user_id IS NULL AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
@@ -359,7 +359,7 @@ def stats_hours(project_id, period='2 week'):
                     FROM task_run WHERE project_id=:project_id
                     AND user_ip IS NULL AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
@@ -380,7 +380,7 @@ def stats_hours(project_id, period='2 week'):
                     FROM task_run WHERE project_id=:project_id
                     AND user_ip IS NULL AND
                     TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-                    >= NOW() - :period :: INTERVAL
+                    >= NOW() AT TIME ZONE 'utc' - :period :: INTERVAL
                     GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
