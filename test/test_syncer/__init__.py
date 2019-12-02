@@ -55,7 +55,7 @@ class TestSyncer(Test):
 
     @patch('pybossa.syncer.requests.get')
     def test_get_target(self, http_get):
-        res = http_get.retur_value
+        res = http_get.return_value
         res.ok = True
         res.content = json.dumps([])
         assert self.syncer.get_target() is None
