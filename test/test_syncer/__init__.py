@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 from mock import patch, Mock
 from pybossa.syncer import Syncer
 from default import Test, with_context
@@ -51,3 +52,10 @@ class TestSyncer(Test):
 
         assert self.syncer.is_sync_enabled(project_enabled) == True
         assert self.syncer.is_sync_enabled(project_disabled) == False
+
+    @patch('pybossa.syncer.requests.get')
+    def test_get_target(self, http_get):
+        res = http_get.retur_value
+        res.ok = True
+        res.content = json.dumps([])
+        assert self.syncer.get_target() is None
