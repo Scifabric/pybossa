@@ -2551,9 +2551,9 @@ def auditlog(short_name):
                            pro_features=pro)
 
 
-@blueprint.route('/<short_name>/<int:published>/publish', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/publish', methods=['GET', 'POST'])
 @login_required
-def publish(short_name, published):
+def publish(short_name):
 
     project, owner, ps = project_by_shortname(short_name)
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
@@ -2562,7 +2562,6 @@ def publish(short_name, published):
 
     pro = pro_features()
     ensure_authorized_to('publish', project)
-    published = bool(published)
     if request.method == 'GET':
         sync_form = ProjectSyncForm()
         template_args = {"project": project_sanitized,
@@ -2574,15 +2573,15 @@ def publish(short_name, published):
         response = dict(template = '/projects/publish.html', **template_args)
         return handle_content_type(response)
 
-    if published != project.published:
-        project.published = published
-        project_repo.save(project)
-        cached_users.delete_published_projects(current_user.id)
-        cached_projects.reset()
-    if not published:
+    project.published = not project.published
+    project_repo.save(project)
+    cached_users.delete_published_projects(current_user.id)
+    cached_projects.reset()
+
+    if not project.published:
         auditlogger.log_event(project, current_user, 'update', 'published', True, False)
         flash(gettext('Project unpublished! Volunteers cannot contribute to the project now.'))
-        return redirect(url_for('.publish', short_name=project.short_name, published=published))
+        return redirect(url_for('.publish', short_name=project.short_name))
 
     force_reset = request.form.get("force_reset") == 'on'
     if force_reset:
@@ -2594,7 +2593,7 @@ def publish(short_name, published):
 
     auditlogger.log_event(project, current_user, 'update', 'published', False, True)
     flash(gettext('Project published! Volunteers will now be able to help you!'))
-    return redirect(url_for('.publish', short_name=project.short_name, published=published))
+    return redirect(url_for('.publish', short_name=project.short_name))
 
 
 def project_event_stream(short_name, channel_type):
@@ -2972,7 +2971,7 @@ def sync_project(short_name):
         if not able_to_sync or not auth_to_sync:
             flash(msg, 'error')
             return redirect_content_type(
-                url_for('.publish', short_name=short_name, published=project.published))
+                url_for('.publish', short_name=short_name))
 
         # Perform sync
         is_new_project = False
@@ -3055,7 +3054,7 @@ def sync_project(short_name):
         flash(msg, 'error')
 
     return redirect_content_type(
-        url_for('.publish', short_name=short_name, published=project.published))
+        url_for('.publish', short_name=short_name))
 
 @blueprint.route('/<short_name>/project-config', methods=['GET', 'POST'])
 @login_required
