@@ -227,7 +227,7 @@ class TestProjectAuthorization(Test):
         project = ProjectFactory.create(owner=owner, published=False)
 
         assert project.owner.id == self.mock_authenticated.id, project.owner
-        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'publish', project)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -257,7 +257,7 @@ class TestProjectAuthorization(Test):
         owner = UserFactory.build_batch(2)[1]
         project = ProjectFactory.create(owner=owner, published=False)
 
-        assert_raises(Forbidden, ensure_authorized_to, 'publish', project)
+        assert_not_raises(Exception, ensure_authorized_to, 'publish', project)
 
     @with_context
     @patch('pybossa.auth.current_user', new=mock_admin)
