@@ -70,5 +70,4 @@ class ProjectAuth(object):
 
     def _publish(self, user, project):
         return (project.has_presenter() and
-            len(self.task_repo.filter_tasks_by(project_id=project.id)) > 0 and
             self.only_admin_or_subadminowner(user, project))

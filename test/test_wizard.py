@@ -95,8 +95,8 @@ class TestWizard(WizardTestHelper):
         project_wizard = Wizard(self.get_project(), self.get_wizard_steps(), self.get_request())
         assert project_wizard.get_href({}, False) == ''
         href = {'url_for': 'project.publish',
-                'args': ['short_name', 'published']}
-        assert project_wizard.get_href(href, True).endswith('project1/1/publish'), 'project1/1/publish'
+                'args': ['short_name']}
+        assert project_wizard.get_href(href, True).endswith('project1/publish'), 'project1/publish'
 
         href = {'url_for': 'project.new',
                 'args': ['']}
@@ -183,6 +183,6 @@ class TestWizard(WizardTestHelper):
              'enable': True,
              'done': False,
              'title': 'Publish',
-             'href': 'http://localhost/project/project1/1/publish',
+             'href': 'http://localhost/project/project1/publish',
              'icon': 'fa fa-check'}]
         assert project_wizard.get_wizard_list() == expected_list
