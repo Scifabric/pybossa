@@ -816,6 +816,7 @@ def export_tasks(current_user_email_addr, short_name,
                 data = data.get(segment, {})
             bucket_name = data
             if bucket_name:
+                print(bucket_name)
                 from pybossa.cloud_store_api.connection import create_connection
                 conn = create_connection(**current_app.config.get('S3_EXPORT_CONN', {}))
                 try:
