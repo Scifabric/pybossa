@@ -812,7 +812,7 @@ def export_tasks(current_user_email_addr, short_name,
                 filename = fp.filename
                 content = fp.read()
             data = project.info
-            for segment in current_app.config.get('BUCKET_CONFIG_PATH', []):
+            for segment in current_app.config.get('BUCKET_CONFIG_PATH', ['-']):
                 data = data.get(segment, {})
             bucket_name = data
             if bucket_name:
