@@ -22,6 +22,16 @@ def create_connection(**kwargs):
     return conn
 
 
+class CustomCallingFormat(OrdinaryCallingFormat):
+
+    def build_path_base(self, bucket, key=''):
+        """Some services don't like the trailing / so we strip it."""
+        path_base = super(CustomCallingFormat, self).build_path_base(bucket, key)
+        if not key and path_base.endswith('/'):
+            path_base = path_base[:-1]
+        return path_base
+
+
 class CustomProvider(Provider):
     """Extend Provider to carry information about the end service provider, in
        case the service is being proxied.
@@ -40,7 +50,7 @@ class CustomConnection(S3Connection):
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('calling_format'):
-            kwargs['calling_format'] = OrdinaryCallingFormat()
+            kwargs['calling_format'] = CustomCallingFormat()
 
         kwargs['provider'] = CustomProvider('aws',
             kwargs.get('aws_access_key_id'),
