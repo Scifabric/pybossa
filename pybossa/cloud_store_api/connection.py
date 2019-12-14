@@ -95,6 +95,12 @@ class ProxiedKey(Key):
             return True
         return super(ProxiedKey, self).should_retry(response, chunked_transfer)
 
+    def generate_url(self, *args, **kwargs):
+        service_url = self.bucket.connection.object_service_url
+        if service_url:
+            return '{}/{}/{}'.format(service_url, self.bucket.name, self.name)
+        return super(ProxiedKey, self).generate_url(*args, **kwargs)
+
 
 class ProxiedBucket(CustomBucket):
 
@@ -111,6 +117,7 @@ class ProxiedConnection(CustomConnection):
     def __init__(self, client_id, client_secret, object_service, *args, **kwargs):
         self.client_id = client_id
         self.client_secret = client_secret
+        self.object_service_url = kwargs.pop('object_service_url', None)
         kwargs['object_service'] = object_service
         super(ProxiedConnection, self).__init__(*args, **kwargs)
         self.set_bucket_class(ProxiedBucket)
