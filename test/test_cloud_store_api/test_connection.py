@@ -19,7 +19,7 @@
 import jwt
 from mock import patch, Mock
 from default import Test, with_context
-from pybossa.cloud_store_api.connection import create_connection, CustomAuthHandler, CustomProvider
+from pybossa.cloud_store_api.connection import create_connection, CustomAuthHandler, CustomProvider, CustomCallingFormat
 from nose.tools import assert_raises
 from boto.auth_handler import NotReadyToAuthenticate
 
@@ -120,3 +120,7 @@ class TestS3Connection(Test):
         bucket = conn.get_bucket('test_bucket', validate=False)
         key = bucket.get_key('test_key', validate=False)
         assert key.generate_url(0).split('?')[0] == 'https://s3.test.com/test/test_bucket/test_key'
+
+    def test_calling_format(self):
+        fmt = CustomCallingFormat()
+        assert fmt.build_path_base('buck') == '/buck'
