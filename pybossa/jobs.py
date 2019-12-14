@@ -35,6 +35,7 @@ import app_settings
 from pybossa.cache import sentinel, management_dashboard_stats
 from pybossa.cache import settings, site_stats
 from pybossa.cache.users import get_users_for_report
+from pybossa.cloud_store_api.connection import create_connection
 from collections import OrderedDict
 import json
 from StringIO import StringIO
@@ -816,8 +817,6 @@ def export_tasks(current_user_email_addr, short_name,
                 data = data.get(segment, {})
             bucket_name = data
             if bucket_name:
-                print(bucket_name)
-                from pybossa.cloud_store_api.connection import create_connection
                 conn = create_connection(**current_app.config.get('S3_EXPORT_CONN', {}))
                 try:
                     bucket = conn.create_bucket(bucket_name)
@@ -834,7 +833,7 @@ def export_tasks(current_user_email_addr, short_name,
                 mail_dict['attachments'] = [Attachment(filename, "application/zip", content)]
         else:
             # Failure email
-            subject = u'Data export failed for your project: {0}'.format(project.name)
+            mail_dict['subject'] = u'Data export failed for your project: {0}'.format(project.name)
             msg = u'There was an issue with your export. ' + \
                   u'Please try again or report this issue ' + \
                   u'to a {0} administrator.'
