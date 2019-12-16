@@ -19,7 +19,7 @@
 import jwt
 from mock import patch, Mock
 from default import Test, with_context
-from pybossa.cloud_store_api.connection import create_connection, CustomAuthHandler, CustomProvider, CustomCallingFormat, ProxiedConnection
+from pybossa.cloud_store_api.connection import create_connection, CustomAuthHandler, CustomProvider
 from nose.tools import assert_raises
 from boto.auth_handler import NotReadyToAuthenticate
 
