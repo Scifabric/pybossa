@@ -3095,6 +3095,8 @@ def project_config(short_name):
         for _, fields in six.iteritems(ext_config):
             for key, value in six.iteritems(fields):
                 config[key] = value
+                if not value:
+                    config.pop(key)
 
     def integrate_ext_config(config_dict):
         '''
@@ -3169,6 +3171,8 @@ def ext_config(short_name):
                     flash(gettext('Please correct the errors', 'error'))
                 ext_conf[form_name] = form.data
                 ext_conf[form_name].pop('csrf_token', None)     #Fflask-wtf v0.14.2 issue 102
+                if not ext_conf[form_name].get('bpv_key_id'):
+                    ext_conf[form_name].pop('bpv_key_id', None)
                 project.info['ext_config'] = ext_conf
                 project_repo.save(project)
                 sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
