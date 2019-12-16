@@ -126,7 +126,7 @@ class TestS3Connection(Test):
         assert fmt.build_path_base('buck') == '/buck'
 
     def test_get_url(self):
-        conn = ProxiedConnection('client', 'secret', object_service='aa', object_service_url='https://a.com')
+        conn = ProxiedConnection('client', 'secret', auth_handlers=[('test', 'object-service')], object_service='aa', object_service_url='https://a.com')
         bucket = conn.get_bucket('buck', validate=False)
         key = bucket.new_key('new_key')
         assert key.generate_url(0) == 'https://a.com/buck/new_key'
