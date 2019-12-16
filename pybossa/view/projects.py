@@ -3076,9 +3076,7 @@ def project_config(short_name):
         '''
         for _, fields in six.iteritems(ext_config):
             for key, value in six.iteritems(fields):
-                config[key] = value
-                if not value:
-                    config.pop(key)
+                config[key] = value if value else None
 
     def integrate_ext_config(config_dict):
         '''
@@ -3093,7 +3091,6 @@ def project_config(short_name):
                     cf[name] = config_dict[name]
             if cf:
                 new_config[fieldname] = cf
-        print(new_config)
         return new_config
 
     if request.method == 'POST':
