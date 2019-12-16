@@ -120,13 +120,3 @@ class TestS3Connection(Test):
         bucket = conn.get_bucket('test_bucket', validate=False)
         key = bucket.get_key('test_key', validate=False)
         assert key.generate_url(0).split('?')[0] == 'https://s3.test.com/test/test_bucket/test_key'
-
-    def test_calling_format(self):
-        fmt = CustomCallingFormat()
-        assert fmt.build_path_base('buck') == '/buck'
-
-    def test_get_url(self):
-        conn = ProxiedConnection('client', 'secret', auth_headers=[('test', 'object-service')], object_service='aa', object_service_url='https://a.com')
-        bucket = conn.get_bucket('buck', validate=False)
-        key = bucket.new_key('new_key')
-        assert key.generate_url(0) == 'https://a.com/buck/new_key'

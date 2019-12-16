@@ -179,7 +179,8 @@ class TestExport(Test):
         key.generate_url.return_value = 'https://s3.com/buck/key'
 
         with patch.dict(self.flask_app.config, {
-            'BUCKET_CONFIG_PATH': ['export-bucket']
+            'EXPORT_MAX_SIZE': 0,
+            'EXPORT_BUCKET': 'export-bucket'
         }):
             export_tasks(user.email_addr, project.short_name, 'consensus', False, 'csv')
         args, kwargs = mail.send.call_args

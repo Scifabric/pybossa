@@ -813,15 +813,11 @@ def export_tasks(current_user_email_addr, short_name,
                 filename = fp.filename
                 content = fp.read()
             data = project.info
-            for segment in current_app.config.get('BUCKET_CONFIG_PATH', ['-']):
-                data = data.get(segment, {})
-            bucket_name = data
-            if bucket_name:
+            bucket_name = current_app.config.get('EXPORT_BUCKET'):
+            max_size = current_app.config.get('EXPORT_MAX_SIZE', float('inf'))
+
+            if len(content) > max_size and bucket_name:
                 conn = create_connection(**current_app.config.get('S3_EXPORT_CONN', {}))
-                try:
-                    bucket = conn.create_bucket(bucket_name)
-                except Exception:
-                    pass  # do not complain if bucket already exists.
                 bucket = conn.get_bucket(bucket_name, validate=False)
                 timestamp = datetime.utcnow().isoformat()
                 key = bucket.new_key('{}-{}'.format(timestamp, filename))
