@@ -40,7 +40,7 @@ class CustomConnection(S3Connection):
 
     def __init__(self, *args, **kwargs):
         if not kwargs.get('calling_format'):
-            kwargs['calling_format'] = CustomCallingFormat()
+            kwargs['calling_format'] = OrdinaryCallingFormat()
 
         kwargs['provider'] = CustomProvider('aws',
             kwargs.get('aws_access_key_id'),
