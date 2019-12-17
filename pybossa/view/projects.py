@@ -452,11 +452,10 @@ def clone_project(project, form):
     proj_dict['name'] = form['name']
 
     task_presenter = proj_dict['info'].get('task_presenter', '')
-    for quoted_part in re.findall(r"[\'\"](.*?)[\"\']", task_presenter):
-        task_presenter = task_presenter.replace(quoted_part, quoted_part.replace(proj_dict['short_name'], form['short_name']))
+    regex = r"([\"\'\/])({})([\"\'\/])".format(proj_dict['short_name'])
+    proj_dict['info']['task_presenter'] = re.sub(regex, r"\1{}\3".format(form['short_name']), task_presenter)
 
     proj_dict['short_name'] = form['short_name']
-    proj_dict['info']['task_presenter'] = task_presenter
 
     new_project = Project(**proj_dict)
     new_project.set_password(form['password'])
