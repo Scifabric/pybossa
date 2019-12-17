@@ -823,21 +823,21 @@ def export_tasks(current_user_email_addr, short_name,
                 key = bucket.new_key('{}-{}'.format(timestamp, filename))
                 key.set_contents_from_string(content)
                 url = key.generate_url(current_app.config.get('EXPORT_EXPIRY', 12 * 3600))
-                msg = u'You can download your file at {}.'.format(url)
+                msg = u'<p>You can download your file <a href="{}">here</a>.</p>'.format(url)
             else:
-                msg = u'Your exported data is attached.'
+                msg = u'<p>Your exported data is attached.</p>'
                 mail_dict['attachments'] = [Attachment(filename, "application/zip", content)]
         else:
             # Failure email
             mail_dict['subject'] = u'Data export failed for your project: {0}'.format(project.name)
-            msg = u'There was an issue with your export. ' + \
+            msg = u'<p>There was an issue with your export. ' + \
                   u'Please try again or report this issue ' + \
-                  u'to a {0} administrator.'
+                  u'to a {0} administrator.</p>'
             msg = msg.format(current_app.config.get('BRAND'))
 
-        body = u'Hello,\n\n' + msg + '\n\nThe {0} team.'
+        body = u'<p>Hello,</p>' + msg + '<p>The {0} team.</p>'
         body = body.format(current_app.config.get('BRAND'))
-        mail_dict['body'] = body
+        mail_dict['html'] = body
         message = Message(**mail_dict)
         mail.send(message)
         job_response = u'{0} {1} file was successfully exported for: {2}'

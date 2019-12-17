@@ -161,7 +161,7 @@ class TestExport(Test):
         assert message.recipients[0] == user.email_addr, message.recipients
         assert message.subject == 'Data exported for your project: test_project', message.subject
         assert not message.attachments
-        assert 'https://s3.com/buck/key' in message.body
+        assert 'https://s3.com/buck/key' in message.html
 
 
     @with_context
@@ -189,7 +189,7 @@ class TestExport(Test):
         assert message.recipients[0] == user.email_addr, message.recipients
         assert message.subject == 'Data exported for your project: test_project', message.subject
         assert not message.attachments
-        assert 'https://s3.com/buck/key' in message.body
+        assert 'https://s3.com/buck/key' in message.html
 
     @with_context
     @patch('pybossa.jobs.mail')
