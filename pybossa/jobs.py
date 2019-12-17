@@ -822,7 +822,7 @@ def export_tasks(current_user_email_addr, short_name,
                 timestamp = datetime.utcnow().isoformat()
                 key = bucket.new_key('{}-{}'.format(timestamp, filename))
                 key.set_contents_from_string(content)
-                url = key.generate_url(0)
+                url = key.generate_url(current_app.config.get('EXPORT_EXPIRY', 12 * 3600))
                 msg = u'You can download your file at {}.'.format(url)
             else:
                 msg = u'Your exported data is attached.'
