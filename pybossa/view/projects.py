@@ -3066,17 +3066,18 @@ def project_config(short_name):
             input_forms.append(content)
             for field in content.get('fields', []):
                 ext_config_field_name.append(field['name'])
-        ext_config_dict = {name: None for name in ext_config_field_name}
-        update_ext_config_dict(ext_config_dict)
+        ext_config_dict = update_ext_config_dict()
         return input_forms, ext_config_dict
 
-    def update_ext_config_dict(config):
+    def update_ext_config_dict():
         '''
         update dict with values from project.info.ext_config
         '''
+        config = {}
         for _, fields in six.iteritems(ext_config):
             for key, value in six.iteritems(fields):
-                config[key] = value if value else None
+                config[key] = value
+        return {k: v for k, v in six.iteritems(config) if v}
 
     def integrate_ext_config(config_dict):
         '''
@@ -3109,7 +3110,6 @@ def project_config(short_name):
     ext_config = project.info.get('ext_config', {})
     input_forms, ext_config_dict = generate_input_forms_and_external_config_dict()
     data_access = project.info.get('data_access') or []
-
     response = dict(template='/projects/summary.html',
                     external_config_dict=json.dumps(ext_config_dict),
                     forms=input_forms,
