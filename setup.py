@@ -32,7 +32,7 @@ requirements = [
     "nose",
     "rednose",
     "redis==3.0.1",
-    "coverage",
+    "coverage==4.5.4",
     "nose-cov",
     "mock",
     "pyrax>=1.9.6, <2.0",
