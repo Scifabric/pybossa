@@ -52,6 +52,10 @@ import app_settings
 import six
 from iiif_prezi.loader import ManifestReader
 from wtforms.validators import NumberRange
+from wtforms.fields.html5 import DateField
+from wtforms_components import DateRange
+from datetime import date
+
 
 EMAIL_MAX_LENGTH = 254
 USER_NAME_MAX_LENGTH = 35
@@ -821,3 +825,19 @@ class DataAccessForm(Form):
     """Form to configure data access levels"""
 
     #for future extensions
+
+class ProjectReportForm(Form):
+    """Register Form Class for generating project report."""
+
+    start_date = DateField(
+        lazy_gettext('Start date'), format='%Y-%m-%d',
+        validators=[validators.Optional(),
+            DateRange(max=date.today(),message="Date cannot be greater than todays date.")
+        ]
+    )
+    end_date = DateField(
+        lazy_gettext('End date'), format='%Y-%m-%d',
+        validators=[pb_validator.EndDateValidator(), validators.Optional(),
+            DateRange(max=date.today(),message="Date cannot be greater than today's date."),
+        ]
+    )
