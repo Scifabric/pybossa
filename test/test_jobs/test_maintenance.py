@@ -78,14 +78,15 @@ class TestMaintenance(Test):
     @with_context
     def test_disable_users_jobs(self):
         """Test disable users jobs works."""
-        users = UserFactory.create_batch(3)
+        users = UserFactory.create_batch(1, email_addr='test1@user.com')
+        date_old = (datetime.datetime.utcnow() -  datetime.timedelta(91)).isoformat()
+        users += UserFactory.create_batch(1, email_addr='test2@user.com', created=date_old, last_login=date_old)
+        users += UserFactory.create_batch(1, email_addr='test1@extended.com', created=date_old, last_login=date_old)
+        ext_date_old = (datetime.datetime.utcnow() -  datetime.timedelta(300)).isoformat()
+        users += UserFactory.create_batch(1, email_addr='test2@extended.com', created=ext_date_old, last_login=ext_date_old)
         res = disable_users_job()
-        assert users[0].enabled and users[1].enabled \
-            and users[2].enabled, "Users created recently shouldn't be disabled"
 
-        date_old = (datetime.datetime.utcnow() -  datetime.timedelta(100)).isoformat()
-        old_users = UserFactory.create_batch(2, created=date_old, last_login=date_old)
-        res = disable_users_job()
-        assert users[0].enabled and users[1].enabled \
-            and users[2].enabled and not old_users[0].enabled \
-            and not old_users[1].enabled, "Only users not logged in > 90 days should be disabled"
+        assert users[0].enabled, 'recent user should be enabled'
+        assert not users[1].enabled, 'stale user should be disabled'
+        assert users[2].enabled, 'recent extended user should be enabled'
+        assert not users[3].enabled, 'stale extended user should be disabled'
