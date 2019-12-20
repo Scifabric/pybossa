@@ -3066,10 +3066,10 @@ def project_config(short_name):
             input_forms.append(content)
             for field in content.get('fields', []):
                 ext_config_field_name.append(field['name'])
-        ext_config_dict = update_ext_config_dict()
+        ext_config_dict = flatten_ext_config()
         return input_forms, ext_config_dict
 
-    def update_ext_config_dict():
+    def flatten_ext_config():
         '''
         update dict with values from project.info.ext_config
         '''
