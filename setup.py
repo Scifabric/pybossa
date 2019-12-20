@@ -32,7 +32,7 @@ requirements = [
     "nose",
     "rednose",
     "redis==3.0.1",
-    "coverage",
+    "coverage==4.5.4",
     "nose-cov",
     "mock",
     "pyrax>=1.9.6, <2.0",
@@ -74,8 +74,7 @@ requirements = [
     "python-saml>=2.4.0, <2.5.0",
     "hdfs[kerberos]>=2.2.1, <2.3.0",
     "iiif-prezi>=0.2.9, <1.0.0",
-    "Werkzeug>=0.14.0, <0.15.0",
-    "regex"
+    "Werkzeug>=0.14.0, <0.15.0"
 ]
 
 setup(

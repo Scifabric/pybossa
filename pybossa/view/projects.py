@@ -449,13 +449,14 @@ def clone_project(project, form):
 
     proj_dict['owner_id'] = current_user.id
     proj_dict['owners_ids'] = [current_user.id]
-    proj_dict['short_name'] = form['short_name']
     proj_dict['name'] = form['name']
-    replacement = 'pybossa.run("%s")' % proj_dict['short_name']
-    pybossa_re = "(pybossa\.run\(\s*)(['\"]\S+['\"]\))"
-    proj_dict['info']['task_presenter'] = re.sub(pybossa_re,
-                                                 replacement,
-                                                 proj_dict['info'].get('task_presenter', ''))
+
+    task_presenter = proj_dict['info'].get('task_presenter', '')
+    regex = r"([\"\'\/])({})([\"\'\/])".format(proj_dict['short_name'])
+    proj_dict['info']['task_presenter'] = re.sub(regex, r"\1{}\3".format(form['short_name']), task_presenter)
+
+    proj_dict['short_name'] = form['short_name']
+
     new_project = Project(**proj_dict)
     new_project.set_password(form['password'])
     project_repo.save(new_project)
