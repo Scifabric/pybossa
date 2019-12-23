@@ -45,7 +45,7 @@ class ProjectReportCsvExporter(CsvExporter):
         out.seek(0)
         yield out.read()
 
-    def _respond_csv(self, ty, id, info_only=False):
+    def _respond_csv(self, ty, id, info_only=False, **kwargs):
         out = tempfile.TemporaryFile()
         writer = UnicodeWriter(out)
         empty_row = []
@@ -57,7 +57,12 @@ class ProjectReportCsvExporter(CsvExporter):
                               'Average Time Spend Per Task', 'Task Redundancy']
             writer.writerow(project_section)
             writer.writerow(project_header)
-            project_data = get_project_report_projectdata(id)
+
+
+            # get project data for report
+            start_date = kwargs.get("start_date")
+            end_date = kwargs.get("end_date")
+            project_data = get_project_report_projectdata(id, start_date, end_date)
             writer.writerow(project_data)
 
             writer.writerow(empty_row)
@@ -67,7 +72,9 @@ class ProjectReportCsvExporter(CsvExporter):
                            'Additional Comments', 'Total Tasks Completed', 'Percent Tasks Completed',
                            'First Task Submission', 'Last Task Submission', 'Average Time Per Task']
             writer.writerow(user_section)
-            users_project_data = get_project_report_userdata(id)
+
+            # get user data for report
+            users_project_data = get_project_report_userdata(id, start_date, end_date)
             if users_project_data:
                 writer.writerow(user_header)
                 for user_data in users_project_data:
@@ -77,9 +84,9 @@ class ProjectReportCsvExporter(CsvExporter):
 
             return self._get_csv(out, writer)
 
-    def _make_zip(self, project, ty):
+    def _make_zip(self, project, ty, **kwargs):
         name = self._project_name_latin_encoded(project)
-        csv_task_generator = self._respond_csv(ty, project.id)
+        csv_task_generator = self._respond_csv(ty, project.id, **kwargs)
         if csv_task_generator is not None:
             with tempfile.NamedTemporaryFile() as datafile, \
                  tempfile.NamedTemporaryFile(delete=False) as zipped_datafile:

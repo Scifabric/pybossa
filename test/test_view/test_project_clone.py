@@ -80,7 +80,7 @@ class TestProjectClone(Helper):
         admin = UserFactory.create()
         user2 = UserFactory.create()
         assign_users = [admin.id, user2.id]
-        task_presenter = 'test; pybossa.run("oldname"); test;'
+        task_presenter = 'test; url="project/oldname/" pybossa.run("oldname"); test;'
         project = ProjectFactory.create(id=40,
                                         short_name='oldname',
                                         info={'task_presenter': task_presenter,
@@ -98,7 +98,7 @@ class TestProjectClone(Helper):
             res = self.app.post(url, data=data)
             new_project = project_repo.get(1)
             old_project = project_repo.get(40)
-            task_presenter_expected = 'test; pybossa.run("newproj"); test;'
+            task_presenter_expected = 'test; url="project/newproj/" pybossa.run("newproj"); test;'
             assert old_project.info['passwd_hash'] == 'testpass', old_project.info['passwd_hash']
             assert new_project.get_project_users() == assign_users, new_project.get_project_users()
             assert new_project.info['task_presenter'] == task_presenter_expected, new_project.info['task_presenter']
@@ -117,7 +117,7 @@ class TestProjectClone(Helper):
         admin = UserFactory.create(admin=False, subadmin=True)
         user2 = UserFactory.create()
         assign_users = [user2.id]
-        task_presenter = 'test; pybossa.run("oldname"); test;'
+        task_presenter = 'test"; url="project/oldname/" pybossa.run("oldname"); test;'
         project = ProjectFactory.create(id=40,
                                         short_name='oldname',
                                         info={'task_presenter': task_presenter,
@@ -134,7 +134,7 @@ class TestProjectClone(Helper):
             res = self.app.post(url, data=data)
             new_project = project_repo.get(1)
             old_project = project_repo.get(40)
-            task_presenter_expected = 'test; pybossa.run("newproj"); test;'
+            task_presenter_expected = 'test"; url="project/newproj/" pybossa.run("newproj"); test;'
             assert old_project.owner_id == user2.id, old_project.owner_id
             assert old_project.info['passwd_hash'] == 'testpass', old_project.info['passwd_hash']
             assert new_project.info['task_presenter'] == task_presenter_expected, new_project.info['task_presenter']

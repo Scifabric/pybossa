@@ -1136,3 +1136,16 @@ def sign_task(task):
 
 def get_now_plus_delta_ts(**kwargs):
     return (datetime.utcnow() + timedelta(**kwargs))
+
+
+def get_taskrun_date_range_sql_clause_params(start_date, end_date):
+    """Generate date cause and sql params for queriying db."""
+    sql_params = {}
+    date_clause = ""
+    if start_date:
+        date_clause = " AND task_run.finish_time >=:start_date"
+        sql_params['start_date'] = start_date
+    if end_date:
+        date_clause += " AND task_run.finish_time <=:end_date"
+        sql_params['end_date'] = end_date
+    return date_clause, sql_params

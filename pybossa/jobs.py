@@ -35,6 +35,7 @@ import app_settings
 from pybossa.cache import sentinel, management_dashboard_stats
 from pybossa.cache import settings, site_stats
 from pybossa.cache.users import get_users_for_report
+from pybossa.cloud_store_api.connection import create_connection
 from collections import OrderedDict
 import json
 from StringIO import StringIO
@@ -804,31 +805,40 @@ def export_tasks(current_user_email_addr, short_name,
         else:
             export_fn = None
 
+        mail_dict = dict(recipients=[current_user_email_addr])
         # Construct message
         if export_fn is not None:
-            # Success email
-            subject = u'Data exported for your project: {0}'.format(project.name)
-            msg = u'Your exported data is attached.'
+            mail_dict['subject'] = u'Data exported for your project: {0}'.format(project.name)
+            with export_fn(project, ty, expanded, filters, disclose_gold) as fp:
+                filename = fp.filename
+                content = fp.read()
+            data = project.info
+            bucket_name = current_app.config.get('EXPORT_BUCKET')
+            max_size = current_app.config.get('EXPORT_MAX_SIZE', float('Inf'))
+
+            if len(content) > max_size and bucket_name:
+                conn = create_connection(**current_app.config.get('S3_EXPORT_CONN', {}))
+                bucket = conn.get_bucket(bucket_name, validate=False)
+                timestamp = datetime.utcnow().isoformat()
+                key = bucket.new_key('{}-{}'.format(timestamp, filename))
+                key.set_contents_from_string(content)
+                url = key.generate_url(current_app.config.get('EXPORT_EXPIRY', 12 * 3600))
+                msg = u'<p>You can download your file <a href="{}">here</a>.</p>'.format(url)
+            else:
+                msg = u'<p>Your exported data is attached.</p>'
+                mail_dict['attachments'] = [Attachment(filename, "application/zip", content)]
         else:
             # Failure email
-            subject = u'Data export failed for your project: {0}'.format(project.name)
-            msg = u'There was an issue with your export. ' + \
+            mail_dict['subject'] = u'Data export failed for your project: {0}'.format(project.name)
+            msg = u'<p>There was an issue with your export. ' + \
                   u'Please try again or report this issue ' + \
-                  u'to a {0} administrator.'
+                  u'to a {0} administrator.</p>'
             msg = msg.format(current_app.config.get('BRAND'))
 
-        body = u'Hello,\n\n' + msg + '\n\nThe {0} team.'
+        body = u'<p>Hello,</p>' + msg + '<p>The {0} team.</p>'
         body = body.format(current_app.config.get('BRAND'))
-        mail_dict = dict(recipients=[current_user_email_addr],
-                         subject=subject,
-                         body=body)
+        mail_dict['html'] = body
         message = Message(**mail_dict)
-
-        # Attach export file to message
-        if export_fn is not None:
-            with export_fn(project, ty, expanded, filters, disclose_gold) as fp:
-                message.attach(fp.filename, "application/zip", fp.read())
-
         mail.send(message)
         job_response = u'{0} {1} file was successfully exported for: {2}'
         return job_response.format(
