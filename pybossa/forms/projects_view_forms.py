@@ -35,4 +35,5 @@ from forms import (
     AvatarUploadForm,
     TransferOwnershipForm,
     DataAccessForm,
-    AnnotationForm)
+    AnnotationForm,
+    ProjectReportForm)

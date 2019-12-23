@@ -209,3 +209,17 @@ class UserTypeValiadator(object):
             self.message = lazy_gettext(u'Invalid data access {}. Valid data access(s) for user type {} are {}'
                 .format(','.join(access_levels), user_type, ', '.join(valid_data_access)))
             raise ValidationError(self.message)
+
+class EndDateValidator(object):
+    """Ensure end date is not less than start date."""
+    def __init__(self, message=None):
+        if not message:
+            message = lazy_gettext("Start date must be earlier than end date.")
+        self.message = message
+
+    def __call__(self, form, field):
+        if not (form.start_date.data and form.end_date.data):
+            return
+
+        if form.start_date.data > form.end_date.data:
+            raise ValidationError(self.message)
