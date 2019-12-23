@@ -24,7 +24,7 @@ from pybossa.cache import memoize, cache, delete_memoized, delete_cached, \
     memoize_essentials, delete_memoized_essential, delete_cache_group
 from pybossa.cache.task_browse_helpers import get_task_filters, allowed_fields
 import app_settings
-
+from pybossa.util import get_taskrun_date_range_sql_clause_params
 
 session = db.slave_session
 
@@ -692,22 +692,24 @@ def clean_project(project_id, category=None):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_project_report_projectdata(project_id):
+def get_project_report_projectdata(project_id, start_date, end_date):
     """Return data to build project report"""
+    date_clause, sql_params = get_taskrun_date_range_sql_clause_params(start_date, end_date)
+    sql_params["project_id"] = project_id
     sql = text(
             '''
             SELECT id, name, short_name,
             (SELECT COUNT(id) FROM task WHERE project_id = p.id) AS total_tasks,
-            (SELECT MIN(finish_time) FROM task_run WHERE project_id = p.id) AS first_task_submission,
-            (SELECT MAX(finish_time) FROM task_run WHERE project_id = p.id) AS last_task_submission,
+            (SELECT MIN(finish_time) FROM task_run WHERE project_id = p.id''' + date_clause +''') AS first_task_submission,
+            (SELECT MAX(finish_time) FROM task_run WHERE project_id = p.id''' + date_clause +''') AS last_task_submission,
             (SELECT MAX(n_answers) FROM task WHERE project_id = p.id) AS redundancy,
             (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
-            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s') FROM task_run WHERE project_id=p.id)
+            to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s') FROM task_run WHERE project_id=p.id''' + date_clause +''')
             AS average_time
             FROM project p
             WHERE p.id=:project_id;
             ''')
-    results = session.execute(sql, dict(project_id=project_id))
+    results = session.execute(sql, sql_params)
     project_data = []
     for row in results:
         project_data.extend((project_id, row.name, row.short_name, row.total_tasks,

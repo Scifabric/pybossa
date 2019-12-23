@@ -97,6 +97,7 @@ from pybossa.data_access import (data_access_levels, ensure_data_access_assignme
 import app_settings
 from copy import deepcopy
 
+
 cors_headers = ['Content-Type', 'Authorization']
 
 blueprint = Blueprint('project', __name__)
@@ -2870,70 +2871,50 @@ def del_coowner(short_name, user_name=None):
         return redirect_content_type(url_for('.coowners', short_name=short_name))
     return abort(404)
 
-
-@blueprint.route('/<short_name>/projectreport/export')
+@blueprint.route('/<short_name>/projectreport/export', methods=['GET', 'POST'])
 @login_required
+@admin_or_subadmin_required
 def export_project_report(short_name):
-    """Export individual project information in the given format"""
-    project, owner, ps = allow_deny_project_info(short_name)
-    project_report_csv_exporter = ProjectReportCsvExporter()
+    """Export project report for a given project short name."""
+
+    project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(
+        project, owner, current_user, ps)
+    ensure_authorized_to('read', project)
 
     def respond():
-        project, owner, ps = project_by_shortname(short_name)
-        project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
-                                                                current_user,
-                                                                ps)
-        title = project_title(project, "Settings")
-        pro = pro_features()
-        project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
-        owner_serialized = cached_users.get_user_summary(owner.name)
-        response = dict(template='/projects/settings.html',
-                        project=project_sanitized,
-                        owner=owner_serialized,
-                        n_tasks=ps.n_tasks,
-                        overall_progress=ps.overall_progress,
-                        n_task_runs=ps.n_task_runs,
-                        last_activity=ps.last_activity,
-                        n_completed_tasks=ps.n_completed_tasks,
-                        n_volunteers=ps.n_volunteers,
-                        title=title,
-                        pro_features=pro)
+        response = dict(
+            template='/projects/project_report.html',
+            project=project_sanitized,
+            form=form,
+            csrf=generate_csrf()
+        )
         return handle_content_type(response)
 
-    def respond_csv(ty):
-        if ty not in ('project',):
-            return abort(404)
-
-        try:
-
-            res = project_report_csv_exporter.response_zip(project, ty)
-            return res
-        except Exception as e:
-            current_app.logger.exception(
-                    u'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
-                    .format(project.short_name, ty, e))
-            flash(gettext('Error generating project report.'),
-                  'error')
-        return abort(500)
-
-    export_formats = ['csv']
-    ty = request.args.get('type')
-    fmt = request.args.get('format')
-
-    if not (fmt and ty):
-        if len(request.args) >= 1:
-            abort(404)
+    form = ProjectReportForm(request.body)
+    if request.method == 'GET':
         return respond()
 
-    if fmt not in export_formats:
-        abort(415)
+    if not form.validate():
+        flash("Please correct the error", 'message')
+        return respond()
 
-    if ty == 'project':
-        project = project_repo.get(project.id)
-        if project:
-            ensure_authorized_to('read', project)
+    start_date = form.start_date.data
+    end_date = form.end_date.data
+    kwargs = {}
+    if start_date:
+        kwargs["start_date"] = start_date.strftime("%Y-%m-%dT00:00:00")
+    if end_date:
+        kwargs["end_date"] = end_date.strftime("%Y-%m-%dT23:59:59")
 
-    return {'csv': respond_csv}[fmt](ty)
+    try:
+        project_report_csv_exporter = ProjectReportCsvExporter()
+        res = project_report_csv_exporter.response_zip(project, "project", **kwargs)
+        return res
+    except Exception:
+        current_app.logger.exception("Project report export failed")
+        flash(gettext('Error generating project report.'), 'error')
+    return abort(500)
 
 
 @blueprint.route('/<short_name>/syncproject', methods=['POST'])
