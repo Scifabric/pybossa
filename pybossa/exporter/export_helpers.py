@@ -27,7 +27,8 @@ USER_FIELDS = [
     '"user".created    AS {}created',
     '"user".email_addr AS {}email_addr',
     '"user".fullname   AS {}fullname',
-    '"user".user_pref  AS {}user_pref'
+    '"user".user_pref  AS {}user_pref',
+    '("user".info)->\'metadata\'->\'user_type\'       AS {}user_type'
 ]
 
 TASKRUN_FIELDS_WITHOUT_GOLD = [

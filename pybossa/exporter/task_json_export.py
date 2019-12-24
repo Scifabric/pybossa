@@ -55,8 +55,6 @@ class TaskJsonExporter(JsonExporter):
     def merge_objects(t):
         """Merge joined objects into a single dictionary."""
         obj_dict = {}
-        current_app.logger.debug('****************************** starting construct email object ******************************')
-
         try:
             obj_dict = t.dictize()
         except:
@@ -70,18 +68,13 @@ class TaskJsonExporter(JsonExporter):
 
         try:
             user = t.user.dictize()
-            current_app.logger.debug('user - 1')
-            current_app.logger.debug(user)
-            allowed_attributes = ['name', 'fullname', 'created',
+            user['user_type'] = user.get('info', {}).get('metadata', {}).get('user_type')
+            allowed_attributes = ['name', 'fullname', 'user_type', 'created',
                                   'email_addr', 'admin', 'subadmin']
             user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
-            current_app.logger.debug('user - 2')
-            current_app.logger.debug(user)
             obj_dict['user'] = user
         except:
             pass
-        current_app.logger.debug('obj_dict')
-        current_app.logger.debug(obj_dict)
         return obj_dict
 
     @staticmethod
@@ -119,7 +112,6 @@ class TaskJsonExporter(JsonExporter):
         sep = ", "
         yield "["
 
-        current_app.logger.debug('--------------- merge objects ----------------')
         for i, tr in enumerate(query_filter(project_id=project_id, yielded=True), 1):
             if expanded:
                 item = self.merge_objects(tr)

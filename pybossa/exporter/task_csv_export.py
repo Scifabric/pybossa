@@ -18,6 +18,7 @@
 # Cache global variables for timeouts
 
 import tempfile
+from flask import current_app
 from flask import url_for, safe_join, send_file, redirect
 from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
@@ -111,13 +112,13 @@ class TaskCsvExporter(CsvExporter):
 
         try:
             user = t.user.dictize()
-            allowed_attributes = ['name', 'fullname', 'created',
+            user['user_type'] = user.get('info', {}).get('metadata', {}).get('user_type')
+            allowed_attributes = ['name', 'fullname', 'user_type', 'created',
                                   'email_addr', 'admin', 'subadmin']
             user = {a: user.get(a) for a in allowed_attributes}
             obj_dict['user'] = user
         except Exception:
             pass
-
         return obj_dict
 
     @staticmethod
@@ -147,12 +148,12 @@ class TaskCsvExporter(CsvExporter):
     def _handle_row(self, writer, t, headers):
         writer.writerow(self._format_csv_row(self.merge_objects(t),
                                              headers=headers))
-   
+
     @staticmethod
     def flatten(key_value_pairs, key_prefix='', return_value=None):
         return_value = return_value if return_value is not None else {}
         for k, v in key_value_pairs:
-            key = k if not key_prefix else '{}__{}'.format(key_prefix, k) 
+            key = k if not key_prefix else '{}__{}'.format(key_prefix, k)
             if isinstance(v, dict):
                 iterator = TaskCsvExporter.flatten(v.iteritems(), key, return_value)
             elif isinstance(v, list):
@@ -160,7 +161,7 @@ class TaskCsvExporter(CsvExporter):
             else:
                 iterator = [(key, v)]
             for kk, vv, in iterator:
-                yield kk, vv                                        
+                yield kk, vv
 
     def _get_csv_with_filters(self, out, writer, table, project_id,
                               expanded, filters, disclose_gold):
@@ -189,7 +190,7 @@ class TaskCsvExporter(CsvExporter):
         for all tasks are included, regardless of whether
         or not all tasks were imported with the same headers.
 
-        :param objs: an iterable of objects or dicts to 
+        :param objs: an iterable of objects or dicts to
             extract keys from
         :param expanded: determines if joined objects should
             be merged
