@@ -55,6 +55,7 @@ class TaskJsonExporter(JsonExporter):
     def merge_objects(t):
         """Merge joined objects into a single dictionary."""
         obj_dict = {}
+
         try:
             obj_dict = t.dictize()
         except:
@@ -75,6 +76,7 @@ class TaskJsonExporter(JsonExporter):
             obj_dict['user'] = user
         except:
             pass
+
         return obj_dict
 
     @staticmethod

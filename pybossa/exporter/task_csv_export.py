@@ -18,7 +18,6 @@
 # Cache global variables for timeouts
 
 import tempfile
-from flask import current_app
 from flask import url_for, safe_join, send_file, redirect
 from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
