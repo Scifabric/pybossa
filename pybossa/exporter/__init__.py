@@ -131,7 +131,7 @@ class Exporter(object):
         _zip = zipfile.ZipFile(file=filename, mode='w', compression=zip_compression, allowZip64=True)
         return _zip
 
-    def _make_zip(self, project, ty):
+    def _make_zip(self, project, ty, **kwargs):
         """Generate a ZIP of a certain type and upload it"""
         pass
 
@@ -168,12 +168,12 @@ class Exporter(object):
         if uploader.file_exists(filename, self._container(project)):
             assert uploader.delete_file(filename, self._container(project))
 
-    def get_zip(self, project, ty):
+    def get_zip(self, project, ty, **kwargs):
         """Delete existing ZIP file directly from uploads directory,
         generate one on the fly and upload it."""
         filename = self.download_name(project, ty)
         self.delete_existing_zip(project, ty)
-        with make_zip_context(self._make_zip(project, ty)) as zip_result:
+        with make_zip_context(self._make_zip(project, ty, **kwargs)) as zip_result:
             if (not zip_result) and isinstance(uploader, local.LocalUploader):
                 filepath = self._download_path(project)
                 zip_result = dict(filepath=safe_join(filepath, filename),
@@ -189,8 +189,8 @@ class Exporter(object):
                                         container=self._container(project),
                                         _external=True))
 
-    def response_zip(self, project, ty):
-        return self.get_zip(project, ty)
+    def response_zip(self, project, ty, **kwargs):
+        return self.get_zip(project, ty, **kwargs)
 
     def pregenerate_zip_files(self, project):
         """Cache and generate all types (tasks and task_run) of ZIP files"""

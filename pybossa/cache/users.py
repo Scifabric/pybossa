@@ -30,6 +30,7 @@ from pybossa.leaderboard.jobs import leaderboard as lb
 import json
 from pybossa.util import get_user_pref_db_clause
 from pybossa.data_access import data_access_levels
+from pybossa.util import get_taskrun_date_range_sql_clause_params
 
 
 session = db.slave_session
@@ -411,12 +412,11 @@ def get_users_for_report():
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def get_project_report_userdata(project_id):
+def get_project_report_userdata(project_id, start_date, end_date):
     """Return users details who contributed to a particular project."""
-    if project_id is None:
-        return None
-
-    total_tasks = n_tasks(project_id)
+    date_clause, sql_params = get_taskrun_date_range_sql_clause_params(start_date, end_date)
+    sql_params["project_id"] = project_id
+    sql_params["total_tasks"] = n_tasks(project_id)
     sql = text(
             '''
             SELECT id as u_id, name, fullname, email_addr, admin, subadmin, enabled,
@@ -424,17 +424,17 @@ def get_project_report_userdata(project_id):
             info->'metadata'->'work_hours_from' AS work_hours_from, info->'metadata'->'work_hours_to' AS work_hours_to,
             info->'metadata'->'timezone' AS timezone, info->'metadata'->'user_type' AS type_of_user,
             info->'metadata'->'review' AS additional_comments,
-            (SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS completed_tasks,
-            ((SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id =:project_id) * 100 / :total_tasks) AS percent_completed_tasks,
-            (SELECT min(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS first_submission_date,
-            (SELECT max(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS last_submission_date,
+            (SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id=:project_id''' + date_clause +''') AS completed_tasks,
+            ((SELECT count(id) FROM task_run WHERE user_id = u.id AND project_id =:project_id''' + date_clause +''') * 100 / :total_tasks) AS percent_completed_tasks,
+            (SELECT min(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id''' + date_clause +''') AS first_submission_date,
+            (SELECT max(finish_time) FROM task_run WHERE user_id = u.id AND project_id=:project_id''' + date_clause +''') AS last_submission_date,
             (SELECT coalesce(AVG(to_timestamp(finish_time, 'YYYY-MM-DD"T"HH24-MI-SS.US') -
             to_timestamp(created, 'YYYY-MM-DD"T"HH24-MI-SS.US')), interval '0s')
-            FROM task_run WHERE user_id = u.id AND project_id=:project_id) AS avg_time_per_task
+            FROM task_run WHERE user_id = u.id AND project_id=:project_id''' + date_clause +''') AS avg_time_per_task
             FROM "user" u WHERE id IN
-            (SELECT DISTINCT user_id FROM task_run tr GROUP BY project_id, user_id HAVING project_id=:project_id);
+            (SELECT DISTINCT user_id FROM task_run GROUP BY project_id, user_id HAVING project_id=:project_id);
             ''')
-    results = session.execute(sql, dict(project_id=project_id, total_tasks=total_tasks))
+    results = session.execute(sql, sql_params)
     users_report = [
         [row.u_id, row.name, row.fullname, row.email_addr,
          row.admin, row.subadmin, row.enabled, row.languages,
