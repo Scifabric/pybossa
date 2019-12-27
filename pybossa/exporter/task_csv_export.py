@@ -94,33 +94,6 @@ class TaskCsvExporter(CsvExporter):
                     return val
 
     @staticmethod
-    def merge_objects(t):
-        """Merge joined objects into a single dictionary."""
-        obj_dict = {}
-
-        try:
-            obj_dict = t.dictize()
-        except Exception:
-            pass
-
-        try:
-            task = t.task.dictize()
-            obj_dict['task'] = task
-        except Exception:
-            pass
-
-        try:
-            user = t.user.dictize()
-            user['user_type'] = user.get('info', {}).get('metadata', {}).get('user_type')
-            allowed_attributes = ['name', 'fullname', 'user_type', 'created',
-                                  'email_addr', 'admin', 'subadmin']
-            user = {a: user.get(a) for a in allowed_attributes}
-            obj_dict['user'] = user
-        except Exception:
-            pass
-        return obj_dict
-
-    @staticmethod
     def process_filtered_row(row):
         """Normalizes a row returned from a SQL query to
         the same format as that of merging joined domain
@@ -143,10 +116,6 @@ class TaskCsvExporter(CsvExporter):
     def _format_csv_row(self, row, headers):
         return [self.get_value(row, header.split('__', 1)[1])
                 for header in headers]
-
-    def _handle_row(self, writer, t, headers):
-        writer.writerow(self._format_csv_row(self.merge_objects(t),
-                                             headers=headers))
 
     @staticmethod
     def flatten(key_value_pairs, key_prefix='', return_value=None):
@@ -173,8 +142,7 @@ class TaskCsvExporter(CsvExporter):
 
         headers = self._get_all_headers(objs=rows,
                                         expanded=expanded,
-                                        table=table,
-                                        from_obj=False)
+                                        table=table)
         writer.writerow(headers)
 
         for row in rows:
@@ -184,7 +152,7 @@ class TaskCsvExporter(CsvExporter):
         out.seek(0)
         yield out.read()
 
-    def _get_all_headers(self, objs, expanded, table=None, from_obj=True):
+    def _get_all_headers(self, objs, expanded, table=None):
         """Construct headers to **guarantee** that all headers
         for all tasks are included, regardless of whether
         or not all tasks were imported with the same headers.
@@ -200,24 +168,10 @@ class TaskCsvExporter(CsvExporter):
         """
         headers = set()
 
-        if from_obj:
-            obj_name = objs[0].__class__.__name__.lower()
-            for obj in objs:
-                headers.update(self._get_headers_from_row(obj, obj_name, expanded))
-        else:
-            for obj in objs:
-                headers.update(self.get_keys(obj, table))
+        for obj in objs:
+            headers.update(self.get_keys(obj, table))
 
         headers = sorted(list(headers))
-        return headers
-
-    def _get_headers_from_row(self, obj, obj_name, expanded):
-        if expanded:
-            obj_dict = self.merge_objects(obj)
-        else:
-            obj_dict = obj.dictize()
-
-        headers = self.get_keys(obj_dict, obj_name)
         return headers
 
     def _respond_csv(self, ty, project_id, expanded=False, filters=None, disclose_gold=False):
