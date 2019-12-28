@@ -135,7 +135,7 @@ requirements = [
     "urllib3==1.24.1",
     "validators==0.12.4",
     "webassets==0.12.1",
-    "Werkzeug==0.14.1",
+    "Werkzeug==0.15.3",
     "wrapt==1.10.11",
     "WTForms==1.0.5",
     "WTForms-Components==0.10.3",
