@@ -22,7 +22,7 @@ This package adds GET method for:
     * users
 
 """
-from api_base import APIBase, error, jsonpify, ratelimits, ratelimit
+from .api_base import APIBase, error, jsonpify, ratelimits, ratelimit
 from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed
 from flask import request
@@ -50,7 +50,7 @@ class UserAPI(APIBase):
     allowed_attributes = ('name', 'locale', 'fullname', 'created')
 
     def _select_attributes(self, user_data):
-        if current_user.is_authenticated() and (current_user.admin or
+        if current_user.is_authenticated and (current_user.admin or
                                                 current_user.id ==
                                                 user_data['id']):
             tmp = User().to_public_json(user_data)
@@ -60,7 +60,7 @@ class UserAPI(APIBase):
             return tmp
         else:
             privacy = self._is_user_private(user_data)
-            for attribute in user_data.keys():
+            for attribute in list(user_data.keys()):
                 self._remove_attribute_if_private(attribute, user_data, privacy)
             return user_data
 
@@ -76,7 +76,7 @@ class UserAPI(APIBase):
         return not self._is_requester_admin() and user['privacy_mode']
 
     def _is_requester_admin(self):
-        return current_user.is_authenticated() and current_user.admin
+        return current_user.is_authenticated and current_user.admin
 
     def _custom_filter(self, filters):
         if self._private_attributes_in_request() and not self._is_requester_admin():
@@ -84,7 +84,7 @@ class UserAPI(APIBase):
         return filters
 
     def _private_attributes_in_request(self):
-        for attribute in request.args.keys():
+        for attribute in list(request.args.keys()):
             if (attribute in self.allowed_attributes and
                     attribute not in self.public_attributes):
                 return True

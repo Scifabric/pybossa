@@ -125,7 +125,7 @@ class TestApiCommon(TestAPI):
             if endpoint == 'project':
                 assert len(data) == 1, data
                 project_res = data[0]
-                assert 'total' not in project_res['info'].keys(), data
+                assert 'total' not in list(project_res['info'].keys()), data
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'task':
@@ -159,7 +159,7 @@ class TestApiCommon(TestAPI):
             if endpoint == 'project':
                 assert len(data) == 1, data
                 project_res = data[0]
-                assert 'total' in project_res['info'].keys(), data
+                assert 'total' in list(project_res['info'].keys()), data
                 assert project_res['info']['total'] == 150, data
                 assert res.mimetype == 'application/json', res
 
@@ -189,7 +189,7 @@ class TestApiCommon(TestAPI):
             if endpoint == 'project':
                 assert len(data) == 1, data
                 project_res = data[0]
-                assert 'total' in project_res['info'].keys(), data
+                assert 'total' in list(project_res['info'].keys()), data
                 assert project_res['info']['total'] == 150, data
                 assert res.mimetype == 'application/json', res
 
@@ -296,8 +296,8 @@ class TestApiCommon(TestAPI):
         assert len(data) == 2, res.data
         for d in data:
             assert 'fox' in d['info']['foo']
-            assert 'rank' in d.keys()
-            assert 'headline' in d.keys()
+            assert 'rank' in list(d.keys())
+            assert 'headline' in list(d.keys())
 
         # Without the fulltextsearch
         res = self.app.get('/api/task?all=1&info=foo::fox')
@@ -305,8 +305,8 @@ class TestApiCommon(TestAPI):
         assert len(data) == 1, res.data
         for d in data:
             assert 'fox' in d['info']['foo']
-            assert 'rank' not in d.keys()
-            assert 'headline'  not in d.keys()
+            assert 'rank' not in list(d.keys())
+            assert 'headline'  not in list(d.keys())
 
 
     @with_context
@@ -339,8 +339,7 @@ class TestApiCommon(TestAPI):
         project = ProjectFactory.create()
         res = self.app.get('/api/project/%s?callback=mycallback' % project.id)
         err_msg = "mycallback should be included in the response"
-        print res.data
-        assert "mycallback" in res.data, err_msg
+        assert "mycallback" in str(res.data), err_msg
         err_msg = "Status code should be 200"
         assert res.status_code == 200, err_msg
 

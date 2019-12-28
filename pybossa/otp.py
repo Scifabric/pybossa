@@ -19,6 +19,7 @@
 import os
 import base64
 import uuid
+import six
 
 from pybossa.core import sentinel
 from otpauth import OtpAuth
@@ -58,7 +59,10 @@ def _create_url_token_key(token):
 
 
 def generate_url_token(user_email):
-    token = uuid.uuid4().get_hex()
+    if six.PY2:  # pragma: no cover
+        token = uuid.uuid4().get_hex()
+    else:
+        token = uuid.uuid4().hex
     key = _create_url_token_key(token)
     conn.delete(token)
     conn.setex(key, OTP_TTL, user_email)

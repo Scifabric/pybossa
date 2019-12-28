@@ -54,7 +54,7 @@ class TestCacheHashFunctions(object):
     def test_03_get_hash_key(self):
         """Test CACHE get_hash_key works."""
         prefix = 'prefix'
-        key_to_hash = get_key_to_hash(1, vowel=u'ñ')
+        key_to_hash = get_key_to_hash(1, vowel='ñ')
         tmp = key_to_hash.encode('utf-8')
         expected = prefix + ":" + hashlib.md5(tmp).hexdigest()
         key = get_hash_key(prefix, key_to_hash)
@@ -101,7 +101,7 @@ class TestCacheMemoizeFunctions(object):
         my_func()
         key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
 
-        assert test_sentinel.master.keys() == [key], test_sentinel.master.keys()
+        assert list(test_sentinel.master.keys()) == [key.encode('utf-8')], list(test_sentinel.master.keys())
 
 
     def test_cache_gets_function_from_cache_after_first_call(self):
@@ -218,11 +218,11 @@ class TestCacheMemoizeFunctions(object):
             return 'my_func was called'
         key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
         my_func()
-        assert test_sentinel.master.keys() == [key]
+        assert list(test_sentinel.master.keys()) == [key.encode('utf-8')]
 
         delete_succedeed = delete_cached('my_cached_func')
         assert delete_succedeed is True, delete_succedeed
-        assert test_sentinel.master.keys() == [], 'Key was not deleted!'
+        assert list(test_sentinel.master.keys()) == [], 'Key was not deleted!'
 
 
     def test_delete_cached_returns_false_when_delete_fails(self):
@@ -232,7 +232,7 @@ class TestCacheMemoizeFunctions(object):
         def my_func():
             return 'my_func was called'
         key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
-        assert test_sentinel.master.keys() == []
+        assert list(test_sentinel.master.keys()) == []
 
         delete_succedeed = delete_cached('my_cached_func')
         assert delete_succedeed is False, delete_succedeed
@@ -246,11 +246,11 @@ class TestCacheMemoizeFunctions(object):
         def my_func(*args, **kwargs):
             return [args, kwargs]
         my_func('arg', kwarg='kwarg')
-        assert len(test_sentinel.master.keys()) == 1
+        assert len(list(test_sentinel.master.keys())) == 1
 
         delete_succedeed = delete_memoized(my_func, 'arg', kwarg='kwarg')
         assert delete_succedeed is True, delete_succedeed
-        assert test_sentinel.master.keys() == [], 'Key was not deleted!'
+        assert list(test_sentinel.master.keys()) == [], 'Key was not deleted!'
 
 
     def test_delete_memoized_returns_false_when_delete_fails(self):
@@ -260,11 +260,11 @@ class TestCacheMemoizeFunctions(object):
         def my_func(*args, **kwargs):
             return [args, kwargs]
         my_func('arg', kwarg='kwarg')
-        assert len(test_sentinel.master.keys()) == 1
+        assert len(list(test_sentinel.master.keys())) == 1
 
         delete_succedeed = delete_memoized(my_func, 'badarg', kwarg='barkwarg')
         assert delete_succedeed is False, delete_succedeed
-        assert len(test_sentinel.master.keys()) == 1, 'Key was unexpectedly deleted'
+        assert len(list(test_sentinel.master.keys())) == 1, 'Key was unexpectedly deleted'
 
 
     def test_delete_memoized_deletes_only_requested(self):
@@ -276,11 +276,11 @@ class TestCacheMemoizeFunctions(object):
             return [args, kwargs]
         my_func('arg', kwarg='kwarg')
         my_func('other', kwarg='other')
-        assert len(test_sentinel.master.keys()) == 2
+        assert len(list(test_sentinel.master.keys())) == 2
 
         delete_succedeed = delete_memoized(my_func, 'arg', kwarg='kwarg')
         assert delete_succedeed is True, delete_succedeed
-        assert len(test_sentinel.master.keys()) == 1, 'Everything was deleted!'
+        assert len(list(test_sentinel.master.keys())) == 1, 'Everything was deleted!'
 
 
     def test_delete_memoized_deletes_all_function_calls(self):
@@ -296,8 +296,8 @@ class TestCacheMemoizeFunctions(object):
         my_func('arg', kwarg='kwarg')
         my_func('other', kwarg='other')
         my_other_func('arg', kwarg='kwarg')
-        assert len(test_sentinel.master.keys()) == 3
+        assert len(list(test_sentinel.master.keys())) == 3
 
         delete_succedeed = delete_memoized(my_func)
         assert delete_succedeed is True, delete_succedeed
-        assert len(test_sentinel.master.keys()) == 1
+        assert len(list(test_sentinel.master.keys())) == 1

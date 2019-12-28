@@ -32,7 +32,7 @@ class PageAuth(object):
         return getattr(self, action)(user, page, project_id)
 
     def _create(self, user, page=None, project_id=None):
-        if user.is_anonymous() or (page is None and project_id is None):
+        if user.is_anonymous or (page is None and project_id is None):
             return False
         project = self._get_project(page, project_id)
         if page is None:
@@ -45,7 +45,7 @@ class PageAuth(object):
             if project:
                 return (project.published or
                         self._is_admin_or_owner(user, project))
-            if user.is_anonymous() or (page is None and project_id is None):
+            if user.is_anonymous or (page is None and project_id is None):
                 return False
             return self._is_admin_or_owner(user, project)
         else:
@@ -53,13 +53,13 @@ class PageAuth(object):
 
     def _update(self, user, page, project_id=None):
         project = self._get_project(page, project_id)
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return self._is_admin_or_owner(user, project)
 
     def _delete(self, user, page, project_id=None):
         project = self._get_project(page, project_id)
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         return self._is_admin_or_owner(user, project)
 
@@ -69,5 +69,5 @@ class PageAuth(object):
         return self.project_repo.get(project_id)
 
     def _is_admin_or_owner(self, user, project):
-        return (not user.is_anonymous() and
+        return (not user.is_anonymous and
                 (project.owner_id == user.id or user.admin))

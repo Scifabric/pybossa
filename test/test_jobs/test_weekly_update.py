@@ -40,7 +40,7 @@ class TestWeeklyStats(Test):
         mock_datetime.today.return_value = mock_date
 
         jobs = get_weekly_stats_update_projects()
-        assert_raises(StopIteration, jobs.next)
+        assert_raises(StopIteration, jobs.__next__)
 
     @with_context
     @patch('pybossa.jobs.datetime')
@@ -77,7 +77,7 @@ class TestWeeklyStats(Test):
         mock_datetime.today.return_value = mock_date
 
         jobs = get_weekly_stats_update_projects()
-        assert_raises(StopIteration, jobs.next)
+        assert_raises(StopIteration, jobs.__next__)
 
     @with_context
     @patch('pybossa.jobs.datetime')
@@ -117,7 +117,7 @@ class TestWeeklyStats(Test):
         mock_datetime.today.return_value = mock_date
 
         jobs = get_weekly_stats_update_projects()
-        assert_raises(StopIteration, jobs.next)
+        assert_raises(StopIteration, jobs.__next__)
 
     @with_context
     @patch('pybossa.jobs.datetime')

@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/circulate
     docker:
-      - image: scifabric/python2.7-ldap
+      - image: scifabric/python3.6-ldap
         environment:
           FLASK_CONFIG: testing
           TEST_DATABASE_URL: postgresql://rtester:rtester@localhost/pybossa_test?sslmode=disable

@@ -49,7 +49,7 @@ def login():  # pragma: no cover
 @facebook.oauth.tokengetter
 def get_facebook_token():  # pragma: no cover
     """Get Facebook token from session."""
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return session.get('oauth_token')
     else:
         return (current_user.info['facebook_token']['oauth_token'], '')
@@ -61,8 +61,8 @@ def oauth_authorized():  # pragma: no cover
     resp = facebook.oauth.authorized_response()
     next_url = request.args.get('next') or url_for_app_type('home.home')
     if resp is None:
-        flash(u'You denied the request to sign in.', 'error')
-        flash(u'Reason: ' + request.args['error_reason'] +
+        flash('You denied the request to sign in.', 'error')
+        flash('Reason: ' + request.args['error_reason'] +
               ' ' + request.args['error_description'], 'error')
         next_url = (request.args.get('next') or
                     url_for_app_type('home.home', _hash_last_flash=True))
@@ -95,6 +95,10 @@ def manage_user(access_token, user_data):
                         user_repo.get_by(email_addr=user_data['email']) is not None)
 
         if not user_exists and not email_exists:
+            if type(user_data.get('email')) == bytes:  # pragma: no cover
+                user_data['email'] = user_data['email'].decode('utf-8')
+            if type(name) == bytes:  # pragma: no cover
+                name = name.decode('utf-8')
             if not user_data.get('email'):
                 user_data['email'] = name
             user = User(fullname=user_data['name'],

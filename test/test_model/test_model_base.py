@@ -53,13 +53,13 @@ class TestModelBase(Test):
         err_msg = "Wrong value"
         assert json['name'] == user.name, err_msg
         err_msg = "Missing fields"
-        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        assert list(json.keys()).sort() == user.public_attributes().sort(), err_msg
 
         json = user.to_public_json(data=user_dict)
         err_msg = "Wrong value"
         assert json['name'] == user.name, err_msg
         err_msg = "Missing fields"
-        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        assert list(json.keys()).sort() == user.public_attributes().sort(), err_msg
 
     @with_context
     def test_info_public_keys(self):
@@ -76,7 +76,7 @@ class TestModelBase(Test):
         err_msg = "Wrong value"
         assert json['name'] == user.name, err_msg
         err_msg = "Missing fields"
-        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        assert list(json.keys()).sort() == user.public_attributes().sort(), err_msg
         err_msg = "There should be info keys"
         assert json['info']['container'] == '3', err_msg
         assert json['info']['avatar'] == 'img.png', err_msg
@@ -87,7 +87,7 @@ class TestModelBase(Test):
         err_msg = "Wrong value"
         assert json['name'] == user.name, err_msg
         err_msg = "Missing fields"
-        assert json.keys().sort() == user.public_attributes().sort(), err_msg
+        assert list(json.keys()).sort() == user.public_attributes().sort(), err_msg
         err_msg = "There should be info keys"
         assert json['info']['container'] == '3', err_msg
         assert json['info']['avatar'] == 'img.png', err_msg
@@ -96,9 +96,9 @@ class TestModelBase(Test):
 
         with patch.dict(self.flask_app.config, {'USER_INFO_PUBLIC_FIELDS': ['badges']}):
             json = user.to_public_json()
-            assert json['info'].keys().sort() == User().public_info_keys().sort(), err_msg
-            assert 'badges' in json['info'].keys()
-            assert 'hidden' not in json['info'].keys()
+            assert list(json['info'].keys()).sort() == User().public_info_keys().sort(), err_msg
+            assert 'badges' in list(json['info'].keys())
+            assert 'hidden' not in list(json['info'].keys())
 
 
     @with_context
@@ -121,36 +121,36 @@ class TestModelBase(Test):
         err_msg = "Wrong value"
         assert json['name'] == project.name, err_msg
         err_msg = "Missing fields"
-        assert json.keys().sort() == project.public_attributes().sort(), err_msg
+        assert list(json.keys()).sort() == project.public_attributes().sort(), err_msg
         err_msg = "There should be info keys"
-        assert json['info'].keys().sort() == Project().public_info_keys().sort(), err_msg
+        assert list(json['info'].keys()).sort() == Project().public_info_keys().sort(), err_msg
         with patch.dict(self.flask_app.config, {'PROJECT_INFO_PUBLIC_FIELDS': ['public_field']}):
             json = project.to_public_json()
-            assert json['info'].keys().sort() == Project().public_info_keys().sort(), err_msg
-            assert 'public_field' in json['info'].keys()
-            assert 'secret_key' not in json['info'].keys()
+            assert list(json['info'].keys()).sort() == Project().public_info_keys().sort(), err_msg
+            assert 'public_field' in list(json['info'].keys())
+            assert 'secret_key' not in list(json['info'].keys())
 
     @with_context
     def test_all(self):
         """Test MODEL works"""
-        username = u'test-user-1'
+        username = 'test-user-1'
         user = User(name=username, fullname=username, email_addr=username)
         info = {
             'total': 150,
             'long_description': 'hello world'}
         project = Project(
-            name=u'My New Project',
-            short_name=u'my-new-app',
-            description=u'description',
+            name='My New Project',
+            short_name='my-new-app',
+            description='description',
             info=info)
-        category = Category(name=u'cat', short_name=u'cat', description=u'cat')
+        category = Category(name='cat', short_name='cat', description='cat')
         project.category = category
         project.owner = user
         task_info = {
             'question': 'My random question',
             'url': 'my url'}
         task = Task(info=task_info)
-        task_run_info = {'answer': u'annakarenina'}
+        task_run_info = {'answer': 'annakarenina'}
         task_run = TaskRun(info=task_run_info)
         task.project = project
         task_run.task = task
@@ -163,7 +163,7 @@ class TestModelBase(Test):
         db.session.remove()
 
         project = db.session.query(Project).get(project_id)
-        assert project.name == u'My New Project', project
+        assert project.name == 'My New Project', project
         # year would start with 201...
         assert project.created.startswith('201'), project.created
         assert len(project.tasks) == 1, project

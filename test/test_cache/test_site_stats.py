@@ -159,8 +159,8 @@ class TestSiteStatsCache(Test):
         two_days_ago = (datetime.datetime.utcnow() -
                         datetime.timedelta(2)).isoformat()
 
-        TaskRunFactory.create(project=recently_contributed_project)
-        TaskRunFactory.create(
+        tr = TaskRunFactory.create(project=recently_contributed_project)
+        tr = TaskRunFactory.create(
             project=long_ago_contributed_project, finish_time=two_days_ago)
 
         top5 = stats.get_top5_projects_24_hours()
@@ -177,7 +177,7 @@ class TestSiteStatsCache(Test):
         top5 = stats.get_top5_projects_24_hours()
 
         for field in fields:
-            assert field in top5[0].keys()
+            assert field in list(top5[0].keys())
 
     @with_context
     def test_get_top5_users_24_hours_returns_best_5_users_only(self):

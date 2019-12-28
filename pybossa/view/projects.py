@@ -22,7 +22,7 @@ import json
 import os
 import math
 import requests
-from StringIO import StringIO
+from io import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response, session
@@ -83,7 +83,7 @@ webhook_queue = Queue('high', connection=sentinel.master)
 
 def sanitize_project_owner(project, owner, current_user, ps=None):
     """Sanitize project and owner data."""
-    if current_user.is_authenticated() and owner.id == current_user.id:
+    if current_user.is_authenticated and owner.id == current_user.id:
         if isinstance(project, Project):
             project_sanitized = project.dictize()   # Project object
         else:
@@ -117,9 +117,9 @@ def sanitize_project_owner(project, owner, current_user, ps=None):
 def zip_enabled(project, user):
     """Return if the user can download a ZIP file."""
     if project.zip_download is False:
-        if user.is_anonymous():
+        if user.is_anonymous:
             return abort(401)
-        if (user.is_authenticated() and
+        if (user.is_authenticated and
             (user.id not in project.owners_ids and
                 user.admin is False)):
             return abort(403)
@@ -376,7 +376,7 @@ def task_presenter_editor(short_name):
             flash(Markup(msg), 'info')
 
             wrap = lambda i: "projects/presenters/%s.html" % i
-            pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
+            pres_tmpls = list(map(wrap, current_app.config.get('PRESENTERS')))
 
             project = add_custom_contrib_button_to(project, get_user_id_or_ip(), ps=ps)
             project_sanitized, owner_sanitized = sanitize_project_owner(project,
@@ -672,8 +672,10 @@ def import_task(short_name):
             try:
                 return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
+                raise
                 flash(err_msg, 'error')
             except Exception as inst:  # pragma: no cover
+                raise
                 current_app.logger.error(inst)
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
@@ -684,10 +686,10 @@ def import_task(short_name):
         template_tasks = current_app.config.get('TEMPLATE_TASKS')
         if importer_type is None:
             template_wrap = lambda i: "projects/tasks/gdocs-%s.html" % i
-            task_tmpls = map(template_wrap, template_tasks)
+            task_tmpls = list(map(template_wrap, template_tasks))
             template_args['task_tmpls'] = task_tmpls
             importer_wrap = lambda i: "projects/tasks/%s.html" % i
-            template_args['available_importers'] = map(importer_wrap, all_importers)
+            template_args['available_importers'] = list(map(importer_wrap, all_importers))
             template_args['template'] = '/projects/task_import_options.html'
             return handle_content_type(template_args)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
@@ -755,7 +757,7 @@ def setup_autoimporter(short_name):
     if request.method == 'GET':
         if importer_type is None:
             wrap = lambda i: "projects/tasks/%s.html" % i
-            template_args['available_importers'] = map(wrap, all_importers)
+            template_args['available_importers'] = list(map(wrap, all_importers))
             return render_template('projects/task_autoimport_options.html',
                                    **template_args)
     return render_template('/projects/importers/%s.html' % importer_type,
@@ -814,7 +816,7 @@ def task_presenter(short_name, task_id):
     else:
         ensure_authorized_to('read', project)
 
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         if not project.allow_anonymous_contributors:
             msg = ("Oops! You have to sign in to participate in "
                    "<strong>%s</strong>"
@@ -862,16 +864,16 @@ def task_presenter(short_name, task_id):
 def presenter(short_name):
 
     def invite_new_volunteers(project, ps):
-        user_id = None if current_user.is_anonymous() else current_user.id
+        user_id = None if current_user.is_anonymous else current_user.id
         user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
-                   if current_user.is_anonymous() else None)
+                   if current_user.is_anonymous else None)
         task = sched.new_task(project.id,
                               project.info.get('sched'),
                               user_id, user_ip, 0)
         return task == [] and ps.overall_progress < 100.0
 
     def respond(tmpl):
-        if (current_user.is_anonymous()):
+        if (current_user.is_anonymous):
             msg_1 = gettext(msg)
             flash(msg_1, "warning")
         resp = make_response(render_template(tmpl, **template_args))
@@ -890,7 +892,7 @@ def presenter(short_name):
     template_args = {"project": project, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(project, ps)}
 
-    if not project.allow_anonymous_contributors and current_user.is_anonymous():
+    if not project.allow_anonymous_contributors and current_user.is_anonymous:
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
                project" % project.name
         flash(Markup(gettext(msg)), 'warning')
@@ -1181,7 +1183,6 @@ def export_to(short_name):
             current_app.logger.error(msg)
             flash(msg, 'danger')
         except Exception as inst:
-            print inst
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
@@ -1193,7 +1194,7 @@ def export_to(short_name):
             return respond()
 
     export_formats = ["json", "csv"]
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         if current_user.ckan_api:
             export_formats.append('ckan')
 
@@ -1489,7 +1490,7 @@ def task_priority(short_name):
 def show_blogposts(short_name):
     project, owner, ps = project_by_shortname(short_name)
 
-    if current_user.is_authenticated() and current_user.id == owner.id:
+    if current_user.is_authenticated and current_user.id == owner.id:
         blogposts = blog_repo.filter_by(project_id=project.id)
     else:
         blogposts = blog_repo.filter_by(project_id=project.id,
@@ -1528,10 +1529,10 @@ def show_blogpost(short_name, id):
     blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
-    if current_user.is_anonymous() and blogpost.published is False:
+    if current_user.is_anonymous and blogpost.published is False:
         raise abort(404)
     if (blogpost.published is False and
-            current_user.is_authenticated() and
+            current_user.is_authenticated and
             current_user.id != blogpost.user_id):
         raise abort(404)
     if project.needs_password():
@@ -2052,7 +2053,7 @@ def export_project_report(short_name):
             return res
         except Exception as e:
             current_app.logger.exception(
-                    u'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
+                    'CSV Export Failed - Project: {0}, Type: {1} - Error: {2}'
                     .format(project.short_name, ty, e))
             flash(gettext('Error generating project report.'), 'error')
         return abort(500)

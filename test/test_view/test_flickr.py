@@ -57,17 +57,17 @@ class TestFlickrOauth(object):
     @with_context
     @patch('pybossa.view.flickr.flickr.oauth')
     def test_oauth_authorized_saves_token_and_user_to_session(self, oauth):
-        fake_resp = {'oauth_token_secret': u'secret',
-                     'username': u'palotespaco',
-                     'fullname': u'paco palotes',
-                     'oauth_token': u'token',
-                     'user_nsid': u'user'}
+        fake_resp = {'oauth_token_secret': 'secret',
+                     'username': 'palotespaco',
+                     'fullname': 'paco palotes',
+                     'oauth_token':'token',
+                     'user_nsid': 'user'}
         oauth.authorized_response.return_value = fake_resp
         expected_token = {
-            'oauth_token_secret': u'secret',
-            'oauth_token': u'token'
+            'oauth_token_secret': 'secret',
+            'oauth_token': 'token'
         }
-        expected_user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        expected_user = {'username': 'palotespaco', 'user_nsid': 'user'}
 
         with flask_app.test_client() as c:
             c.get('/flickr/oauth-authorized')
@@ -80,11 +80,11 @@ class TestFlickrOauth(object):
     @patch('pybossa.view.flickr.redirect')
     def test_oauth_authorized_redirects_to_url_next_param_on_authorization(
             self, redirect, flickr):
-        fake_resp = {'oauth_token_secret': u'secret',
-                     'username': u'palotespaco',
-                     'fullname': u'paco palotes',
-                     'oauth_token': u'token',
-                     'user_nsid': u'user'}
+        fake_resp = {'oauth_token_secret': 'secret',
+                     'username': 'palotespaco',
+                     'fullname': 'paco palotes',
+                     'oauth_token':'token',
+                     'user_nsid': 'user'}
         flickr.authorized_response.return_value = fake_resp
         redirect.return_value = "OK"
         flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
@@ -113,5 +113,4 @@ class TestFlickrAPI(object):
         albums = ['one album', 'another album']
         client_instance.get_user_albums.return_value = albums
         resp = flask_app.test_client().get('/flickr/albums')
-
-        assert resp.data == json.dumps(albums), resp.data
+        assert resp.data == json.dumps(albums).encode('utf-8'), resp.data

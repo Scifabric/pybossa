@@ -127,11 +127,11 @@ class TestCategoryAPI(TestAPI):
         """Test API Category creation and auth"""
         admin = UserFactory.create()
         user = UserFactory.create()
-        name = u'Category'
+        name = 'Category'
         category = dict(
             name=name,
             short_name='category',
-            description=u'description')
+            description='description')
         data = json.dumps(category)
         # no api-key
         url = '/api/category'
@@ -174,13 +174,13 @@ class TestCategoryAPI(TestAPI):
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', wrong=15)
         res = self.app.post(url + '?api_key=' + admin.api_key,
-                            data=data)
+                            data=json.dumps(data))
         err = json.loads(res.data)
         err_msg = "ValueError exception should be raised"
         assert res.status_code == 415, err
         assert err['action'] == 'POST', err
         assert err['status'] == 'failed', err
-        assert err['exception_cls'] == "ValueError", err_msg
+        assert err['exception_cls'] == "TypeError", (err_msg, err)
         # Now with a JSON object but not valid
         data = json.dumps(data)
         res = self.app.post(url + '?api_key=' + user.api_key,
@@ -250,7 +250,7 @@ class TestCategoryAPI(TestAPI):
         data = dict(
             name='Category3',
             short_name='category3',
-            description=u'description3')
+            description='description3')
 
         datajson = json.dumps(data)
         res = self.app.put('/api/category/%s?api_key=%s&search=select1' % (cat.id, admin.api_key),
@@ -318,11 +318,11 @@ class TestCategoryAPI(TestAPI):
         clean_category_mock = MagicMock()
         caching_mock.get.return_value = dict(refresh=clean_category_mock)
         owner = UserFactory.create()
-        name = u'Category'
+        name = 'Category'
         category = dict(
             name=name,
             short_name='category',
-            description=u'description')
+            description='description')
         data = json.dumps(category)
         # no api-key
         url = '/api/category?api_key=%s' % owner.api_key

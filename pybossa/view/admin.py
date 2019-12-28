@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Admin view for PYBOSSA."""
+import sys
 from rq import Queue
 from flask import Blueprint
 from flask import render_template
@@ -32,10 +33,11 @@ from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import ProgrammingError
+import pandas as pd
 
 from pybossa.model.category import Category
 from pybossa.model.announcement import Announcement
-from pybossa.util import admin_required, UnicodeWriter, handle_content_type
+from pybossa.util import admin_required, handle_content_type
 from pybossa.util import redirect_content_type
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
@@ -45,7 +47,7 @@ from pybossa.feed import get_update_feed
 import pybossa.dashboard.data as dashb
 from pybossa.jobs import get_dashboard_jobs
 import json
-from StringIO import StringIO
+from io import StringIO
 
 from pybossa.forms.admin_view_forms import *
 from pybossa.news import NOTIFY_ADMIN
@@ -181,25 +183,16 @@ def export_users():
         return dict_user
 
     def respond_csv():
-        out = StringIO()
-        writer = UnicodeWriter(out)
         tmp = 'attachment; filename=all_users.csv'
-        res = Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+        dict_users = []
+        for user in user_repo.filter_by(restrict=False):
+            dict_users.append(user.dictize())
+        df = pd.DataFrame.from_dict(dict_users)
+        res = Response(df.to_csv(columns=exportable_attributes,
+                                 index=False),
+                       mimetype='text/csv')
         res.headers['Content-Disposition'] = tmp
         return res
-
-    def gen_csv(out, writer, write_user):
-        add_headers(writer)
-        for user in user_repo.filter_by(restrict=False):
-            write_user(writer, user)
-        yield out.getvalue()
-
-    def write_user(writer, user):
-        values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
-        writer.writerow(values)
-
-    def add_headers(writer):
-        writer.writerow(sorted(exportable_attributes))
 
     export_formats = ["json", "csv"]
 

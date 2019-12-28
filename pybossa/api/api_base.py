@@ -26,6 +26,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
     * etc.
 
 """
+import six
 import json
 from flask import request, abort, Response, current_app
 from flask_login import current_user
@@ -111,7 +112,7 @@ class APIBase(MethodView):
 
     def valid_args(self):
         """Check if the domain object args are valid."""
-        for k in request.args.keys():
+        for k in list(request.args.keys()):
             if k not in ['api_key']:
                 getattr(self.__class__, k)
 
@@ -150,7 +151,7 @@ class APIBase(MethodView):
         for result in query_result:
             # This is for n_favs orderby case
             if not isinstance(result, DomainObject):
-                if 'n_favs' in result.keys():
+                if 'n_favs' in list(result.keys()):
                     result = result[0]
             try:
                 if (result.__class__ != self.__class__):
@@ -241,7 +242,7 @@ class APIBase(MethodView):
         return results
 
     def api_context(self, all_arg, **filters):
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             filters['owner_id'] = current_user.id
         if filters.get('owner_id') and all_arg == '1':
             del filters['owner_id']
@@ -249,7 +250,7 @@ class APIBase(MethodView):
 
     def _filter_query(self, repo_info, limit, offset, orderby):
         filters = {}
-        for k in request.args.keys():
+        for k in list(request.args.keys()):
             if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
                          'participated', 'full', 'stats']:
@@ -500,7 +501,7 @@ class APIBase(MethodView):
         if (content_type in request_headers and
                 cls_name in self.allowed_classes_upload):
             tmp = dict()
-            for key in request.form.keys():
+            for key in list(request.form.keys()):
                 tmp[key] = request.form[key]
             if isinstance(self, announcement.Announcement):
                 # don't check project id for announcements
@@ -518,7 +519,7 @@ class APIBase(MethodView):
                 if request.files.get('file') is None:
                     raise AttributeError
                 _file = request.files['file']
-                if current_user.is_authenticated():
+                if current_user.is_authenticated:
                     if current_user.admin:
                         container = "user_%s" % project.owner.id
                     else:
@@ -535,7 +536,7 @@ class APIBase(MethodView):
             tmp['media_url'] = file_url
             if tmp.get('info') is None:
                 tmp['info'] = dict()
-            elif type(tmp['info']) is unicode:
+            elif type(tmp['info']) is six.text_type:
                 tmp['info'] = json.loads(tmp['info'])
             tmp['info']['container'] = container
             tmp['info']['file_name'] = _file.filename
@@ -547,7 +548,7 @@ class APIBase(MethodView):
         """Delete file object."""
         cls_name = self.__class__.__name__.lower()
         if cls_name in self.allowed_classes_upload:
-            keys = obj.info.keys()
+            keys = list(obj.info.keys())
             if 'file_name' in keys and 'container' in keys:
                 ensure_authorized_to('delete', obj)
                 uploader.delete_file(obj.info['file_name'],

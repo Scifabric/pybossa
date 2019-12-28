@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 SERVER_NAME='localhost'
 PREFERRED_URL_SCHEME='https'
-# THEME='crowdcrafting-theme'
+# THEME='pybossa-default-theme'
 CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
@@ -15,6 +15,7 @@ FACEBOOK_APP_SECRET='secret'
 TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
 ITSDANGEROUSKEY = 'its-dangerous-key'
+REDIS_SOCKET_TIMEOUT = 1.0
 LOGO = 'logo.png'
 PORT=5001
 MAIL_SERVER = 'localhost'

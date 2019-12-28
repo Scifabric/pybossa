@@ -25,6 +25,7 @@ from .youtubeapi import BulkTaskYoutubeImport
 from .epicollect import BulkTaskEpiCollectPlusImport
 from .iiif import BulkTaskIIIFImporter
 from .s3 import BulkTaskS3Import
+import six
 
 class Importer(object):
 
@@ -67,7 +68,7 @@ class Importer(object):
         importer = self._create_importer_for(**form_data)
         for task_data in importer.tasks():
             task = Task(project_id=project_id)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            [setattr(task, k, v) for k, v in six.iteritems(task_data)]
             found = task_repo.get_task_by(project_id=project_id, info=task.info)
             if found is None:
                 task_repo.save(task)

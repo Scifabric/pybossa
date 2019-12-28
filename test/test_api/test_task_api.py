@@ -336,9 +336,9 @@ class TestTaskAPI(TestAPI):
         """ Test API Task query"""
         project = ProjectFactory.create()
         t1 = TaskFactory.create(
-            created='2015-01-01T14:37:30.642119', info={'question': 'answer'})
-        tasks = TaskFactory.create_batch(
-            8, project=project, info={'question': 'answer'})
+            created='2015-01-01T14:37:30.642119',
+            info={'question': 'answer'})
+        tasks = TaskFactory.create_batch(8, project=project, info={'question': 'answer'})
         t2 = TaskFactory.create(created='2019-01-01T14:37:30.642119',
                                 info={'question': 'answer'},
                                 fav_user_ids=[1, 2, 3, 4])
@@ -414,6 +414,7 @@ class TestTaskAPI(TestAPI):
         data = json.loads(res.data)
         err_msg = "It should get the last item first."
         assert data[0]['id'] == t3.id, err_msg
+
         url = "/api/task?orderby=fav_user_ids&desc=true&limit=1&offset=2"
         res = self.app.get(url)
         data = json.loads(res.data)
@@ -434,7 +435,7 @@ class TestTaskAPI(TestAPI):
         res = self.app.get("/api/task?limit=1&stats=True")
         data = json.loads(res.data)
         assert len(data) == 1, data
-        assert 'stats' not in data[0].keys()
+        assert 'stats' not in list(data[0].keys())
 
     @with_context
     def test_task_query_without_params_with_context(self):
@@ -485,7 +486,7 @@ class TestTaskAPI(TestAPI):
         assert len(data) == 10, data
         # Correct result
         assert data[0]['project_id'] == 1, data
-        assert data[0]['state'] == u'ongoing', data
+        assert data[0]['state'] == 'ongoing', data
 
         # Limits
         res = self.app.get("/api/task?project_id=1&limit=5")
@@ -542,7 +543,7 @@ class TestTaskAPI(TestAPI):
         # Correct result
         for t in data:
             assert t['project_id'] == project_oc.id, data
-            assert t['state'] == u'ongoing', data
+            assert t['state'] == 'ongoing', data
 
         # Limits
         res = self.app.get(
@@ -603,7 +604,7 @@ class TestTaskAPI(TestAPI):
         # Correct result
         for t in data:
             assert t['project_id'] == project_oc.id, data
-            assert t['state'] == u'ongoing', data
+            assert t['state'] == 'ongoing', data
 
         # Limits
         res = self.app.get(
@@ -883,7 +884,7 @@ class TestTaskAPI(TestAPI):
         # anonymous
         res = self.app.delete('/api/task/%s' % task.id)
         error_msg = 'Anonymous should not be allowed to delete'
-        print res.status
+        print((res.status))
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # real user but not allowed as not owner!
@@ -906,7 +907,7 @@ class TestTaskAPI(TestAPI):
         url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
-        assert res.data == '', res.data
+        assert res.data == b'', res.data
 
         # root user
         url = '/api/task/%s?api_key=%s' % (root_task.id, admin.api_key)

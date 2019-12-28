@@ -44,20 +44,20 @@ from pybossa.ratelimit import ratelimit
 from pybossa.cache.projects import n_tasks
 import pybossa.sched as sched
 from pybossa.error import ErrorStatus
-from global_stats import GlobalStatsAPI
-from task import TaskAPI
-from task_run import TaskRunAPI
-from project import ProjectAPI
-from announcement import AnnouncementAPI
-from blogpost import BlogpostAPI
-from category import CategoryAPI
-from favorites import FavoritesAPI
-from user import UserAPI
-from token import TokenAPI
-from result import ResultAPI
-from project_stats import ProjectStatsAPI
-from helpingmaterial import HelpingMaterialAPI
-from page import PageAPI
+from .global_stats import GlobalStatsAPI
+from .task import TaskAPI
+from .task_run import TaskRunAPI
+from .project import ProjectAPI
+from .announcement import AnnouncementAPI
+from .blogpost import BlogpostAPI
+from .category import CategoryAPI
+from .favorites import FavoritesAPI
+from .user import UserAPI
+from .token import TokenAPI
+from .result import ResultAPI
+from .project_stats import ProjectStatsAPI
+from .helpingmaterial import HelpingMaterialAPI
+from .page import PageAPI
 from pybossa.core import project_repo, task_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -152,7 +152,7 @@ def _retrieve_new_task(project_id):
     if project is None:
         raise NotFound
 
-    if not project.allow_anonymous_contributors and current_user.is_anonymous():
+    if not project.allow_anonymous_contributors and current_user.is_anonymous:
         info = dict(
             error="This project does not allow anonymous contributors")
         error = [model.task.Task(info=info)]
@@ -187,9 +187,9 @@ def _retrieve_new_task(project_id):
     else:
         desc = False
 
-    user_id = None if current_user.is_anonymous() else current_user.id
+    user_id = None if current_user.is_anonymous else current_user.id
     user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
-               if current_user.is_anonymous() else None)
+               if current_user.is_anonymous else None)
     external_uid = request.args.get('external_uid')
     task = sched.new_task(project_id, project.info.get('sched'),
                           user_id,
@@ -229,7 +229,7 @@ def user_progress(project_id=None, short_name=None):
             # For now, keep this version, but wait until redis cache is 
             # used here for task_runs too
             query_attrs = dict(project_id=project.id)
-            if current_user.is_anonymous():
+            if current_user.is_anonymous:
                 query_attrs['user_ip'] = anonymizer.ip(request.remote_addr or
                                                        '127.0.0.1')
             else:
@@ -270,7 +270,7 @@ def auth_jwt_project(short_name):
 def get_disqus_sso_api():
     """Return remote_auth_s3 and api_key for disqus SSO."""
     try:
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             message, timestamp, sig, pub_key = get_disqus_sso_payload(current_user)
         else:
             message, timestamp, sig, pub_key = get_disqus_sso_payload(None)
@@ -282,5 +282,5 @@ def get_disqus_sso_api():
         else:
             raise MethodNotAllowed
     except MethodNotAllowed as e:
-        e.message = "Disqus keys are missing"
-        return error.format_exception(e, target='DISQUS_SSO', action='GET')
+        return error.format_exception(e, target='DISQUS_SSO', action='GET',
+                                      message="Disqus keys are missing")

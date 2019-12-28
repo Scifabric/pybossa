@@ -78,7 +78,7 @@ def index(page=1):
     if not accounts and page != 1:
         abort(404)
     pagination = Pagination(page, per_page, count)
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         user_id = current_user.id
     else:
         user_id = None
@@ -158,7 +158,7 @@ def signin():
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     auth = {'twitter': False, 'facebook': False, 'google': False}
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         # If Twitter is enabled in config, show the Twitter Sign in button
         if (isLdap is False):
             if ('twitter' in current_app.blueprints):  # pragma: no cover
@@ -215,11 +215,16 @@ def otpvalidation(token):
         return redirect_content_type(url_for('account.signin'))
     form = OTPForm(request.body)
     user_otp = form.otp.data
+    if type(email) == bytes:
+        email = email.decode('utf-8')
     user = user_repo.get_by(email_addr=email)
     current_app.logger.info('validating otp for user email: {}'.format(email))
     if request.method == 'POST' and form.validate():
         otp_code = otp.retrieve_user_otp_secret(email)
+        if type(otp_code) == bytes:
+            otp_code = otp_code.decode('utf-8')
         if otp_code is not None:
+            print(otp_code, user_otp)
             if otp_code == user_otp:
                 msg = gettext('OTP verified. You are logged in to the system')
                 flash(msg, 'success')
@@ -365,7 +370,7 @@ def newsletter_subscribe():
 
     """
     # Save that we've prompted the user to sign up in the newsletter
-    if newsletter.is_initialized() and current_user.is_authenticated():
+    if newsletter.is_initialized() and current_user.is_authenticated:
         next_url = request.args.get('next') or url_for('home.home')
         user = user_repo.get(current_user.id)
         if current_user.newsletter_prompted is False:
@@ -437,9 +442,9 @@ def _update_user_with_valid_email(user, email_addr):
 @blueprint.route('/profile', methods=['GET'])
 def redirect_profile():
     """Redirect method for profile."""
-    if current_user.is_anonymous():  # pragma: no cover
+    if current_user.is_anonymous:  # pragma: no cover
         return redirect_content_type(url_for('.signin'), status='not_signed_in')
-    if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated():
+    if (request.headers.get('Content-Type') == 'application/json') and current_user.is_authenticated:
         form = None
         if current_app.config.upref_mdata:
             form_data = cached_users.get_user_pref_metadata(current_user.name)
@@ -468,9 +473,9 @@ def profile(name):
         form = UserPrefMetadataForm(**form_data)
         form.set_upref_mdata_choices()
 
-    if current_user.is_anonymous() or (user.id != current_user.id):
+    if current_user.is_anonymous or (user.id != current_user.id):
         return _show_public_profile(user, form)
-    if current_user.is_authenticated() and user.id == current_user.id:
+    if current_user.is_authenticated and user.id == current_user.id:
         return _show_own_profile(user, form, current_user)
 
 
@@ -482,7 +487,7 @@ def _show_public_profile(user, form):
     can_update = False
 
     if (user.restrict is False and
-        current_user.is_authenticated() and
+        current_user.is_authenticated and
             current_user.admin):
         draft_projects = cached_users.draft_projects(user.id)
         projects_created.extend(draft_projects)
@@ -936,7 +941,7 @@ def add_metadata(name):
             user_dict = cached_users.public_get_user_summary(user.name)
         projects_contributed = cached_users.projects_contributed_cached(user.id)
         projects_created = cached_users.published_projects_cached(user.id)
-        if current_user.is_authenticated() and current_user.admin:
+        if current_user.is_authenticated and current_user.admin:
             draft_projects = cached_users.draft_projects(user.id)
             projects_created.extend(draft_projects)
         title = "%s &middot; User Profile" % user.name
@@ -963,11 +968,11 @@ def add_metadata(name):
 def get_user_pref_and_metadata(user_name, form):
     user_pref = {}
     metadata = {}
-    if not any(value for value in form.data.values()):
+    if not any(value for value in list(form.data.values())):
         return user_pref, metadata
 
     if form.validate():
-        admin = user_name if current_user.is_anonymous() else current_user.name
+        admin = user_name if current_user.is_anonymous else current_user.name
         metadata = dict(admin=admin, time_stamp=time.ctime(),
                         user_type=form.user_type.data, work_hours_from=form.work_hours_from.data,
                         work_hours_to=form.work_hours_to.data, review=form.review.data,

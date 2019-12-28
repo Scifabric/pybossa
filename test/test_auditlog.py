@@ -92,10 +92,10 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': False,
-                'info': {u'list': [1]}
+                'allow_anonymous_contributors': 'False',
+                'info': {'list': [1]}
                 }
-        attributes = data.keys()
+        attributes = list(data.keys())
         attributes.append('list')
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
@@ -111,7 +111,7 @@ class TestAuditlogAPI(Test):
             assert log.attribute in attributes, (log.attribute, attributes)
             if log.attribute != 'list':
                 msg = "%s != %s" % (data[log.attribute], log.new_value)
-                assert unicode(data[log.attribute]) == log.new_value, msg
+                assert str(data[log.attribute]) == log.new_value, msg
             else:
                 msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
                 assert data['info'][log.attribute] == json.loads(log.new_value), msg
@@ -128,7 +128,7 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': False,
                 }
-        attributes = data.keys()
+        attributes = list(data.keys())
         url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
@@ -142,7 +142,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
             msg = "%s != %s" % (data[log.attribute], log.new_value)
-            assert unicode(data[log.attribute]) == log.new_value, msg
+            assert str(data[log.attribute]) == log.new_value, msg
 
     @with_context
     def test_project_update_attributes_non_owner(self):
@@ -216,7 +216,7 @@ class TestAuditlogAPI(Test):
         owner_id = project.owner.id
         owner_name = project.owner.name
         data = {'info': {'sched': 'depth_first', 'task_presenter': 'new'}}
-        attributes = data['info'].keys()
+        attributes = list(data['info'].keys())
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
@@ -385,7 +385,7 @@ class TestAuditlogWEB(web.Helper):
 
         logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)
         for log in logs:
-            print log
+            print(log)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
@@ -736,7 +736,7 @@ class TestAuditlogWEB(web.Helper):
         url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
-        assert "Sign in" in res.data, res.data
+        assert "Sign in" in str(res.data), res.data
 
     @with_context
     def test_project_auditlog_access_owner(self):

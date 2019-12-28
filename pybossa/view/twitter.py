@@ -49,7 +49,7 @@ def login():  # pragma: no cover
 @twitter.oauth.tokengetter
 def get_twitter_token():  # pragma: no cover
     """Get Twitter token from session."""
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return None
 
     return((current_user.info['twitter_token']['oauth_token'],
@@ -76,7 +76,7 @@ def oauth_authorized():  # pragma: no cover
     resp = twitter.oauth.authorized_response()
     next_url = request.args.get('next') or url_for_app_type('home.home')
     if resp is None:
-        flash(u'You denied the request to sign in.', 'error')
+        flash('You denied the request to sign in.', 'error')
         return redirect(next_url)
     if isinstance(resp, OAuthException):
         flash('Access denied: %s' % resp.message)
@@ -146,7 +146,7 @@ def manage_user_login(user, user_data, next_url):
 
 
 def manage_user_no_login(access_token, next_url):
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         user = user_repo.get(current_user.id)
         user.info['twitter_token'] = access_token
         user_repo.save(user)

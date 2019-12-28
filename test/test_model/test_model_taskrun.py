@@ -40,7 +40,7 @@ class TestModelTaskRun(Test):
         db.session.commit()
 
         user = db.session.query(User).first()
-        category = Category(name=u'cat', short_name=u'cat', description=u'cat')
+        category = Category(name='cat', short_name='cat', description='cat')
         project = Project(name='Application', short_name='app', description='desc',
                   owner_id=user.id, category=category)
         db.session.add(project)

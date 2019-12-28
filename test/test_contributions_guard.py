@@ -36,18 +36,18 @@ class TestContributionsGuard(object):
         self.task = Task(id=22)
 
     def test_stamp_registers_specific_user_id_and_task(self):
-        key = 'pybossa:task_requested:user:33:task:22'
+        key = b'pybossa:task_requested:user:33:task:22'
 
         self.guard.stamp(self.task, self.auth_user)
 
-        assert key in self.connection.keys(), self.connection.keys()
+        assert key in list(self.connection.keys()), list(self.connection.keys())
 
     def test_stamp_registers_specific_user_ip_and_task_if_no_id_provided(self):
-        key = 'pybossa:task_requested:user:127.0.0.1:task:22'
+        key = b'pybossa:task_requested:user:127.0.0.1:task:22'
 
         self.guard.stamp(self.task, self.anon_user)
 
-        assert key in self.connection.keys(), self.connection.keys()
+        assert key in list(self.connection.keys()), list(self.connection.keys())
 
     def test_stamp_expires_in_one_hour(self):
         key = 'pybossa:task_requested:user:33:task:22'
@@ -59,12 +59,12 @@ class TestContributionsGuard(object):
 
     @patch('pybossa.contributions_guard.make_timestamp')
     def test_stamp_adds_a_timestamp_when_the_task_is_stamped(self, make_timestamp):
-        make_timestamp.return_value = "now"
-        key = 'pybossa:task_requested:user:127.0.0.1:task:22'
+        make_timestamp.return_value = b'now'
+        key = b'pybossa:task_requested:user:127.0.0.1:task:22'
 
         self.guard.stamp(self.task, self.anon_user)
 
-        assert self.connection.get(key) == 'now'
+        assert self.connection.get(key) == b'now', self.connection.get(key)
 
     def test_check_task_stamped_returns_False_for_non_stamped_task(self):
         assert self.guard.check_task_stamped(self.task, self.auth_user) is False
@@ -84,7 +84,7 @@ class TestContributionsGuard(object):
 
     @patch('pybossa.contributions_guard.make_timestamp')
     def test_retrieve_timestamp_returs_the_timestamp_for_stamped_task(self, make_timestamp):
-        make_timestamp.return_value = "now"
+        make_timestamp.return_value = b'now'
         self.guard.stamp(self.task, self.auth_user)
 
-        assert self.guard.retrieve_timestamp(self.task, self.auth_user) == 'now'
+        assert self.guard.retrieve_timestamp(self.task, self.auth_user) == b'now'

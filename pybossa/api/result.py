@@ -24,7 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from werkzeug.exceptions import BadRequest
 from pybossa.model.result import Result
-from api_base import APIBase
+from .api_base import APIBase
 
 
 class ResultAPI(APIBase):
@@ -36,6 +36,6 @@ class ResultAPI(APIBase):
                          'task_id', 'task_run_ids', 'last_version'])
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")

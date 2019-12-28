@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * announcement
 
 """
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.announcement import Announcement
 from pybossa.core import user_repo, project_repo
 from flask_login import current_user
@@ -38,10 +38,10 @@ class AnnouncementAPI(APIBase):
     __class__ = Announcement
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 raise BadRequest("Reserved keys in payload")
 
     def _update_object(self, obj):
-        if not current_user.is_anonymous():
+        if not current_user.is_anonymous:
             obj.user_id = current_user.id

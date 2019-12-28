@@ -99,14 +99,15 @@ def get_top5_projects_24_hours():
     sql = text('''SELECT project.id, project.name, project.short_name, project.info,
                COUNT(task_run.project_id) AS n_answers FROM project, task_run
                WHERE project.id=task_run.project_id
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
+               AND DATE(task_run.finish_time) > NOW() AT TIME ZONE 'utc' - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW() AT TIME ZONE 'utc'
                GROUP BY project.id
                ORDER BY n_answers DESC LIMIT 5;''')
 
     results = session.execute(sql, dict(limit=5))
     top5_apps_24_hours = []
     for row in results:
+        print(row)
         tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
                    info=row.info, n_answers=row.n_answers)
         top5_apps_24_hours.append(tmp)
@@ -121,8 +122,8 @@ def get_top5_users_24_hours():
                "user".restrict,
                COUNT(task_run.project_id) AS n_answers FROM "user", task_run
                WHERE "user".restrict=false AND "user".id=task_run.user_id
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
+               AND DATE(task_run.finish_time) > NOW() AT TIME ZONE 'utc' - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW() AT TIME ZONE 'utc'
                GROUP BY "user".id
                ORDER BY n_answers DESC LIMIT 5;''')
 

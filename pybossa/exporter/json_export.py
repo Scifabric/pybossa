@@ -70,7 +70,7 @@ class JsonExporter(Exporter):
         zipped_datafile = tempfile.NamedTemporaryFile()
         _zip = self._zip_factory(zipped_datafile.name)
         try:
-            datafile = tempfile.NamedTemporaryFile()
+            datafile = tempfile.NamedTemporaryFile(mode='w')
             try:
                 datafile.write(json.dumps(data))
                 datafile.flush()

@@ -75,7 +75,7 @@ def add_blog_event(mapper, conn, target):
                              id=target.id,
                              _scheme=scheme,
                              _external=True)
-        print launch_url
+        print(launch_url)
         web_buttons = [{"id": "read-more-button",
                         "text": "Read more",
                         "icon": "http://i.imgur.com/MIxJp1L.png",

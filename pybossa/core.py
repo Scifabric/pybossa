@@ -20,7 +20,7 @@ import os
 import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
-    flash, _app_ctx_stack, abort
+    flash, _app_ctx_stack, abort, redirect
 from flask_login import current_user
 from flask_babel import gettext
 from flask_assets import Bundle
@@ -107,7 +107,7 @@ def configure_app(app):
             app.config['SQLALCHEMY_DATABASE_TEST_URI']
     # Enable Slave bind in case is missing using Master node
     if app.config.get('SQLALCHEMY_BINDS') is None:
-        print "Slave binds are misssing, adding Master as slave too."
+        print("Slave binds are misssing, adding Master as slave too.")
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
@@ -125,7 +125,7 @@ def setup_sse(app):
     if app.config['SSE']:
         msg = "WARNING: async mode is required as Server Sent Events are enabled."
         app.logger.warning(msg)
-    else:
+    else:  # pragma: no cover
         msg = "INFO: async mode is disabled."
         app.logger.info(msg)
 
@@ -262,7 +262,7 @@ def setup_logging(app):
 def setup_login_manager(app):
     """Setup login manager."""
     login_manager.login_view = 'account.signin'
-    login_manager.login_message = u"Please sign in to access this page."
+    login_manager.login_message = "Please sign in to access this page."
 
     @login_manager.user_loader
     def _load_user(username):
@@ -277,7 +277,7 @@ def setup_babel(app):
     @babel.localeselector
     def _get_locale():
         locales = [l[0] for l in app.config.get('LOCALES')]
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             lang = current_user.locale
         else:
             lang = request.cookies.get('language')
@@ -323,9 +323,20 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
-    from rq_dashboard import RQDashboard
-    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
-                redis_conn=sentinel.master)
+    # from rq_dashboard import RQDashboard
+    import rq_dashboard
+    app.config.from_object(rq_dashboard.default_settings)
+    rq_dashboard.blueprint.before_request(is_admin)
+    app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
+                           redis_conn=sentinel.master)
+
+
+def is_admin():
+    """Check if user is admin."""
+    if current_user.is_anonymous:
+        return abort(401)
+    if current_user.admin is False:
+        return abort(403)
 
 
 def setup_external_services(app):
@@ -347,10 +358,10 @@ def setup_twitter_login(app):
             from pybossa.view.twitter import blueprint as twitter_bp
             app.register_blueprint(twitter_bp, url_prefix='/twitter')
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Twitter signin disabled"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Twitter signin disabled")
         log_message = 'Twitter signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -364,10 +375,10 @@ def setup_facebook_login(app):
             from pybossa.view.facebook import blueprint as facebook_bp
             app.register_blueprint(facebook_bp, url_prefix='/facebook')
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Facebook signin disabled"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Facebook signin disabled")
         log_message = 'Facebook signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -381,10 +392,10 @@ def setup_google_login(app):
             from pybossa.view.google import blueprint as google_bp
             app.register_blueprint(google_bp, url_prefix='/google')
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Google signin disabled"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Google signin disabled")
         log_message = 'Google signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -399,10 +410,10 @@ def setup_flickr_importer(app):
             importer_params = {'api_key': app.config['FLICKR_API_KEY']}
             importer.register_flickr_importer(importer_params)
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Flickr importer not available"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Flickr importer not available")
         log_message = 'Flickr importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -412,10 +423,10 @@ def setup_dropbox_importer(app):
         if app.config['DROPBOX_APP_KEY']:
             importer.register_dropbox_importer()
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Dropbox importer not available"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Dropbox importer not available")
         log_message = 'Dropbox importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -430,10 +441,10 @@ def setup_twitter_importer(app):
             }
             importer.register_twitter_importer(importer_params)
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Twitter importer not available"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Twitter importer not available")
         log_message = 'Twitter importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -446,10 +457,10 @@ def setup_youtube_importer(app):
             }
             importer.register_youtube_importer(importer_params)
     except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Youtube importer not available"
+        print(type(inst))
+        print(inst.args)
+        print(inst)
+        print("Youtube importer not available")
         log_message = 'Youtube importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
@@ -535,8 +546,8 @@ def setup_hooks(app):
     @app.context_processor
     def _global_template_context():
         notify_admin = False
-        if (current_user and current_user.is_authenticated()
-                and current_user.admin):
+        if (current_user and current_user.is_authenticated
+            and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
                 notify_admin = True
@@ -553,8 +564,8 @@ def setup_hooks(app):
         # Announcement sections
         if app.config.get('ANNOUNCEMENT'):
             announcement = app.config['ANNOUNCEMENT']
-            if current_user and current_user.is_authenticated():
-                for key in announcement.keys():
+            if current_user and current_user.is_authenticated:
+                for key in list(announcement.keys()):
                     if key == 'admin' and current_user.admin:
                         flash(announcement[key], 'info')
                     if key == 'owner' and len(current_user.projects) != 0:

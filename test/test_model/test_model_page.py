@@ -29,4 +29,5 @@ class TestModelPage(Test):
     def test_page_public_attributes(self):
         """Test public attributes works."""
         page = PageFactory.create()
-        assert page.public_attributes().sort() == page.dictize().keys().sort()
+        public_attributes = ['created', 'id', 'info', 'media_url', 'slug']
+        assert sorted(page.public_attributes()) == sorted(public_attributes)

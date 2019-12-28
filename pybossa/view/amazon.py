@@ -33,6 +33,6 @@ def objects(bucket):
         error = dict(action='GET',
                      status="failed",
                      status_code=status_code,
-                     exception_msg=str(e.message))
+                     exception_msg=str(e))
         return Response(json.dumps(error), status=status_code,
                         mimetype='application/json')

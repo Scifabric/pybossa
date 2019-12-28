@@ -25,7 +25,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 import copy
 from werkzeug.exceptions import BadRequest, Forbidden
 from flask_login import current_user
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
 from pybossa.util import is_reserved_name
@@ -54,7 +54,7 @@ class ProjectAPI(APIBase):
         category_ids = [c.id for c in get_categories()]
         default_category = get_categories()[0]
         inst.category_id = default_category.id
-        if 'category_id' in data.keys():
+        if 'category_id' in list(data.keys()):
             if int(data.get('category_id')) in category_ids:
                 inst.category_id = data.get('category_id')
             else:
@@ -62,7 +62,7 @@ class ProjectAPI(APIBase):
         return inst
 
     def _update_object(self, obj):
-        if not current_user.is_anonymous():
+        if not current_user.is_anonymous:
             obj.owner_id = current_user.id
             owners = obj.owners_ids or []
             if current_user.id not in owners:
@@ -78,7 +78,7 @@ class ProjectAPI(APIBase):
         auditlogger.add_log_entry(old_project, new_project, current_user)
 
     def _forbidden_attributes(self, data):
-        for key in data.keys():
+        for key in list(data.keys()):
             if key in self.reserved_keys:
                 if key == 'published':
                     raise Forbidden('You cannot publish a project via the API')
@@ -90,16 +90,16 @@ class ProjectAPI(APIBase):
         public.append('link')
         public.append('links')
         public.append('stats')
-        for key in tmp.keys():
+        for key in list(tmp.keys()):
             if key not in public:
                 del tmp[key]
-        for key in tmp['info'].keys():
+        for key in list(tmp['info'].keys()):
             if key not in Project().public_info_keys():
                 del tmp['info'][key]
         return tmp
 
     def _select_attributes(self, data):
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             data = self._filter_private_data(data)
             return data
         if (current_user.is_authenticated and

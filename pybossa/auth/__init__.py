@@ -27,20 +27,20 @@ import jwt
 from flask import jsonify
 from jwt import exceptions
 
-import project
-import projectstats
-import task
-import taskrun
-import category
-import user
-import token
-import announcement
-import blogpost
-import auditlog
-import webhook
-import result
-import helpingmaterial
-import page
+from . import project
+from . import projectstats
+from . import task
+from . import taskrun
+from . import category
+from . import user
+from . import token
+from . import announcement
+from . import blogpost
+from . import auditlog
+from . import webhook
+from . import result
+from . import helpingmaterial
+from . import page
 
 assert project
 assert projectstats
@@ -90,7 +90,7 @@ def is_authorized(user, action, resource, **kwargs):
 def ensure_authorized_to(action, resource, **kwargs):
     authorized = is_authorized(current_user, action, resource, **kwargs)
     if authorized is False:
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             raise abort(401)
         else:
             raise abort(403)
@@ -124,7 +124,12 @@ def jwt_authorize_project(project, payload):
             return handle_error(INVALID_HEADER_MISSING)
         parts = payload.split()
 
-        if parts[0].lower() != 'bearer':
+        if type(parts[0]) == bytes:
+            b = parts[0].lower()
+        else:
+            b = str(parts[0].lower()).encode('utf-8')
+
+        if b != b'bearer':
             return handle_error(INVALID_HEADER_BEARER)
         elif len(parts) == 1:
             return handle_error(INVALID_HEADER_TOKEN)

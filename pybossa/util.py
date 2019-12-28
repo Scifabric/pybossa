@@ -24,7 +24,7 @@ from functools import update_wrapper
 from flask_wtf import Form
 import csv
 import codecs
-import cStringIO
+import io
 from flask import abort, request, make_response, current_app, url_for
 from flask import redirect, render_template, jsonify, get_flashed_messages
 from flask_wtf.csrf import generate_csrf
@@ -78,7 +78,7 @@ def hash_last_flash_message():
         data['flash'] = message_and_status[1]
         data['status'] = message_and_status[0]
     json_data = json.dumps(data)
-    return base64.b64encode(json_data)
+    return base64.b64encode(json_data.encode('utf-8'))
 
 
 def handle_content_type(data):
@@ -90,7 +90,7 @@ def handle_content_type(data):
         if message_and_status:
             data['flash'] = message_and_status[1]
             data['status'] = message_and_status[0]
-        for item in data.keys():
+        for item in list(data.keys()):
             if isinstance(data[item], Form):
                 data[item] = form_to_json(data[item])
             if isinstance(data[item], Pagination):
@@ -120,14 +120,14 @@ def handle_content_type(data):
             if (item == 'category'):
                 data[item] = data[item].to_public_json()
 
-        if 'code' in data.keys():
+        if 'code' in list(data.keys()):
             return jsonify(data), data['code']
         else:
             return jsonify(data)
     else:
         template = data['template']
         del data['template']
-        if 'code' in data.keys():
+        if 'code' in list(data.keys()):
             error_code = data['code']
             del data['code']
             return render_template(template, **data), error_code
@@ -194,7 +194,7 @@ def pretty_date(time=False):
     """
     import dateutil.parser
     now = datetime.now()
-    if type(time) is str or type(time) is unicode:
+    if type(time) is str or type(time) is str:
         time = dateutil.parser.parse(time)
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
@@ -218,24 +218,24 @@ def pretty_date(time=False):
         if second_diff < 120:
             return "a minute ago"
         if second_diff < 3600:
-            return ' '.join([str(second_diff / 60), "minutes ago"])
+            return ' '.join([str(int(second_diff / 60)), "minutes ago"])
         if second_diff < 7200:
             return "an hour ago"
         if second_diff < 86400:
-            return ' '.join([str(second_diff / 3600), "hours ago"])
+            return ' '.join([str(int(second_diff / 3600)), "hours ago"])
     if day_diff == 1:
         return "Yesterday"
     if day_diff < 7:
-        return ' '.join([str(day_diff), "days ago"])
+        return ' '.join([str(int(day_diff)), "days ago"])
     if day_diff < 31:
-        return ' '.join([str(day_diff / 7), "weeks ago"])
+        return ' '.join([str(int(day_diff / 7)), "weeks ago"])
     if day_diff < 60:
-        return ' '.join([str(day_diff / 30), "month ago"])
+        return ' '.join([str(int(day_diff / 30)), "month ago"])
     if day_diff < 365:
-        return ' '.join([str(day_diff / 30), "months ago"])
+        return ' '.join([str(int(day_diff / 30)), "months ago"])
     if day_diff < (365 * 2):
-        return ' '.join([str(day_diff / 365), "year ago"])
-    return ' '.join([str(day_diff / 365), "years ago"])
+        return ' '.join([str(int(day_diff / 365)), "year ago"])
+    return ' '.join([str(int(day_diff / 365)), "years ago"])
 
 
 class Pagination(object):
@@ -267,7 +267,7 @@ class Pagination(object):
                    right_edge=0):
         """Iterate over pages."""
         last = 0
-        for num in xrange(1, self.pages + 1):
+        for num in range(1, self.pages + 1):
             if (num <= left_edge or
                     (num > self.page - left_current - 1 and
                      num < self.page + right_current) or
@@ -286,64 +286,9 @@ class Pagination(object):
                     prev=self.has_prev)
 
 
-def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
-    """Unicode CSV reader."""
-    # This code is taken from http://docs.python.org/library/csv.html#examples
-    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
-    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                            dialect=dialect, **kwargs)
-    for row in csv_reader:
-        # decode UTF-8 back to Unicode, cell by cell:
-        yield [unicode(cell, 'utf-8') for cell in row]
-
-
-def utf_8_encoder(unicode_csv_data):
-    """UTF8 encoder for CSV data."""
-    # This code is taken from http://docs.python.org/library/csv.html#examples
-    for line in unicode_csv_data:
-        yield line.encode('utf-8')
-
-
-class UnicodeWriter:
-
-    """A CSV writer which will write rows to CSV file "f"."""
-
-    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
-        """Init method."""
-        # Redirect output to a queue
-        self.queue = cStringIO.StringIO()
-        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
-        self.stream = f
-        self.encoder = codecs.getincrementalencoder(encoding)()
-
-    def writerow(self, row):
-        """Write row."""
-        line = []
-        for s in row:
-            if (type(s) == dict):
-                line.append(json.dumps(s))
-            else:
-                line.append(unicode(s).encode("utf-8"))
-        self.writer.writerow(line)
-        # Fetch UTF-8 output from the queue ...
-        data = self.queue.getvalue()
-        data = data.decode("utf-8")
-        # ... and reencode it into the target encoding
-        data = self.encoder.encode(data)
-        # write to the target stream
-        self.stream.write(data)
-        # empty queue
-        self.queue.truncate(0)
-
-    def writerows(self, rows):  # pragma: no cover
-        """Write rows."""
-        for row in rows:
-            self.writerow(row)
-
-
 def get_user_signup_method(user):
     """Return which OAuth sign up method the user used."""
-    msg = u'Sorry, there is already an account with the same e-mail.'
+    msg = 'Sorry, there is already an account with the same e-mail.'
     if user.info:
         # Google
         if user.info.get('google_token'):
@@ -385,10 +330,10 @@ def get_user_id_or_ip():
     """Return the id of the current user if is authenticated.
     Otherwise returns its IP address (defaults to 127.0.0.1).
     """
-    cp = CryptoPAn(current_app.config.get('CRYPTOPAN_KEY'))
-    user_id = current_user.id if current_user.is_authenticated() else None
+    cp = CryptoPAn(str.encode(current_app.config.get('CRYPTOPAN_KEY')))
+    user_id = current_user.id if current_user.is_authenticated else None
     user_ip = cp.anonymize(request.remote_addr or "127.0.0.1") \
-        if current_user.is_anonymous() else None
+        if current_user.is_anonymous else None
     external_uid = request.args.get('external_uid')
     return dict(user_id=user_id, user_ip=user_ip, external_uid=external_uid)
 
@@ -426,9 +371,9 @@ def is_reserved_name(blueprint, name):
 def username_from_full_name(username):
     """Takes a username that may contain several words with capital letters and
     returns a single word username, no spaces, all lowercases."""
-    if type(username) == str:
-        return username.decode('ascii', 'ignore').lower().replace(' ', '')
-    return username.encode('ascii', 'ignore').decode('utf-8').lower().replace(' ', '')
+    username = username.replace(' ', '')
+    username = username.lower()
+    return username.encode('ascii', 'ignore')
 
 
 def rank(projects, order_by=None, desc=False):
@@ -439,7 +384,7 @@ def rank(projects, order_by=None, desc=False):
     """
     def earned_points(project):
         points = 0
-        if project['overall_progress'] != 100L:
+        if project['overall_progress'] != 100:
             points += 1000
         if not ('test' in project['name'].lower()
                 or 'test' in project['short_name'].lower()):
@@ -566,11 +511,12 @@ def get_disqus_sso_payload(user):
         else:
             data = simplejson.dumps({})
         # encode the data to base64
-        message = base64.b64encode(data)
+        message = base64.b64encode(data.encode('utf-8'))
         # generate a timestamp for signing the message
         timestamp = int(time.time())
         # generate our hmac signature
-        sig = hmac.HMAC(DISQUS_SECRET_KEY, '%s %s' % (message, timestamp),
+        tmp = '{} {}'.format(message, timestamp).encode('utf-8')
+        sig = hmac.HMAC(DISQUS_SECRET_KEY.encode('utf-8'), tmp,
                         hashlib.sha1).hexdigest()
 
         return message, timestamp, sig, DISQUS_PUBLIC_KEY
@@ -622,8 +568,8 @@ def check_password_strength(
     pwd_len = len(password)
     if pwd_len < min_len or pwd_len > max_len:
         message = lazy_gettext(
-            u'Password must be between {0} and {1} characters'
-            .format(min_len, max_len))
+                    'Password must be between {0} and {1} characters'
+                    .format(min_len, max_len))
         return False, message
 
     valid = all(re.search(ch, password) for ch in required_chars)

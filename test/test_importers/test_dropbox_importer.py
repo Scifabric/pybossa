@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import string
 from pybossa.importers import BulkImportException
 from pybossa.importers.dropbox import BulkTaskDropboxImport
 from default import with_context
@@ -24,10 +23,10 @@ from default import with_context
 
 class TestBulkTaskDropboxImport(object):
 
-    dropbox_file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
-        u'"name":"test.txt",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+    dropbox_file_data = ('{"bytes":286,'
+        '"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
+        '"name":"test.txt",'
+        '"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
     @with_context
     def test_count_tasks_returns_0_if_no_files_to_import(self):
@@ -71,13 +70,13 @@ class TestBulkTaskDropboxImport(object):
     def test_tasks_attributes_for_image_files(self):
         #For image file extensions: link, filename, link_raw, url_m, url_b, title
         image_ext = ['png', 'jpg', 'jpeg', 'gif']
-        file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
-        u'"name":"test.extension",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.extension"}')
+        file_data = ('{"bytes":286,'
+        '"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        '"name":"test.extension",'
+        '"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.extension"}')
 
         for ext in image_ext:
-            data = string.replace(file_data,'extension', ext)
+            data = file_data.replace('extension', ext)
             form_data = {'files': [data]}
             tasks = BulkTaskDropboxImport(**form_data).tasks()
 
@@ -91,10 +90,10 @@ class TestBulkTaskDropboxImport(object):
     @with_context
     def test_tasks_attributes_for_pdf_files(self):
         #For pdf file extension: link, filename, link_raw, pdf_url
-        pdf_file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0",'
-        u'"name":"test.pdf",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+        pdf_file_data = ('{"bytes":286,'
+        '"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0",'
+        '"name":"test.pdf",'
+        '"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         form_data = {'files': [pdf_file_data]}
         tasks = BulkTaskDropboxImport(**form_data).tasks()
@@ -108,13 +107,13 @@ class TestBulkTaskDropboxImport(object):
     def test_tasks_attributes_for_video_files(self):
         #For video file extension: link, filename, link_raw, video_url
         video_ext = ['mp4', 'm4v', 'ogg', 'ogv', 'webm', 'avi']
-        file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
-        u'"name":"test.extension",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+        file_data = ('{"bytes":286,'
+        '"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        '"name":"test.extension",'
+        '"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         for ext in video_ext:
-            data = string.replace(file_data,'extension', ext)
+            data = file_data.replace('extension', ext)
             form_data = {'files': [data]}
             tasks = BulkTaskDropboxImport(**form_data).tasks()
 
@@ -127,13 +126,13 @@ class TestBulkTaskDropboxImport(object):
     def test_tasks_attributes_for_audio_files(self):
         #For audio file extension: link, filename, link_raw, audio_url
         audio_ext = ['mp4', 'm4a', 'mp3', 'ogg', 'oga', 'webm', 'wav']
-        file_data = (u'{"bytes":286,'
-        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
-        u'"name":"test.extension",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+        file_data = ('{"bytes":286,'
+        '"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        '"name":"test.extension",'
+        '"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         for ext in audio_ext:
-            data = string.replace(file_data,'extension', ext)
+            data = file_data.replace('extension', ext)
             form_data = {'files': [data]}
             tasks = BulkTaskDropboxImport(**form_data).tasks()
 

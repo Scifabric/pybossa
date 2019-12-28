@@ -31,10 +31,10 @@ class UserFactory(BaseFactory):
         return user
 
     id = factory.Sequence(lambda n: n)
-    name = factory.Sequence(lambda n: u'user%d' % n)
-    fullname = factory.Sequence(lambda n: u'User %d' % n)
-    email_addr = factory.LazyAttribute(lambda usr: u'%s@test.com' % usr.name)
-    locale = u'en'
+    name = factory.Sequence(lambda n: 'user%d' % n)
+    fullname = factory.Sequence(lambda n: 'User %d' % n)
+    email_addr = factory.LazyAttribute(lambda usr: '%s@test.com' % usr.name)
+    locale = 'en'
     admin = False
     pro = False
     ldap = None
@@ -42,7 +42,7 @@ class UserFactory(BaseFactory):
     privacy_mode = True
     restrict = False
     consent = False
-    api_key = factory.Sequence(lambda n: u'api-key%d' % n)
+    api_key = factory.Sequence(lambda n: 'api-key%d' % n)
     info = dict(foo='bar', container='container',
                 avatar='img.png',
                 avatar_url='http://cdn.com/container/img.png')

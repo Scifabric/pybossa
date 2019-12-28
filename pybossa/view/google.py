@@ -50,7 +50,7 @@ def login():  # pragma: no cover
 @google.oauth.tokengetter
 def get_google_token():  # pragma: no cover
     """Get Google Token from session."""
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         return session.get('oauth_token')
     else:
         return (current_user.info['google_token']['oauth_token'], '')
@@ -61,8 +61,8 @@ def oauth_authorized():  # pragma: no cover
     """Authorize Oauth."""
     resp = google.oauth.authorized_response()
     if resp is None or request.args.get('error'):
-        flash(u'You denied the request to sign in.', 'error')
-        flash(u'Reason: ' + request.args['error'], 'error')
+        flash('You denied the request to sign in.', 'error')
+        flash('Reason: ' + request.args['error'], 'error')
         if request.args.get('error'):
             current_app.logger.error(resp)
             return redirect(url_for_app_type('account.signin',
@@ -101,7 +101,7 @@ def manage_user(access_token, user_data):
 
     user = user_repo.get_by(google_user_id=user_data['id'])
     google_token = dict(oauth_token=access_token)
-
+    print("user", user)
     # user never signed on
     if user is None:
         info = dict(google_token=google_token)
@@ -109,8 +109,11 @@ def manage_user(access_token, user_data):
         user = user_repo.get_by_name(name)
 
         email = user_repo.get_by(email_addr=user_data['email'])
+        print("email", email)
 
         if ((user is None) and (email is None)):
+            if type(name) == bytes:
+                name = name.decode('utf-8')
             user = User(fullname=user_data['name'],
                         name=name,
                         email_addr=user_data['email'],
@@ -125,8 +128,8 @@ def manage_user(access_token, user_data):
     else:
         user.info['google_token'] = google_token
         # Update the name to fit with new paradigm to avoid UTF8 problems
-        if type(user.name) == unicode or ' ' in user.name:
-            user.name = username_from_full_name(user.name)
+        if type(user.name) == str or ' ' in user.name:
+            user.name = username_from_full_name(user.name).decode('utf-8')
         user_repo.save(user)
         return user
 

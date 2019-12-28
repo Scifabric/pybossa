@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * page
 
 """
-from api_base import APIBase
+from .api_base import APIBase
 from pybossa.model.page import Page
 from flask_login import current_user
 from werkzeug.exceptions import BadRequest
@@ -42,5 +42,5 @@ class PageAPI(APIBase):
                 raise BadRequest("Reserved keys in payload")
 
     def _update_object(self, obj):
-        if not current_user.is_anonymous():
+        if not current_user.is_anonymous:
             obj.user_id = current_user.id

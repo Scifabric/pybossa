@@ -25,7 +25,6 @@ from pybossa.exporter import Exporter
 from pybossa.core import uploader, task_repo
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
-from pybossa.util import UnicodeWriter
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 import pandas as pd
@@ -43,11 +42,11 @@ class CsvExporter(Exporter):
         dataframe = self._respond_csv(ty, project.id)
         if dataframe is not None:
             info_dataframe = self._respond_csv(ty, project.id, info_only=True)
-            datafile = tempfile.NamedTemporaryFile()
-            info_datafile = tempfile.NamedTemporaryFile()
+            datafile = tempfile.NamedTemporaryFile(mode='w')
+            info_datafile = tempfile.NamedTemporaryFile(mode='w')
             try:
-                dataframe.to_csv(datafile, index=False,
-                                 encoding='utf-8')
+                dataframe.to_csv(
+                    datafile, index=False, encoding='utf-8')
                 info_dataframe.to_csv(
                     info_datafile, index=False, encoding='utf-8')
                 datafile.flush()
@@ -74,7 +73,7 @@ class CsvExporter(Exporter):
         return super(CsvExporter, self).download_name(project, ty, 'csv')
 
     def pregenerate_zip_files(self, project):
-        print "%d (csv)" % project.id
+        print("%d (csv)" % project.id)
         self._make_zip(project, "task")
         self._make_zip(project, "task_run")
         self._make_zip(project, "result")

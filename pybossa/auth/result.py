@@ -38,7 +38,7 @@ class ResultAuth(object):
         return True
 
     def _update(self, user, result):
-        if user.is_anonymous():
+        if user.is_anonymous:
             return False
         project = self._get_project(result, result.project_id)
         return user.id in project.owners_ids or user.admin

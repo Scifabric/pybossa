@@ -31,13 +31,14 @@ PYBOSSA allows data capture for further analysis made by users in a transparent 
 
 # PYBOSSA for python 3
 
-We've finally migrated PYBOSSA to python 3. We're not going to merge into master until we test it in production a bit
-more, so please, help us by testing it. All you have to do is basically, check out the python3 branch (migrate-python3) and run
-it. Then, any bug, issue you find, you just report it and we will be happy to help you.
+PYBOSSA runs in python >= 3.6. While 3.8 has been released recently, it needs testing before officially support it.
+
+If you have a python2.7 server, please, checkout the python2.7 branch and use that one for your server. 
 
 ## Get professional support
 
-You can hire us to help you with your PYBOSSA project. Go to our website, and [contact us](https://scifabric.com/).
+You can hire us to help you with your PYBOSSA project or server (specially for python 2.7). Go to our website, and [contact us](https://scifabric.com/).
+
 
 ### Supporting PYBOSSA
 

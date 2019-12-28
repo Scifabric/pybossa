@@ -144,14 +144,14 @@ class Helper(Test):
         with self.flask_app.app_context():
             categories = db.session.query(Category).all()
             if len(categories) == 0:
-                print "Categories 0"
-                print "Creating default ones"
+                print("Categories 0")
+                print("Creating default ones")
                 self._create_categories()
 
 
     def new_project(self, method="POST", name="Sample Project",
                         short_name="sampleapp", description="Description",
-                        long_description=u'Long Description\n================'):
+                        long_description='Long Description\n================'):
         """Helper function to create a project"""
         if method == "POST":
             self.create_categories()
@@ -263,7 +263,7 @@ class Helper(Test):
         # Checks for existence of a cookie and verifies the value of it
         cookies = response.headers.getlist('Set-Cookie')
         for cookie in cookies:
-            c_key, c_value = parse_cookie(cookie).items()[0]
+            c_key, c_value = list(parse_cookie(cookie).items())[0]
             if c_key == name:
                 return c_value
         # Cookie not found

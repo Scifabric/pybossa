@@ -82,7 +82,7 @@ class TestProjectsCache(Test):
         featured = cached_projects.get_featured()[0]
 
         for field in fields:
-            assert featured.has_key(field), "%s not in project info" % field
+            assert field in featured, "%s not in project info" % field
 
 
     @with_context
@@ -133,7 +133,7 @@ class TestProjectsCache(Test):
         retrieved_project = cached_projects.get(project.category.short_name)[0]
 
         for field in fields:
-            assert retrieved_project.has_key(field), "%s not in project info" % field
+            assert field in retrieved_project, "%s not in project info" % field
 
 
     @with_context
@@ -159,7 +159,7 @@ class TestProjectsCache(Test):
         draft = cached_projects.get_draft()[0]
 
         for field in fields:
-            assert draft.has_key(field), "%s not in project info" % field
+            assert field in draft, "%s not in project info" % field
             if field == 'info':
                 assert sorted(draft['info'].keys()) == sorted(Project().public_info_keys())
 
@@ -453,6 +453,7 @@ class TestProjectsCache(Test):
     def test_n_count_calls_n_draft(self, _n_draft, pickle):
         """Test CACHE PROJECTS n_count calls _n_draft when called with argument
         'draft'"""
+        pickle.dumps.return_value = 'str'
         cached_projects.n_count('draft')
 
         _n_draft.assert_called_with()
@@ -464,6 +465,7 @@ class TestProjectsCache(Test):
     def test_n_count_calls_n_featuredt(self, _n_featured, pickle):
         """Test CACHE PROJECTS n_count calls _n_featured when called with
         argument 'featured'"""
+        pickle.dumps.return_value = 'str'
         cached_projects.n_count('featured')
 
         _n_featured.assert_called_with()
@@ -541,7 +543,7 @@ class TestProjectsCache(Test):
         pro_owned_projects = cached_projects.get_from_pro_user()
 
         for field in fields:
-            assert field in pro_owned_projects[0].keys(), field
+            assert field in list(pro_owned_projects[0].keys()), field
 
 
     @with_context
