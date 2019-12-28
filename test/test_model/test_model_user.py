@@ -106,13 +106,16 @@ class TestModelUser(Test):
             fullname="John Doe",
             locale="en")
         public_attributes = ['created', 'name', 'fullname', 'locale', 'info',
-                             'task_runs', 'registered_ago', 'rank', 'score']
+                             'n_answers', 
+                             'registered_ago', 'rank', 'score']
 
         user.set_password("juandiso")
-        assert public_attributes.sort() == user.public_attributes().sort()
+        print(sorted(public_attributes))
+        print(sorted(user.public_attributes()))
+        assert sorted(public_attributes) == sorted(user.public_attributes())
         data = user.to_public_json()
         err_msg = "There are some keys that should not be public"
-        assert list(data.keys()).sort() == public_attributes.sort(), err_msg
+        assert sorted(list(data.keys())) == sorted(public_attributes), err_msg
         all_attributes = list(user.dictize().keys())
         s = set(public_attributes)
         private_attributes = [x for x in all_attributes if x not in s]
