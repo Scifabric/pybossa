@@ -22,12 +22,13 @@ from pybossa.cache.task_browse_helpers import get_task_filters
 from itertools import chain
 
 USER_FIELDS = [
-    '"user".id         AS {}id',
-    '"user".name       AS {}name',
-    '"user".created    AS {}created',
-    '"user".email_addr AS {}email_addr',
-    '"user".fullname   AS {}fullname',
-    '"user".user_pref  AS {}user_pref'
+    '"user".id                                  AS {}id',
+    '"user".name                                AS {}name',
+    '"user".created                             AS {}created',
+    '"user".email_addr                          AS {}email_addr',
+    '"user".fullname                            AS {}fullname',
+    '"user".user_pref                           AS {}user_pref',
+    '("user".info)->\'metadata\'->\'user_type\' AS {}user_type'
 ]
 
 TASKRUN_FIELDS_WITHOUT_GOLD = [
