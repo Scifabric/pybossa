@@ -539,13 +539,29 @@ def disable_users_job():
     from pybossa.model.user import User
     from pybossa.core import db, user_repo
     from pybossa.util import generate_manage_user_email
-    sql = text('''Select id
-                  FROM "user"
-                  WHERE current_timestamp - to_timestamp(last_login, 'YYYY-MM-DD"T"HH24:MI:SS.US') > interval '3 month'
-                  AND enabled = true;
-               ''')
+
+    user_interval = current_app.config.get('STALE_USERS_MONTHS') or 3
+    ext_user_interval = current_app.config.get('EXTENDED_STALE_USERS_MONTHS') or 9
+    ext_user_domains = current_app.config.get('EXTENDED_STALE_USERS_DOMAINS') or []
+
+    if ext_user_domains:
+        ext_users_filter = ' OR '.join('(u.email_addr LIKE \'%{}\')'.format(domain) for domain in ext_user_domains)
+        where = '''((u.inactivity > interval '{} month') AND NOT ({})) OR
+                   ((u.inactivity > interval '{} month') AND ({}))'''.format(user_interval, ext_users_filter,
+                                                                             ext_user_interval, ext_users_filter)
+    else:
+        where = 'u.inactivity > interval \'{} month\''.format(user_interval)
+
+    sql = text('''
+        SELECT id FROM (
+            SELECT id, enabled, email_addr, (current_timestamp - to_timestamp(last_login, 'YYYY-MM-DD"T"HH24:MI:SS.US')) AS inactivity
+            FROM "user"
+        ) u
+        WHERE ({}) AND u.enabled = true;
+    '''.format(where))
     results = db.slave_session.execute(sql)
     users_disabled = []
+
     for row in results:
         user = User.query.get(row.id)
         user.enabled = False
