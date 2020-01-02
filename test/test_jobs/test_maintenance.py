@@ -76,6 +76,31 @@ class TestMaintenance(Test):
         assert not mock_send_mail.called
 
     @with_context
+    def test_disable_users_jobs_extended(self):
+        """Test disable extended users jobs works."""
+        users = UserFactory.create_batch(1, email_addr='test1@user.com')
+        date_old = (datetime.datetime.utcnow() -  datetime.timedelta(91)).isoformat()
+        users += UserFactory.create_batch(1, email_addr='test2@user.com', created=date_old, last_login=date_old)
+        users += UserFactory.create_batch(1, email_addr='test1@extended.com', created=date_old, last_login=date_old)
+        ext_date_old = (datetime.datetime.utcnow() -  datetime.timedelta(300)).isoformat()
+        users += UserFactory.create_batch(1, email_addr='test2@extended.com', created=ext_date_old, last_login=ext_date_old)
+
+        patch_dict = {
+            'STALE_USERS_MONTHS': 3,
+            'EXTENDED_STALE_USERS_MONTHS': 9,
+            'EXTENDED_STALE_USERS_DOMAINS': ['extended.com']
+        }
+
+        with patch.dict(self.flask_app.config, patch_dict):
+            disable_users_job()
+
+        assert users[0].enabled, 'recent user should be enabled'
+        assert not users[1].enabled, 'stale user should be disabled'
+        assert users[2].enabled, 'recent extended user should be enabled'
+        assert not users[3].enabled, 'stale extended user should be disabled'
+
+
+    @with_context
     def test_disable_users_jobs(self):
         """Test disable users jobs works."""
         users = UserFactory.create_batch(1, email_addr='test1@user.com')
@@ -84,9 +109,17 @@ class TestMaintenance(Test):
         users += UserFactory.create_batch(1, email_addr='test1@extended.com', created=date_old, last_login=date_old)
         ext_date_old = (datetime.datetime.utcnow() -  datetime.timedelta(300)).isoformat()
         users += UserFactory.create_batch(1, email_addr='test2@extended.com', created=ext_date_old, last_login=ext_date_old)
-        res = disable_users_job()
+
+        patch_dict = {
+            'STALE_USERS_MONTHS': None,
+            'EXTENDED_STALE_USERS_MONTHS': None,
+            'EXTENDED_STALE_USERS_DOMAINS': None
+        }
+
+        with patch.dict(self.flask_app.config, patch_dict):
+            disable_users_job()
 
         assert users[0].enabled, 'recent user should be enabled'
         assert not users[1].enabled, 'stale user should be disabled'
-        assert users[2].enabled, 'recent extended user should be enabled'
+        assert not users[2].enabled, 'recent extended user should be enabled'
         assert not users[3].enabled, 'stale extended user should be disabled'
