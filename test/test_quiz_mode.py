@@ -67,6 +67,67 @@ class TestScheduler(QuizTest):
         task = json.loads(response.data)
         assert any(task['id'] == non_golden_task.id for non_golden_task in non_golden_tasks)
 
+    @with_context
+    def test_project_quiz_enabled_and_user_quiz_enabled_result_quiz_mode_enabled(self):
+        '''Test that the user can see quiz mode if the user is In Progress for quiz mode and quiz mode is enabled for the project'''
+        '''See also: pybossa/api/__init__.py line 270
+           quiz_mode_enabled = user.get_quiz_in_progress(project) and project.info["quiz"]["enabled"]'''
+        project, user = self.create_project_and_user()
+
+        # Enable quiz mode on the project.
+        quiz = project.get_quiz()
+        quiz["enabled"] = True
+        project.set_quiz(quiz)
+
+        # Enable quiz mode on the user.
+        user.set_quiz_status(project, 'in_progress')
+
+        # Checks.
+        is_in_progress = user.get_quiz_in_progress(project)
+        is_user_quiz_enabled = user.get_quiz_enabled(project)
+
+        assert is_in_progress == True
+        assert is_user_quiz_enabled == True
+
+        golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
+        non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
+        url = '/api/project/{}/newtask'.format(project.id)
+        response = self.app.get(url)
+        task = json.loads(response.data)
+
+        # Verify the user has received a golden task.
+        assert any(task['id'] == golden_task.id for golden_task in golden_tasks)
+
+    @with_context
+    def test_project_quiz_disabled_and_user_quiz_enabled_result_quiz_mode_disabled(self):
+        '''Test that the user receives normal tasks if the project quiz mode is disabled but the user quiz status is in_progress'''
+        '''See also: pybossa/api/__init__.py line 270
+           quiz_mode_enabled = user.get_quiz_in_progress(project) and project.info["quiz"]["enabled"]'''
+        project, user = self.create_project_and_user()
+
+        # Disable quiz mode on the project.
+        quiz = project.get_quiz()
+        quiz["enabled"] = False
+        project.set_quiz(quiz)
+
+        # Enable quiz mode on the user.
+        user.set_quiz_status(project, 'in_progress')
+
+        # Checks.
+        is_in_progress = user.get_quiz_in_progress(project)
+        is_user_quiz_enabled = user.get_quiz_enabled(project)
+
+        assert is_in_progress == True
+        assert is_user_quiz_enabled == False
+
+        golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=1)
+        non_golden_tasks = TaskFactory.create_batch(10, project=project, n_answers=1, calibration=0)
+        url = '/api/project/{}/newtask'.format(project.id)
+        response = self.app.get(url)
+        task = json.loads(response.data)
+
+        # Verify the user has received a normal task.
+        assert any(task['id'] == non_golden_task.id for non_golden_task in non_golden_tasks)
 
 class TestQuizUpdate(QuizTest):
 

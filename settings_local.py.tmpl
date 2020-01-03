@@ -458,7 +458,7 @@ WIZARD_STEPS = OrderedDict([
         'visible_checks': {'and': ['project_exist'], 'or': []}
     }),
     ('task_imports', {
-        'title': 'Task Imports',
+        'title': 'Import Tasks',
         'icon': 'fa fa-file',
         'href': {'url_for': 'project.import_task',
                  'args': ['short_name']},
@@ -471,14 +471,14 @@ WIZARD_STEPS = OrderedDict([
         'icon': 'fa fa-pencil',
         'href': {'url_for': 'project.task_presenter_editor',
                  'args': ['short_name']},
-        'done_checks': {'and': ['task_presenter'], 'or': []},
-        'enable_checks': {'and': ['tasks_amount'], 'or': ['task_presenter', 'project_publish']},
+        'done_checks': {'and': ['task_presenter', 'task_guidelines'], 'or': []},
+        'enable_checks': {'and': ['tasks_amount'], 'or': ['task_presenter', 'task_guidelines', 'project_publish']},
         'visible_checks': {'always': True}
     }),
     ('task_settings', {
-        'title': 'Task Settings',
+        'title': 'Settings',
         'icon': 'fa fa-cogs',
-        'href': {'url_for': 'project.task_settings',
+        'href': {'url_for': 'project.summary',
                  'args': ['short_name']},
         'done_checks': {'and': ['task_presenter', 'tasks_amount'], 'or': ['project_publish']},
         'enable_checks': {'and': ['task_presenter', 'tasks_amount'], 'or': ['project_publish']},
@@ -488,7 +488,7 @@ WIZARD_STEPS = OrderedDict([
         'title': 'Publish',
         'icon': 'fa fa-check',
         'href': {'url_for': 'project.publish',
-                 'args': ['short_name', 'published']},
+                 'args': ['short_name']},
         'done_checks': {'always': False},
         'enable_checks': {'and': ['task_presenter', 'tasks_amount'], 'or': ['project_publish']},
         'visible_checks': {'and': ['not_project_publish'], 'or': ['not_project_exist']},
@@ -496,11 +496,10 @@ WIZARD_STEPS = OrderedDict([
     ('published', {
         'title': 'Published',
         'icon': 'fa fa-check',
-        'href': {'url_for': 'project.details',
+        'href': {'url_for': 'project.publish',
                  'args': ['short_name']},
         'done_checks': {'always': True},
         'enable_checks': {'always': True},
         'visible_checks': {'and': ['project_publish'], 'or': []},
     })]
 )
-

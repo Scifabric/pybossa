@@ -266,6 +266,9 @@ def _retrieve_new_task(project_id):
     # with the user. So we want to commit that snapshot if this is the first access.
     user_repo.update(user)
 
+    # Allow scheduling a gold-only task if quiz mode is enabled for the user and the project.
+    quiz_mode_enabled = user.get_quiz_in_progress(project) and project.info["quiz"]["enabled"]
+
     task = sched.new_task(project.id,
                           project.info.get('sched'),
                           user_id,
@@ -276,7 +279,7 @@ def _retrieve_new_task(project_id):
                           orderby=orderby,
                           desc=desc,
                           rand_within_priority=sched_rand_within_priority,
-                          gold_only=user.get_quiz_in_progress(project))
+                          gold_only=quiz_mode_enabled)
 
     handler = partial(pwd_manager.update_response, project=project,
                       user=user_id_or_ip)
