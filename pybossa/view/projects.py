@@ -3066,19 +3066,18 @@ def project_config(short_name):
             input_forms.append(content)
             for field in content.get('fields', []):
                 ext_config_field_name.append(field['name'])
-        ext_config_dict = {name: None for name in ext_config_field_name}
-        update_ext_config_dict(ext_config_dict)
+        ext_config_dict = flatten_ext_config()
         return input_forms, ext_config_dict
 
-    def update_ext_config_dict(config):
+    def flatten_ext_config():
         '''
         update dict with values from project.info.ext_config
         '''
+        config = {}
         for _, fields in six.iteritems(ext_config):
             for key, value in six.iteritems(fields):
                 config[key] = value
-                if not value:
-                    config.pop(key)
+        return {k: v for k, v in six.iteritems(config) if v}
 
     def integrate_ext_config(config_dict):
         '''
@@ -3093,7 +3092,6 @@ def project_config(short_name):
                     cf[name] = config_dict[name]
             if cf:
                 new_config[fieldname] = cf
-        print(new_config)
         return new_config
 
     if request.method == 'POST':
@@ -3112,7 +3110,6 @@ def project_config(short_name):
     ext_config = project.info.get('ext_config', {})
     input_forms, ext_config_dict = generate_input_forms_and_external_config_dict()
     data_access = project.info.get('data_access') or []
-
     response = dict(template='/projects/summary.html',
                     external_config_dict=json.dumps(ext_config_dict),
                     forms=input_forms,
@@ -3151,10 +3148,8 @@ def ext_config(short_name):
                 form = form_class()
                 if not form.validate():
                     flash(gettext('Please correct the errors', 'error'))
-                ext_conf[form_name] = form.data
+                ext_conf[form_name] = {k: v for k, v in six.iteritems(form.data) if v}
                 ext_conf[form_name].pop('csrf_token', None)     #Fflask-wtf v0.14.2 issue 102
-                if not ext_conf[form_name].get('bpv_key_id'):
-                    ext_conf[form_name].pop('bpv_key_id', None)
                 project.info['ext_config'] = ext_conf
                 project_repo.save(project)
                 sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)

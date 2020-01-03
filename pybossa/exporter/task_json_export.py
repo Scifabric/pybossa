@@ -69,7 +69,8 @@ class TaskJsonExporter(JsonExporter):
 
         try:
             user = t.user.dictize()
-            allowed_attributes = ['name', 'fullname', 'created',
+            user['user_type'] = user.get('info', {}).get('metadata', {}).get('user_type')
+            allowed_attributes = ['name', 'fullname', 'user_type', 'created',
                                   'email_addr', 'admin', 'subadmin']
             user = {k: v for (k, v) in user.iteritems() if k in allowed_attributes}
             obj_dict['user'] = user
