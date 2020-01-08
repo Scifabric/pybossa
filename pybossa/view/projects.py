@@ -3496,10 +3496,7 @@ def annotation_config(short_name):
         'provider',
         'restrictions_and_permissioning',
         'sampling_method',
-        'sampling_script',
-        'label_aggregation_strategy',
-        'task_input_schema',
-        'task_output_schema'
+        'sampling_script'
     ]
 
     for field_name in annotation_fields:
