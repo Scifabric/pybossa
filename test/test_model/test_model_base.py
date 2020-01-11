@@ -164,8 +164,8 @@ class TestModelBase(Test):
 
         project = db.session.query(Project).get(project_id)
         assert project.name == 'My New Project', project
-        # year would start with 201...
-        assert project.created.startswith('201'), project.created
+        # year would start with 202...
+        assert project.created.startswith('202'), project.created
         assert len(project.tasks) == 1, project
         assert project.owner.name == username, project
         out_task = project.tasks[0]
