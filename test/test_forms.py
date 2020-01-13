@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import date, timedelta
 from wtforms import ValidationError
 from nose.tools import raises, assert_raises
 from flask import current_app
@@ -23,7 +24,8 @@ from flask import current_app
 from default import Test, db, with_context
 from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
     USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH, BulkTaskLocalCSVImportForm,
-    RegisterFormWithUserPrefMetadata, UserPrefMetadataForm)
+    RegisterFormWithUserPrefMetadata, UserPrefMetadataForm,
+    ProjectReportForm)
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
@@ -110,6 +112,31 @@ class TestValidator(Test):
         u = validator.CheckPasswordStrength(uppercase=None,
                 lowercase=None, numeric=None, special=None)
         u.__call__(form, form.password)
+
+    @with_context
+    @raises(ValidationError)
+    def test_future_date_fails_not_in_future(self):
+        """Test VALIDATOR NotInFutureValidator with future date """
+        form = ProjectReportForm()
+        form.end_date.data = date.today() + timedelta(days=1)
+        u = validator.NotInFutureValidator()
+        u(form, form.end_date)
+
+    @with_context
+    def test_past_date_passes_not_in_future(self):
+        """Test VALIDATOR NotInFutureValidator with past date """
+        form = ProjectReportForm()
+        form.end_date.data = date.today() - timedelta(days=1)
+        u = validator.NotInFutureValidator()
+        u(form, form.end_date)
+
+    @with_context
+    def test_today_passes_not_in_future(self):
+        """Test VALIDATOR NotInFutureValidator with today date """
+        form = ProjectReportForm()
+        form.end_date.data = date.today()
+        u = validator.NotInFutureValidator()
+        u(form, form.end_date)
 
 
 class TestRegisterForm(Test):

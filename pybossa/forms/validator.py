@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import date
 from flask_babel import lazy_gettext
 from wtforms.validators import ValidationError
 import re
@@ -222,4 +223,13 @@ class EndDateValidator(object):
             return
 
         if form.start_date.data > form.end_date.data:
+            raise ValidationError(self.message)
+
+class NotInFutureValidator(object):
+    """Ensures that a date is not in the future."""
+    def __init__(self, message="Date cannot be greater than today's date."):
+        self.message = lazy_gettext(message)
+
+    def __call__(self, form, field):
+        if field.data > date.today():
             raise ValidationError(self.message)

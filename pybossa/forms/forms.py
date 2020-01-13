@@ -54,7 +54,6 @@ from iiif_prezi.loader import ManifestReader
 from wtforms.validators import NumberRange
 from wtforms.fields.html5 import DateField
 from wtforms_components import DateRange
-from datetime import date
 
 
 EMAIL_MAX_LENGTH = 254
@@ -831,13 +830,16 @@ class ProjectReportForm(Form):
 
     start_date = DateField(
         lazy_gettext('Start date'), format='%Y-%m-%d',
-        validators=[validators.Optional(),
-            DateRange(max=date.today(),message="Date cannot be greater than todays date.")
+        validators=[
+            validators.Optional(),
+            pb_validator.NotInFutureValidator()
         ]
     )
     end_date = DateField(
         lazy_gettext('End date'), format='%Y-%m-%d',
-        validators=[pb_validator.EndDateValidator(), validators.Optional(),
-            DateRange(max=date.today(),message="Date cannot be greater than today's date."),
+        validators=[
+            pb_validator.EndDateValidator(),
+            validators.Optional(),
+            pb_validator.NotInFutureValidator()
         ]
     )
