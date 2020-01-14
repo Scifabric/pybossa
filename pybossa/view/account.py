@@ -1147,7 +1147,7 @@ def get_form_data(request, user, disabled_fields):
     return result
 
 def get_user_data_as_form(user):
-    user_pref = user.user_pref
+    user_pref = user.user_pref or {}
     metadata = user.info.get('metadata', {})
     return {
         'languages': user_pref.get('languages'),
