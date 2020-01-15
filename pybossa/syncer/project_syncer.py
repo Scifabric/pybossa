@@ -89,6 +89,7 @@ class ProjectSyncer(Syncer):
         payload = self._sync_category(project.category_id, payload)
         payload = self._merge_github_keys(project_dict, payload)
 
+        payload['info'].pop('ext_config', None)
         return payload
 
     def _merge_pass_through_keys(self, project_dict, target):
