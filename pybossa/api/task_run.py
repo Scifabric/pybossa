@@ -36,7 +36,6 @@ from werkzeug.exceptions import Forbidden, BadRequest
 from api_base import APIBase
 from pybossa.model.task_run import TaskRun
 from pybossa.util import get_user_id_or_ip
-from pybossa.cache.projects import get_project_data
 from pybossa.core import task_repo, sentinel, anonymizer, project_repo, user_repo, task_repo
 from pybossa.core import performance_stats_repo
 from pybossa.cloud_store_api.s3 import s3_upload_from_string
@@ -216,10 +215,10 @@ def update_gold_stats(user_id, task_id, data, gold_answers=None):
     task = task_repo.get_task(task_id)
     if not task.calibration:
         return
-    
+
     if gold_answers is None:
         gold_answers = get_gold_answers(task)
-    answer_fields = get_project_data(task.project_id)['info'].get('answer_fields', {})
+    answer_fields = project_repo.get(task.project_id).info.get('answer_fields', {})
     answer = data['info']
     _update_gold_stats(
         task.project_id,
@@ -295,5 +294,3 @@ def preprocess_task_run(project_id, task_id, data):
         path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
         _upload_files_from_json(info, path, with_encryption)
         _upload_files_from_request(info, request.files, path, with_encryption)
-
-
