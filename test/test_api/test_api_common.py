@@ -18,7 +18,6 @@
 import json
 import datetime
 from default import with_context
-from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 from pybossa.core import project_repo
 
@@ -470,4 +469,3 @@ class TestApiCommon(TestAPI):
             assert "Statistics" in res.data
             assert 'id="percent-completed"' in res.data
             assert "<div>100%</div>" in res.data
-

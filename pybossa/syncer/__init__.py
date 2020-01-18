@@ -106,7 +106,7 @@ class Syncer(object):
         :param obj: A domain object
         :return: an HTTP response object
         """
-        raise NotImplemented
+        raise NotImplementedError('')
 
     def undo_sync(self, obj):
         """Undo a sync action by getting the target's
@@ -116,7 +116,7 @@ class Syncer(object):
         :param obj: A domain object
         :return: an HTTP response object
         """
-        raise NotImplemented
+        raise NotImplementedError('')
 
     def _create(self, payload, api_key):
         url = '{}/api/{}'.format(

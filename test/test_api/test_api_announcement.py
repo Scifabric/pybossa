@@ -23,7 +23,6 @@ from factories import AnnouncementFactory
 from factories import UserFactory
 from pybossa.repositories import AnnouncementRepository
 from mock import patch
-from nose.tools import assert_raises
 
 announcement_repo = AnnouncementRepository(db)
 

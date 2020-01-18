@@ -21,6 +21,7 @@ from mock import patch, Mock
 from pybossa.syncer import Syncer
 from default import Test, with_context
 from factories import ProjectFactory
+from nose.tools import assert_raises
 
 
 class TestSyncer(Test):
@@ -59,3 +60,7 @@ class TestSyncer(Test):
         res.ok = True
         res.content = json.dumps([])
         assert self.syncer.get_target() is None
+
+    def test_not_implemented(self):
+        assert_raises(NotImplementedError, self.syncer.sync, 'a')
+        assert_raises(NotImplementedError, self.syncer.undo_sync, 'a')
