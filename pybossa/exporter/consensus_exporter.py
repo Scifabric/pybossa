@@ -115,6 +115,7 @@ def get_consensus_data(project_id, filters):
         SELECT
             task.id as task_id,
             task.project_id as project_id,
+            task.calibration as gold,
             r.info as consensus,
             taskruns.task_run__id as task_run__id,
             taskruns.task_run__created as task_run__created,
@@ -141,7 +142,7 @@ def get_consensus_data(project_id, filters):
         LEFT JOIN result r
             ON task.id = r.task_id
             AND r.last_version = True
-        WHERE task.state = 'completed'
+        WHERE (task.state = 'completed' OR task.calibration = 1)
         AND task.project_id=:project_id
         {};
     '''.format(conditions))
@@ -156,6 +157,7 @@ def get_consensus_data_metadata(project_id, filters):
         SELECT
             task.id as task_id,
             task.project_id as project_id,
+            task.calibration as gold,
             task.info as task_info,
             task.user_pref as user_pref,
             r.info as consensus,
@@ -188,7 +190,7 @@ def get_consensus_data_metadata(project_id, filters):
         LEFT JOIN result r
             ON task.id = r.task_id
             AND r.last_version = True
-        WHERE task.state = 'completed'
+        WHERE (task.state = 'completed' OR task.calibration = 1)
         AND task.project_id=:project_id
         {};
     '''.format(conditions))
