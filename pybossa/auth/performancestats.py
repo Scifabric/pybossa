@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+from .project import ProjectAuth
 
 
 class PerformanceStatsAuth(object):
@@ -36,7 +37,7 @@ class PerformanceStatsAuth(object):
             return False
         if not stat:
             return True
-        if user.admin or user.subadmin:
+        if user.admin:
             return True
         project = self.project_repo.get(stat.project_id)
-        return user.id in project.owners_ids
+        return ProjectAuth().can(user, 'read', project)
