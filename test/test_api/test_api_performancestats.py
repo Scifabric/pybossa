@@ -76,7 +76,7 @@ class TestPerformanceStatsAPI(TestAPI):
 
         res = self.app.get('{}?api_key={}&all=1'.format(url, user.api_key))
         data = json.loads(res.data)
-        assert not data
+        assert len(data) == 1
 
     @with_context
     def test_query_projectstats_filter_user(self):

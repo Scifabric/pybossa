@@ -21,12 +21,16 @@ class TestPerfStats(web.Helper):
         assert 'Performance Statistics' in res.data, res.data
 
     @with_context
-    def test_not_owner_has_not_access(self):
+    def test_not_owner_has_access_to_own_stats(self):
         owner, user = UserFactory.create_batch(2)
         project = ProjectFactory.create(owner=owner, published=True)
+        TaskRunFactory.create(user=owner, project=project)
+        TaskRunFactory.create(user=user, project=project)
         url = '/project/%s/performancestats?api_key=%s' % (project.short_name, user.api_key)
-        res = self.app.get(url)
-        assert 'You do not have the permission to access the requested resource.' in res.data, res.data
+        res = self.app_get_json(url)
+        data = json.loads(res.data)
+        assert len(data['contributors']) == 1
+        assert str(user.id) in data['contributors']
 
     @with_context
     def test_has_fields_config(self):
