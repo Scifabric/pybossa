@@ -96,7 +96,7 @@ def ensure_authorized_to(action, resource, **kwargs):
 
 def _authorizer_for(resource_name):
     kwargs = {}
-    if resource_name in ('taskrun'):
+    if resource_name in ('taskrun',):
         kwargs.update({'task_repo': task_repo})
     if resource_name in ('auditlog', 'blogpost', 'task',
                          'taskrun', 'webhook', 'result',
