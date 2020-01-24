@@ -142,7 +142,7 @@ def get_consensus_data(project_id, filters):
         LEFT JOIN result r
             ON task.id = r.task_id
             AND r.last_version = True
-        WHERE (task.state = 'completed' OR task.calibration = 1)
+        WHERE (task.state = 'completed' OR (task.calibration = 1 AND taskruns.ct > 0))
         AND task.project_id=:project_id
         {};
     '''.format(conditions))
@@ -190,7 +190,7 @@ def get_consensus_data_metadata(project_id, filters):
         LEFT JOIN result r
             ON task.id = r.task_id
             AND r.last_version = True
-        WHERE (task.state = 'completed' OR task.calibration = 1)
+        WHERE (task.state = 'completed' OR (task.calibration = 1 AND taskruns.ct > 0))
         AND task.project_id=:project_id
         {};
     '''.format(conditions))

@@ -33,6 +33,7 @@ class TestConsensusExporter(Test):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, info={'test': 2}, n_answers=1)
         task2 = TaskFactory.create(project=project, info={'test': 2}, n_answers=1, calibration=1)
+        task3 = TaskFactory.create(project=project, info={'test': 2}, n_answers=1, calibration=1)
         task_run = TaskRunFactory.create(task=task, info={'hello': u'你好'})
         task_run2 = TaskRunFactory.create(task=task2, info={'hello': u'你好'})
         with export_consensus(project, 'tsk', 'csv', False, None) as fp:
@@ -50,6 +51,7 @@ class TestConsensusExporter(Test):
         project = ProjectFactory.create()
         task = TaskFactory.create(project=project, info={'test': 2}, n_answers=1)
         task2 = TaskFactory.create(project=project, info={'test': 2}, n_answers=1, calibration=1)
+        task3 = TaskFactory.create(project=project, info={'test': 2}, n_answers=1, calibration=1)
         task_run = TaskRunFactory.create(task=task, info={'hello': u'你好'})
         task_run2 = TaskRunFactory.create(task=task2, info={'hello': u'你好'})
         with export_consensus(project, 'tsk', 'csv', True, None) as fp:
