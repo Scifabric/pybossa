@@ -20,10 +20,6 @@ from pybossa import data_access
 class ProjectAuth(object):
     _specific_actions = ['publish']
 
-    def __init__(self, task_repo, result_repo):
-        self.task_repo = task_repo
-        self.result_repo = result_repo
-
     @property
     def specific_actions(self):
         return self._specific_actions
@@ -45,9 +41,9 @@ class ProjectAuth(object):
         return user.is_authenticated and \
             user.id in project.info.get('project_users', [])
 
-    def can(self, user, action, taskrun=None):
+    def can(self, user, action, project=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, taskrun)
+        return getattr(self, action)(user, project)
 
     def _create(self, user, project=None):
         if project is not None and self.only_admin_or_subadmin(user):

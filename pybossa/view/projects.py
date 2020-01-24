@@ -3390,7 +3390,7 @@ def answerfieldsconfig(short_name):
 @login_required
 def show_performance_stats(short_name):
     """Returns Project Stats"""
-    project, owner, ps = allow_deny_project_info(short_name)
+    project, owner, ps = project_by_shortname(short_name)
     ensure_authorized_to('read', project)
     title = project_title(project, "Performance Statistics")
     pro = pro_features(owner)
@@ -3410,10 +3410,14 @@ def show_performance_stats(short_name):
                                                                 current_user,
                                                                 ps)
     _, _, user_ids = stats.stats_users(project.id)
-    users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
 
     can_update = current_user.admin or \
         (current_user.subadmin and current_user.id in project.owners_ids)
+
+    if can_update:
+        users = {uid: cached_users.get_user_info(uid)['name'] for uid, _ in user_ids}
+    else:
+        users = {current_user.id: current_user.name}
 
     response = dict(template='/projects/performancestats.html',
                     title=title,
