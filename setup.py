@@ -133,7 +133,7 @@ requirements = [
     "Unidecode==0.4.21",
     "uritemplate==3.0.0",
     "urllib3==1.24.2",
-    "validators==0.12.4",
+    "validators==0.12.6",
     "webassets==0.12.1",
     "Werkzeug==0.15.3",
     "wrapt==1.10.11",
