@@ -68,7 +68,6 @@ nose
 nose-cov
 numpy
 oauth2client
-oauthlib
 os-diskconfig-python-novaclient-ext
 os-networksv2-python-novaclient-ext
 os-service-types
