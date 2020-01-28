@@ -1,6 +1,7 @@
 requests_oauthlib<1.2.0
 oauthlib<3.0.0
 python-novaclient==2.27.0
+pbr<2.0
 alembic
 arrow
 asn1crypto
@@ -81,7 +82,6 @@ oslo.serialization
 oslo.utils
 otpauth
 pandas
-pbr
 Pillow
 prettytable
 psycopg2-binary
