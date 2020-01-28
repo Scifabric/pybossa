@@ -1,4 +1,6 @@
 requests_oauthlib<1.2.0
+oauthlib<3.0.0
+python-novaclient==2.27.0
 alembic
 arrow
 asn1crypto
@@ -69,7 +71,6 @@ nose
 nose-cov
 numpy
 oauth2client
-oauthlib
 os-diskconfig-python-novaclient-ext
 os-networksv2-python-novaclient-ext
 os-service-types
@@ -100,7 +101,6 @@ python-dateutil
 python-editor
 python-keystoneclient
 python-ldap
-python-novaclient
 pytz
 PyYAML
 rackspace-auth-openstack
