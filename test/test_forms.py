@@ -46,7 +46,7 @@ class TestValidator(Test):
         """Test VALIDATOR Unique works."""
         with self.flask_app.test_request_context('/'):
             f = LoginForm()
-            f.email.data = self.email_addr
+            f.email.data = self.email_addr + '\t'
             u = validator.Unique(user_repo.get_by, 'email_addr')
             u.__call__(f, f.email)
 
@@ -185,7 +185,7 @@ class TestRegisterForm(Test):
         form = RegisterForm(**self.fill_in_data)
 
         assert not form.validate()
-        assert "$#&\\/| and space symbols are forbidden" in form.errors['name'], form.errors
+        assert "$#&\\/| and whitespace symbols are forbidden" in form.errors['name'], form.errors
 
     @with_context
     def test_register_name_reserved_name(self):

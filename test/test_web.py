@@ -2523,7 +2523,7 @@ class TestWeb(web.Helper):
         # Issue the error for the project.short_name
         res = self.new_project(short_name='$#/|')
         err_msg = "A project must have a short_name without |/$# chars"
-        assert '$#&amp;\/| and space symbols are forbidden' in res.data, err_msg
+        assert '$#&amp;\/| and whitespace symbols are forbidden' in res.data, err_msg
 
         # Now Unique checks
         self.new_project()

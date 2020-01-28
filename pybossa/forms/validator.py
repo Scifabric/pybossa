@@ -37,7 +37,10 @@ class Unique(object):
         self.message = message
 
     def __call__(self, form, form_field):
-        filters = {self.field_name: form_field.data}
+        field_value = form_field.data
+        if isinstance(field_value, basestring):
+            field_value = form_field.data.strip()
+        filters = {self.field_name: field_value}
         check = self.query_function(**filters)
         if 'id' in form:
             if check:
@@ -61,18 +64,18 @@ class UniqueCaseInsensitive(Unique):
     def __call__(self, form, form_field):
         if not isinstance(form_field.data, basestring):
             return False
-        form_field.data = form_field.data.lower()
+        form_field.data = form_field.data.strip().lower()
         super(UniqueCaseInsensitive, self).__call__(form, form_field)
 
 
 class NotAllowedChars(object):
     """Validator that checks field not allowed chars"""
-    not_valid_chars = '$#&\/| '
+    not_valid_chars = '$#&\/| \t'
 
     def __init__(self, message=None):
         if not message:
-            self.message = lazy_gettext(u'%sand space symbols are forbidden'
-                                        % self.not_valid_chars)
+            self.message = lazy_gettext(u'%s and whitespace symbols are forbidden'
+                                        % self.not_valid_chars.strip())
         else:  # pragma: no cover
             self.message = message
 
