@@ -112,7 +112,6 @@ readability-lxml
 redis
 rednose
 requests
-requests-oauthlib
 rfc3986
 rq
 rq-dashboard
