@@ -67,7 +67,7 @@ netifaces
 nose
 nose-cov
 numpy
-oauth2client
+#oauth2client
 os-diskconfig-python-novaclient-ext
 os-networksv2-python-novaclient-ext
 os-service-types
