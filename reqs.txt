@@ -96,7 +96,7 @@ PyLD
 pyldap
 pyOpenSSL
 pyparsing
-pyrax
+#pyrax
 python-dateutil
 python-editor
 python-keystoneclient
