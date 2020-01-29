@@ -1,6 +1,6 @@
 requests_oauthlib<1.2.0
 oauthlib<3.0.0
-python-novaclient==2.27.0
+python-novaclient
 pbr
 alembic
 arrow
