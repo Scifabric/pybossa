@@ -479,6 +479,14 @@ def setup_jinja(app):
 
 def setup_error_handlers(app):
     """Setup error handlers."""
+
+    from flask_wtf.csrf import CSRFError
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        response = dict(template='400.html', code=400,
+                        description=CSRFERROR)
+        return handle_content_type(response)
+
     @app.errorhandler(400)
     def _bad_request(e):
         response = dict(template='400.html', code=400,
