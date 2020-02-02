@@ -119,7 +119,7 @@ requirements = [
     "six==1.12.0",
     "soupsieve==1.6.1",
     "speaklater==1.3",
-    "SQLAlchemy==1.1.7",
+    "SQLAlchemy>=1.3.0",
     "stevedore>=1.30.0",
     "termstyle==0.1.11",
     "text-unidecode==1.2",
@@ -138,7 +138,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '3.1.0',
+    version = '3.1.2',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

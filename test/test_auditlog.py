@@ -92,7 +92,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'False',
+                'allow_anonymous_contributors': False,
                 'info': {'list': [1]}
                 }
         attributes = list(data.keys())
