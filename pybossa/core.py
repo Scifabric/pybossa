@@ -278,10 +278,8 @@ def setup_babel(app):
     def _get_locale():
         from flask import request
         locales = [l[0] for l in app.config.get('LOCALES')]
-        lang = 'en'
-        if current_user != None: 
-            if current_user.is_authenticated:
-                lang = current_user.locale
+        if current_user.is_authenticated:
+           lang = current_user.locale
         else:
             lang = request.cookies.get('language')
         if (lang is None or lang == '' or
