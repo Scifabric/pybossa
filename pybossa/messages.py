@@ -32,9 +32,11 @@ This module exports the following variables:
 """
 from werkzeug.exceptions import Forbidden, Unauthorized, InternalServerError
 from werkzeug.exceptions import NotFound, BadRequest
+from flask_wtf.csrf import CSRFError
 
 __all__ = ['SUCCESS', 'ERROR', 'WARNING', 'FORBIDDEN', 'NOTFOUND', 'BADREQUEST',
-           'INFO', 'NOTFOUND', 'INTERNALSERVERERROR', 'UNAUTHORIZED']
+           'INFO', 'NOTFOUND', 'INTERNALSERVERERROR', 'UNAUTHORIZED',
+           'CSRFERROR']
 
 SUCCESS = "success"
 
@@ -54,6 +56,8 @@ INTERNALSERVERERROR = InternalServerError.description
 
 UNAUTHORIZED = Unauthorized.description
 
+CSRFERROR = CSRFError.description
+
 assert SUCCESS
 assert ERROR
 assert WARNING
@@ -62,3 +66,4 @@ assert NOTFOUND
 assert BADREQUEST
 assert INTERNALSERVERERROR
 assert UNAUTHORIZED
+assert CSRFERROR

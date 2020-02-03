@@ -55,11 +55,10 @@ class TestJsonProject(web.Helper):
             res = self.app_post_json(url, follow_redirects=True)
             data = json.loads(res.data)
             assert data.get('code') == 400, data
-            assert data.get('description') == 'CSRF token missing or incorrect.', data
+            assert data.get('description') == 'CSRF validation failed.', data
 
             # With errors and CSRF
             csrf = self.get_csrf(url)
-            print(csrf)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf})
             data = json.loads(res.data)
             assert data.get('errors'), data
@@ -70,7 +69,6 @@ class TestJsonProject(web.Helper):
             # New Project
             project = dict(name='project1', short_name='project1', long_description='lore ipsum')
             csrf = self.get_csrf(url)
-            print(csrf)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
             assert data.get('status') == SUCCESS, data
@@ -79,3 +77,10 @@ class TestJsonProject(web.Helper):
             db_project = project_repo.get(1)
             err_msg = "It should be the same project"
             assert db_project.name == project['name'], err_msg
+
+            # New Project and wrong CSRF
+            project = dict(name='project1', short_name='project1', long_description='lore ipsum')
+            csrf = self.get_csrf(url)
+            res = self.app_post_json(url, headers={'X-CSRFToken': 'random'}, data=project)
+            data = json.loads(res.data)
+            assert data.get('code') == 400, data
