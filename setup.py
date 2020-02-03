@@ -81,7 +81,7 @@ requirements = [
     "pbr>=1.10.0",
     "Pillow>=6.2.0",
     "prettytable==0.7.2",
-    "psycopg2-binary==2.7.6.1",
+    "psycopg2-binary>=2.7.6.1",
     "pyasn1==0.4.5",
     "pyasn1-modules==0.2.3",
     "pybossa-onesignal==1.1",
