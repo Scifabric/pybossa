@@ -54,7 +54,7 @@ class ResultAPI(APIBase):
         if results:
             raise BadRequest('Record is already present')
         task = task_repo.get_task(task_id)
-        if not task or task.state != 'completed' or task.calibration != 1:
+        if not task or (task.state != 'completed' and task.calibration != 1):
             raise BadRequest('Invalid task')
         inst.created = make_timestamp()
         inst.project_id = task.project_id
