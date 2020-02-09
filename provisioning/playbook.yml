@@ -119,7 +119,7 @@
       postgresql_user:
         name: pybossa
         password: tester 
-        encrypted: true
+        encrypted: yes
         role_attr_flags: CREATEDB,NOSUPERUSER
 
     - name: create PYBOSSA DB
@@ -134,7 +134,7 @@
     # Populate DB (create tables) only when not existing.
     - name: populate PYBOSSA DB
       become_user: "{{pybossa_user}}"
-      command: "{{virtualenv_path}}/bin/python cli.py {{pybossa_path}}/db_create"
+      command: "{{virtualenv_path}}/bin/python {{pybossa_path}}/cli.py db_create"
       when: pybossa_db_exists.rc != 0
 
     - name: create PYBOSSA DB test user
