@@ -1,5 +1,5 @@
 ---
-# Installation steps for every Ubuntu 14.04
+# Installation steps for every Ubuntu 18.04
 - hosts: all
   become: true
   become_method: sudo
@@ -12,11 +12,11 @@
     redis_port: "6379"
     schedule_interval: "60"
   tasks:
-    - name: Check Ubuntu 16.04 running
+    - name: Check Ubuntu 18.04 running
       assert:
         that:
           - ansible_distribution == 'Ubuntu'
-          - ansible_distribution_release == 'xenial'
+          - ansible_distribution_release == 'bionic'
 
     - name: update apt cache
       apt: update_cache=yes
@@ -28,12 +28,13 @@
       apt: name={{item}} state=latest
       with_items:
         - python
-        - python-dev
-        - python-virtualenv
         - python-setuptools
-        - python-pip
+        - python3-dev
+        - python3-pip
+        - python3-virtualenv
+        - python3-venv
 
-    - name: install PyBossa build requirements
+    - name: install PYBOSSA build requirements
       apt: name={{item}} state=latest
       with_items:
         - build-essential
@@ -78,13 +79,15 @@
     - name: start Sentinel and enable it at boot
       service: name=redis-sentinel state=started enabled=yes
 
-    - name: "upgrade pip itself"
-      become_user: "{{pybossa_user}}"
-      pip: name=pip state=latest chdir={{pybossa_path}} virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
 
-    - name: "install PyBossa virtualenv packages, can take some time..."
+    - name: "install PYBOSSA virtualenv packages, can take some time..."
       become_user: "{{pybossa_user}}"
-      pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
+      pip: 
+        chdir: "{{pybossa_path}}"
+        requirements: /vagrant/requirements.txt
+        virtualenv: /vagrant/pybossa-env
+        virtualenv_command: /usr/bin/python3 -m venv 
+        virtualenv_site_packages: yes
 
     - name: check alembic.ini existing
       stat: path={{pybossa_path}}/alembic.ini
@@ -113,9 +116,13 @@
 
     - name: create DB user pybossa
       become_user: postgres
-      postgresql_user: name=pybossa password=tester role_attr_flags=CREATEDB,NOSUPERUSER
+      postgresql_user:
+        name: pybossa
+        password: tester 
+        encrypted: yes
+        role_attr_flags: CREATEDB,NOSUPERUSER
 
-    - name: create PyBossa DB
+    - name: create PYBOSSA DB
       become_user: postgres
       postgresql_db: name=pybossa
                      owner=pybossa
@@ -125,18 +132,20 @@
                      template='template0'
 
     # Populate DB (create tables) only when not existing.
-    - name: populate PyBossa DB
+    - name: populate PYBOSSA DB
       become_user: "{{pybossa_user}}"
-      command: "{{virtualenv_path}}/bin/python cli.py db_create"
-      args:
-        chdir: "{{pybossa_path}}"
+      command: "{{virtualenv_path}}/bin/python {{pybossa_path}}/cli.py db_create"
       when: pybossa_db_exists.rc != 0
 
-    - name: create PyBossa DB test user
+    - name: create PYBOSSA DB test user
       become_user: postgres
-      postgresql_user: name=rtester password=rtester role_attr_flags=CREATEDB,NOSUPERUSER
+      postgresql_user: 
+        name: rtester
+        password: rtester 
+        encrypted: true
+        role_attr_flags: CREATEDB,NOSUPERUSER
 
-    - name: create PyBossa Test DB
+    - name: create PYBOSSA Test DB
       become_user: postgres
       postgresql_db: name=pybossa_test
                      owner=rtester
