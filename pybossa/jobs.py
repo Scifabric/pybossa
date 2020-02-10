@@ -45,6 +45,7 @@ MINUTE = 60
 IMPORT_TASKS_TIMEOUT = (20 * MINUTE)
 TASK_DELETE_TIMEOUT = (60 * MINUTE)
 EXPORT_TASKS_TIMEOUT = (10 * MINUTE)
+MAX_RECIPIENTS = 50
 from pybossa.core import uploader
 from pybossa.exporter.json_export import JsonExporter
 
@@ -727,8 +728,11 @@ def send_email_notifications():
             body = u'Hello,\n\nThere have been new tasks uploaded to the previously finished project, {0}. ' \
                    u'\nLog on to {1} to complete any available tasks.' \
                 .format(project.name, current_app.config.get('BRAND'))
-            mail_dict = dict(recipients=recipients, subject=subject, body=body)
-            send_mail(mail_dict)
+            recipients_chunk = [recipients[x * MAX_RECIPIENTS : (x+1) * MAX_RECIPIENTS]
+                                for x in range(0, int(math.ceil(len(recipients)*1.0 / MAX_RECIPIENTS)))]
+            for group in recipients_chunk:
+                mail_dict = dict(recipients=group, subject=subject, body=body)
+                send_mail(mail_dict)
     return True
 
 
