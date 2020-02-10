@@ -730,7 +730,9 @@ def send_email_notifications():
                 .format(project.name, current_app.config.get('BRAND'))
             recipients_chunk = [recipients[x * MAX_RECIPIENTS : (x+1) * MAX_RECIPIENTS]
                                 for x in range(0, int(math.ceil(len(recipients)*1.0 / MAX_RECIPIENTS)))]
-            send_mail(dict(recipients=group, subject=subject, body=body)) for group in recipients_chunk
+            for group in recipients_chunk:
+                mail_dict = dict(recipients=group, subject=subject, body=body)
+                send_mail(mail_dict)
     return True
 
 
