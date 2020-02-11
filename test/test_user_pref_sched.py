@@ -428,6 +428,28 @@ class TestSched(sched.Helper):
         send_email_notifications()
         get_contrib_emails.assert_called()
 
+    @with_context
+    @patch('pybossa.jobs.user_repo.get_user_pref_recent_contributor_emails')
+    def test_email_notif_with_email_addr(self, get_contrib_emails):
+        """
+        if the project is configured, email notifications will be sent
+        """
+        get_contrib_emails.return_value = ["dummy@dummy.com"]
+        owner = UserFactory.create(id=500, user_pref={'languages': ['en']})
+
+        project = ProjectFactory.create(owner=owner, email_notif=True)
+        project.info['sched'] = Schedulers.user_pref
+        project_repo.save(project)
+        tasks = TaskFactory.create_batch(1, project=project, n_answers=1,
+                                         user_pref={'languages': ['en']})
+
+        TaskRunFactory.create(task=tasks[0], user=owner)
+
+        TaskFactory.create_batch(1, project=project, n_answers=1,
+                                 user_pref={'languages': ['en']})
+        send_email_notifications()
+        get_contrib_emails.assert_called()
+
 
 class TestNTaskAvailable(sched.Helper):
 
