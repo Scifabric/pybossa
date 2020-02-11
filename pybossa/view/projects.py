@@ -1206,12 +1206,16 @@ def task_presenter(short_name, task_id):
     project_sanitized, owner_sanitized = sanitize_project_owner(project, owner,
                                                                 current_user,
                                                                 ps)
+
+    user_id_or_ip = get_user_id_or_ip()
+    user_id = user_id_or_ip['user_id'] or user_id_or_ip['external_uid'] or user_id_or_ip['user_ip']
     template_args = {
         "project": project_sanitized,
         "title": title,
         "owner": owner_sanitized,
         "mode": mode,
-        "bulk": request.args.get('bulk', False)
+        "bulk": request.args.get('bulk', False),
+        "user_id": user_id
     }
 
     def respond(tmpl):
@@ -1255,8 +1259,10 @@ def presenter(short_name):
             return redirect_to_password
 
     title = project_title(project, "Contribute")
+    user_id_or_ip = get_user_id_or_ip()
+    user_id = user_id_or_ip['user_id'] or user_id_or_ip['external_uid'] or user_id_or_ip['user_ip']
     template_args = {"project": project, "title": title, "owner": owner,
-                     "invite_new_volunteers": False}
+                     "invite_new_volunteers": False, "user_id": user_id}
 
     if not project.allow_anonymous_contributors and current_user.is_anonymous:
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
