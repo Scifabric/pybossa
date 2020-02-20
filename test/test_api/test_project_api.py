@@ -23,7 +23,7 @@ from test_api import TestAPI
 from helper.gig_helper import make_subadmin, make_admin
 
 from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
-                       CategoryFactory)
+                       CategoryFactory, AuditlogFactory)
 
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
@@ -984,6 +984,37 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         assert 'available_gold_tasks' in data, data
         assert data['available_gold_tasks'] == 2
+
+    @with_context
+    def test_user_progress_guidelines_updated(self):
+        """Test API userprogress as an authenticated user works"""
+
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner)
+        tasks = TaskFactory.create_batch(2, project=project)
+        url = '/api/project/%s/userprogress?api_key=%s' % (project.id, owner.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['guidelines_updated'] is False, data
+
+        TaskRunFactory.create(task=tasks[0], project=project, user=owner)
+
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['guidelines_updated'] is False, data
+
+        AuditlogFactory.create_batch(size=3, project_id=project.id,
+            project_short_name=project.short_name,
+            user_id=project.owner.id,
+            user_name=project.owner.name,
+            attribute='task_guidelines',
+            old_value="old_task_guidelines1",
+            new_value="new_task_guidelines2")
+
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        assert data['guidelines_updated'] is True, data
+
 
     @with_context
     def test_delete_project_cascade(self):

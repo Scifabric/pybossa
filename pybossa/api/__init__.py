@@ -38,6 +38,7 @@ from time import time
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, get_user_id_or_ip, fuzzyboolean
 from pybossa.util import get_disqus_sso_payload, grant_access_with_api_key
+import dateutil.parser
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel, anonymizer
 from pybossa.ratelimit import ratelimit
@@ -61,7 +62,7 @@ from result import ResultAPI
 from rq import Queue
 from project_stats import ProjectStatsAPI
 from helpingmaterial import HelpingMaterialAPI
-from pybossa.core import project_repo, task_repo, user_repo
+from pybossa.core import auditlog_repo, project_repo, task_repo, user_repo
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
 from werkzeug.exceptions import MethodNotAllowed, Forbidden
@@ -285,6 +286,19 @@ def _retrieve_new_task(project_id):
                       user=user_id_or_ip)
     return task, project.info.get('timeout'), handler
 
+def _guidelines_updated(project_id, user_id):
+    """Function to determine if guidelines has been
+        updated since last submission"""
+
+    query_attrs_log = dict(project_id=project_id, attribute='task_guidelines', desc=True)
+    query_attrs_task_run = dict(project_id=project_id, user_id=user_id)
+
+    guidelines_log = auditlog_repo.filter_by(limit=1, **query_attrs_log)
+    last_guidelines_update = dateutil.parser.parse(guidelines_log[0].created) if guidelines_log else None
+    task_runs = task_repo.filter_task_runs_by(limit=1, desc=True, **query_attrs_task_run)
+    last_task_run_time = dateutil.parser.parse(task_runs[0].created) if task_runs else None
+
+    return last_task_run_time < last_guidelines_update if last_task_run_time and last_guidelines_update else False
 
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
@@ -317,8 +331,8 @@ def user_progress(project_id=None, short_name=None):
         if project:
             # For now, keep this version, but wait until redis cache is
             # used here for task_runs too
-            query_attrs = dict(project_id=project.id)
-            query_attrs['user_id'] = current_user.id
+            query_attrs = dict(project_id=project.id, user_id=current_user.id)
+            guidelines_updated = _guidelines_updated(project.id, current_user.id)
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
             num_available_tasks = n_available_tasks(project.id, include_gold_task=True)
             num_available_tasks_for_user = n_available_tasks_for_user(project, current_user.id)
@@ -327,7 +341,8 @@ def user_progress(project_id=None, short_name=None):
                 total=n_tasks(project.id),
                 remaining=num_available_tasks,
                 remaining_for_user=num_available_tasks_for_user,
-                quiz = current_user.get_quiz_for_project(project)
+                quiz = current_user.get_quiz_for_project(project),
+                guidelines_updated = guidelines_updated
             )
             if current_user.admin or (current_user.subadmin and current_user.id in project.owners_ids):
                 num_gold_tasks = n_unexpired_gold_tasks(project.id)
