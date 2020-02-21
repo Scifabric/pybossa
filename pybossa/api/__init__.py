@@ -294,11 +294,10 @@ def _guidelines_updated(project_id, user_id):
     query_attrs_task_run = dict(project_id=project_id, user_id=user_id)
 
     guidelines_log = auditlog_repo.filter_by(limit=1, **query_attrs_log)
-    last_guidelines_update = dateutil.parser.parse(guidelines_log[0].created) if guidelines_log else None
+    last_guidelines_update = dateutil.parser.parse(guidelines_log[0].created) if guidelines_log else 0
     task_runs = task_repo.filter_task_runs_by(limit=1, desc=True, **query_attrs_task_run)
-    last_task_run_time = dateutil.parser.parse(task_runs[0].created) if task_runs else None
-
-    return last_task_run_time < last_guidelines_update if last_task_run_time and last_guidelines_update else False
+    last_task_run_time = dateutil.parser.parse(task_runs[0].created) if task_runs else 0
+    return last_task_run_time < last_guidelines_update
 
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
