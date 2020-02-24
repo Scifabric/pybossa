@@ -38,7 +38,8 @@ class ContributionsGuard(object):
 
     def retrieve_timestamp(self, task, user):
         key = self._create_key(task, user)
-        return self.conn.get(key)
+        timestamp = self.conn.get(key)
+        return timestamp and timestamp.decode()
 
     def _create_key(self, task, user):
         user_id = user['user_id'] or user['user_ip']
