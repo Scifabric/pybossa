@@ -192,7 +192,7 @@ class TestApiCommon(TestAPI):
             if endpoint == 'user':
                 assert res.status_code == 200, data
                 assert len(data) == 1
-                assert data['id'] == owner.id
+                assert data[0]['id'] == owner.id
 
         for endpoint in self.endpoints:
             url = '/api/' + endpoint + '?api_key=' + admin.api_key + '&all=1'
