@@ -32,12 +32,13 @@ class UserAuth(object):
         return user.is_authenticated and user.admin is True
 
     def _read(self, user, resource_user=None):
-        if resource_user and resource_user.restrict:
-            if (user.is_authenticated and user.id == resource_user.id):
-                return True
-            else:
-                return False
-        return user.is_authenticated and (user.admin or user.subadmin)
+        if not user.is_authenticated:
+            return False
+        if resource_user is None:
+            return True
+        if user.id == resource_user.id:
+            return True
+        return user.admin or user.subadmin
 
     def _update(self, user, resource_user):
         if user.is_anonymous:

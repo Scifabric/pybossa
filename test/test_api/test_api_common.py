@@ -155,7 +155,9 @@ class TestApiCommon(TestAPI):
                 assert len(data) == 0, "No taskrun to be returned for regular user"
 
             if endpoint == 'user':
-                assert res.status_code == 403, data
+                assert res.status_code == 200, data
+                assert len(data) == 1
+                assert data[0]['id'] == user.id
 
         tmp = project_repo.get(project.id)
 
@@ -188,7 +190,9 @@ class TestApiCommon(TestAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'user':
-                assert res.status_code == 403, data
+                assert res.status_code == 200, data
+                assert len(data) == 1
+                assert data[0]['id'] == owner.id
 
         for endpoint in self.endpoints:
             url = '/api/' + endpoint + '?api_key=' + admin.api_key + '&all=1'

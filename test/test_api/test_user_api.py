@@ -57,11 +57,11 @@ class TestUserAPI(Test):
         assert user['name'] == expected_user.name, (user['name'],
                                                     expected_user.name)
 
-        # Test GETting a specific user by ID as owner
+        # Test GETting a specific user by ID as self
         url = '/api/user/%s?api_key=%s' % (expected_user.id,
                                            expected_user.api_key)
         res = self.app.get(url)
-        assert res.status_code == 403
+        assert res.status_code == 200
 
         # Test GETting a specific user by ID as admin
         url = '/api/user/%s?api_key=%s' % (expected_user.id,
@@ -100,11 +100,11 @@ class TestUserAPI(Test):
 
         # As admin
         res = self.app.get(url + '?api_key=' + admin.api_key)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 200, res.status_code
 
         # As same user
         res = self.app.get(url + '?api_key=' + restricted.api_key)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 200, res.status_code
 
     @with_context
     def test_query_user(self):
