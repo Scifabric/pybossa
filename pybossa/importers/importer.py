@@ -355,7 +355,8 @@ class UserImporter(object):
 
         from pybossa.view.account import create_account
 
-        n = 0
+        new_users = 0
+        enabled_users = 0
         failed_users = 0
         invalid_values = set()
         importer = self._create_importer_for(**form_data)
@@ -374,9 +375,18 @@ class UserImporter(object):
                 user_data['metadata']['admin'] = current_user.name
                 user_data['password'] = form.password.data
                 create_account(user_data, project_slugs=project_slugs)
-                n += 1
-        if n > 0:
-            msg = str(n) + " " + gettext('new users were imported successfully. ')
+                new_users += 1
+            else:
+                if not found.enabled:
+                    found.enabled = True
+                    user_repo.update(found)
+                    enabled_users += 1
+        if new_users or enabled_users:
+            msg = ''
+            if new_users:
+                msg = str(new_users) + " " + gettext('new users were imported successfully. ')
+            if enabled_users:
+                msg += str(enabled_users) + " " + gettext('users were re-enabled.')
         else:
             msg = gettext('It looks like there were no new users created. ')
 
