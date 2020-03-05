@@ -18,6 +18,7 @@
 # Cache global variables for timeouts
 
 import tempfile
+import json
 from flask import url_for, safe_join, send_file, redirect
 from pybossa.uploader import local
 from pybossa.exporter.csv_export import CsvExporter
@@ -90,6 +91,8 @@ class TaskCsvExporter(CsvExporter):
             if key1 in row:
                 key2 = '__'.join(splits[i:])
                 val = cls.get_value(row[key1], key2)
+                if isinstance(val, list):
+                    return json.dumps(val)
                 if val is not None:
                     return val
 
