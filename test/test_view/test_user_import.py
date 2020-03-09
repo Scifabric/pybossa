@@ -90,6 +90,25 @@ class TestUserImport(web.Helper):
     @with_context
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
     @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
+    def test_post_dupe(self, upref_mdata, get_upref_mdata_choices):
+        get_upref_mdata_choices.return_value = choices
+
+        self.register()
+        self.signin()
+        user = UserFactory.create(id=666, email_addr='new@user.com', enabled=False)
+        url = '/admin/userimport?type=%s' % 'usercsvimport'
+        users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
+            newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_a"}'''
+        res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
+            data={'file': (StringIO(users), 'users.csv')})
+        assert '1 users were re-enabled.' in res.data, res.data
+
+        new_user = user_repo.get_by_name(user.name)
+        assert new_user.enabled
+
+    @with_context
+    @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
+    @patch('pybossa.cache.task_browse_helpers.app_settings.upref_mdata')
     def test_invalid_data(self, upref_mdata, get_upref_mdata_choices):
         get_upref_mdata_choices.return_value = choices
 
