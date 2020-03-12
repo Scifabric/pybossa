@@ -22,7 +22,7 @@ from flask import request
 from flask_wtf import FlaskForm as Form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from werkzeug.utils import secure_filename
-from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
+from wtforms import IntegerField, DecimalField, TextField, BooleanField, RadioField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms import SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
@@ -266,6 +266,14 @@ class TaskTimeoutForm(Form):
         seconds = self.seconds.data or 0
         return self.min_seconds <= minutes*60 + seconds <= self.max_minutes*60
 
+
+class ProgressReminderForm(Form):
+    recipients_choices = [('None', 'Do not notify'),
+                          ('owner','Notify only project owner'),
+                          ('coowners', 'Notify all project coowners')]
+    recipients_group = RadioField('TEST_LABEL', choices=recipients_choices, coerce=unicode)
+    percentage = IntegerField(lazy_gettext('Notify once the following percentage of tasks are completed (0 - 100)'),
+                           [validators.NumberRange(min=0, max=100)])
 
 
 class TaskSchedulerForm(Form):

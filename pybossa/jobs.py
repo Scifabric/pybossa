@@ -976,6 +976,23 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     return msg
 
 
+# def notify_project_progress(project_id, email_addr, queue='high'):
+#     """ send email about the progress of task completion """
+#     # TODO:
+#     subject = ""
+#     mail_dict = dict(recipients=[row.email_addr],
+#                         subject=subject,
+#                         body=body,
+#                         html=html)
+
+#     job = dict(name=send_mail,
+#                 args=[mail_dict],
+#                 kwargs={},
+#                 timeout=timeout,
+#                 queue=queue)
+#     enqueue_job(job)
+
+
 def get_weekly_stats_update_projects():
     """Return email jobs with weekly stats update for project owner."""
     from sqlalchemy.sql import text

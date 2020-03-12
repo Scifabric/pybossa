@@ -2342,6 +2342,64 @@ def task_timeout(short_name):
                                pro_features=pro))
 
 
+
+@blueprint.route('/<short_name>/tasks/progress-reminder', methods=['GET', 'POST'])
+@login_required
+def task_progress_reminder(short_name):
+    project, owner, ps = project_by_shortname(short_name)
+    project_sanitized, owner_sanitized = sanitize_project_owner(project,
+                                                                    owner,
+                                                                    current_user,
+                                                                    ps)
+    title = project_title(project, gettext('Progress Reminder'))
+    form = ProgressReminderForm(request.body) if request.data else ProgressReminderForm()
+
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    pro = pro_features()
+    if request.method == 'GET':
+        reminder_info = project.info.get('progress_reminder', {})
+        recipients_group = reminder_info.get('recipients')
+        progress_precentage = reminder_info.get('percentage') or 0
+        # options = [('Do not notify', 'None'),
+        #            ('Notify only project owner', 'owner'),
+        #            ('Notify all project coowners', 'coowners')]
+        recipients_group = recipients_group if recipients_group else 'None'
+        print(recipients_group)
+
+        return handle_content_type(dict(template='/projects/progress_reminder.html',
+                               title=title,
+                               form=form,
+                               recipients_group=recipients_group,
+                               progress_precentage=progress_precentage,
+                               project=project_sanitized,
+                               pro_features=pro))
+"""
+    if form.validate() and form.in_range():
+        project = project_repo.get_by_shortname(short_name=project.short_name)
+        reminder_info = project.info.get('progress_reminder') or {}
+        reminder_info['recipients'] = form.recipients if form.recipients is not None else None
+        reminder_info['percentage'] = form.percentage or 0
+        project.info['progress_reminder'] = reminder_info
+        msg = gettext("Project Task Progress Reminder updated!")
+        flash(msg, 'success')
+
+        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
+    else:
+        # if not form.in_range():
+        #     flash(gettext('Timeout should be between {} seconds and {} minuntes')
+        #                   .format(form.min_seconds, form.max_minutes), 'error')
+        # else:
+        #     flash(gettext('Please correct the errors'), 'error')
+        return handle_content_type(dict(template='/projects/progress_reminder.html',
+                               title=title,
+                               form=form,
+                               project=project_sanitized,
+                               owner=owner_sanitized,
+                               pro_features=pro))
+
+"""
+
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
     project, owner, ps = project_by_shortname(short_name)

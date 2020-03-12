@@ -276,6 +276,10 @@ def on_taskrun_submit(mapper, conn, target):
     is_completed = is_task_completed(conn, target.task_id, target.project_id)
     if is_completed:
         update_task_state(conn, target.task_id)
+        # # TODO: send email notification
+        # if need_notification:
+        #     email_addr = ...
+
     if is_completed and _published:
         update_feed(project_public)
         result_id = create_result(conn, target.project_id, target.task_id)

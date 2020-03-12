@@ -29,6 +29,7 @@ from forms import (
     TaskPriorityForm,
     TaskTimeoutForm,
     TaskSchedulerForm,
+    ProgressReminderForm,
     BlogpostForm,
     PasswordForm,
     GenericBulkTaskImportForm,
