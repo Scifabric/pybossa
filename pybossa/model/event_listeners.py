@@ -34,10 +34,11 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.model.counter import Counter
-from pybossa.core import result_repo, db, task_repo
-from pybossa.jobs import webhook, notify_blog_users
+from pybossa.core import project_repo, result_repo, db, task_repo
+from pybossa.jobs import webhook, notify_blog_users, notify_project_progress
 from pybossa.jobs import push_notification
 from pybossa.cache import projects as cached_projects
+from pybossa.cache import users as cached_users
 from pybossa import sched
 
 from pybossa.core import sentinel
@@ -179,6 +180,37 @@ def is_task_completed(conn, task_id, project_id):
     return (n_answers) >= task_n_answers
 
 
+def check_and_send_project_progress(project_id):
+    project = project_repo.get(project_id)
+    if not project:
+        return
+
+    reminder = project.info.get('progress_reminder', {})
+    recipients = reminder.get("recipients") or None
+    percentage = reminder.get("percentage")
+    n_completed_tasks = cached_projects.n_completed_tasks(project_id)
+    n_tasks = cached_projects.n_tasks(project_id)
+    if n_tasks == 0 or not recipients or percentage is None:
+        return
+
+    previous_project_progress = 100.0 * (n_completed_tasks) / n_tasks
+    current_project_progress = 100.0 * (n_completed_tasks + 1) / n_tasks
+
+    if percentage and current_project_progress >= percentage and \
+        previous_project_progress < percentage:
+        # cross-line, trigger notification
+        if recipients == "owner":
+            email_addr = [cached_users.get_user_email(project.owner_id)]
+        elif recipients == "coowners":
+            email_addr = [cached_users.get_user_email(user_id)
+                          for user_id in project.info.owners_ids]
+        info = dict(project_name=project.name,
+                    n_tasks=n_tasks,
+                    n_completed_tasks=n_completed_tasks,
+                    progress=current_project_progress)
+        notify_project_progress(info, email_addr)
+
+
 def update_task_state(conn, task_id):
     task = task_repo.get_task(id=task_id)
     if task and task.calibration == 1:
@@ -275,10 +307,8 @@ def on_taskrun_submit(mapper, conn, target):
 
     is_completed = is_task_completed(conn, target.task_id, target.project_id)
     if is_completed:
+        check_and_send_project_progress(target.project_id)
         update_task_state(conn, target.task_id)
-        # # TODO: send email notification
-        # if need_notification:
-        #     email_addr = ...
 
     if is_completed and _published:
         update_feed(project_public)

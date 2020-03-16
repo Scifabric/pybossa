@@ -976,21 +976,26 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     return msg
 
 
-# def notify_project_progress(project_id, email_addr, queue='high'):
-#     """ send email about the progress of task completion """
-#     # TODO:
-#     subject = ""
-#     mail_dict = dict(recipients=[row.email_addr],
-#                         subject=subject,
-#                         body=body,
-#                         html=html)
+def notify_project_progress(info, email_addr, queue='high'):
+    """ send email about the progress of task completion """
+    subject = "Project progress reminder for {}".format(info['project_name'])
+    msg = """You have completed {} out of {} tasks in your project: {},
+            project progress reached {}%.
+          """.format(info['n_completed_tasks'], info['n_tasks'],
+                     info['project_name'], info['progress'])
+    body = (u'Hello,\n\n{}\nThe {} team.'
+            .format(msg, current_app.config.get('BRAND')))
+    mail_dict = dict(recipients=email_addr,
+                        subject=subject,
+                        body=body)
 
-#     job = dict(name=send_mail,
-#                 args=[mail_dict],
-#                 kwargs={},
-#                 timeout=timeout,
-#                 queue=queue)
-#     enqueue_job(job)
+    timeout = current_app.config.get('TIMEOUT')
+    job = dict(name=send_mail,
+                args=[mail_dict],
+                kwargs={},
+                timeout=timeout,
+                queue=queue)
+    enqueue_job(job)
 
 
 def get_weekly_stats_update_projects():

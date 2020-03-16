@@ -55,6 +55,23 @@ def get_top(n=4):
     return top_projects
 
 
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def get_project_by_id(project_id):
+    sql = text('''SELECT project.id, project.name, project.short_name, project.description,
+               project.info
+               FROM project
+               WHERE project.id IS NOT NULL
+               AND project.id=:project_id
+               AND project.published=True''')
+    results = session.execute(sql, dict(project_id=project_id))
+    projects = []
+    for row in results:
+        project = dict(id=row.id, name=row.name, short_name=row.short_name,
+                       description=row.description,
+                       info=row.info)
+        projects.append(Project().to_public_json(project))
+    return projects[0] if projects else None
+
 @memoize_essentials(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'), essentials=[0],
                     cache_group_keys=[[0]])
 @static_vars(allowed_fields=allowed_fields)
