@@ -284,6 +284,7 @@ class TaskRepository(Repository):
         tasks with curr redundancy < new redundancy, with state as completed
         and were marked as exported = True
         """
+        from pybossa.jobs import check_and_send_project_progress
 
         if n_answers < self.MIN_REDUNDANCY or n_answers > self.MAX_REDUNDANCY:
             raise ValueError("Invalid redundancy value: {}".format(n_answers))
@@ -334,6 +335,8 @@ class TaskRepository(Repository):
         self.update_task_state(project.id)
         self.db.session.commit()
         cached_projects.clean_project(project.id)
+        # TODO: send email
+        check_and_send_project_progress(project.id)
         return tasks_not_updated
 
     def update_task_state(self, project_id):

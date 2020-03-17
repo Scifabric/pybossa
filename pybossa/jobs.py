@@ -697,6 +697,8 @@ def delete_bulk_tasks(data):
 
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
+    # TODO: send email
+    check_and_send_project_progress(project_id)
 
 
 def send_email_notifications():
@@ -1317,6 +1319,35 @@ def get_management_dashboard_stats(user_email):
             .format(msg, current_app.config.get('BRAND')))
     mail_dict = dict(recipients=[user_email], subject=subject, body=body)
     send_mail(mail_dict)
+
+
+def check_and_send_project_progress(project_id):
+    from pybossa.core import project_repo
+    import pybossa.cache.users as cached_users
+
+    project = project_repo.get(project_id)
+    if not project:
+        return
+
+    reminder = project.info.get('progress_reminder', {})
+    target_remaining = reminder.get("target_remaining")
+    email_already_sent = reminder.get("sent") or False
+    if n_tasks == 0 or target_remaining is None:
+        return
+
+    current_incomplete_tasks = ...
+    if current_incomplete_tasks < target_remaining:
+        reminder['sent'] = False
+    elif not email_already_sent:
+        # progress reached threshold and email not sent yet, send email
+        email_addr = [cached_users.get_user_email(user_id)
+                        for user_id in project.info.owners_ids]
+        info = dict(project_name=project.name,
+                    current_incomplete_tasks=current_incomplete_tasks)
+        notify_project_progress(info, email_addr)
+        reminder['sent'] = True
+    project.info['progress_reminder'] = reminder
+    project_repo.save(project)
 
 
 def export_all_users(fmt, email_addr):

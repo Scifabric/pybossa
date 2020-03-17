@@ -68,7 +68,7 @@ from pybossa.jobs import (webhook, send_mail,
                           import_tasks, IMPORT_TASKS_TIMEOUT,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT,
-                          mail_project_report)
+                          mail_project_report, check_and_send_project_progress)
 from pybossa.forms.dynamic_forms import dynamic_project_form, dynamic_clone_project_form
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
@@ -1001,6 +1001,8 @@ def import_task(short_name):
                 flash(gettext(msg), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
+        # TODO: send email
+        check_and_send_project_progress(project.id)
         return handle_content_type(template_args)
 
     if request.method == 'GET':
