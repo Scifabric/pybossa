@@ -140,13 +140,13 @@ def add_task_event(mapper, conn, target):
     update_feed(obj)
 
 
-# @event.listens_for(Task, 'after_update')
-# @event.listens_for(Task, 'after_delete')
-# def calculate_and_send_progress_after_update_task(mapper, conn, target):
-#     current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-#     current_app.logger.info('after update/delete')
-#     current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-#     check_and_send_project_progress(target.project_id)
+@event.listens_for(Task, 'after_update')
+@event.listens_for(Task, 'after_delete')
+def calculate_and_send_progress_after_update_task(mapper, conn, target):
+    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+    current_app.logger.info('after update/delete')
+    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
+    check_and_send_project_progress(target.project_id, conn)
 
 
 @event.listens_for(User, 'after_insert')
@@ -285,8 +285,8 @@ def on_taskrun_submit(mapper, conn, target):
 
     is_completed = is_task_completed(conn, target.task_id, target.project_id)
     if is_completed:
-        check_and_send_project_progress(target.project_id)
         update_task_state(conn, target.task_id)
+        check_and_send_project_progress(target.project_id, conn)
 
     if is_completed and _published:
         update_feed(project_public)
