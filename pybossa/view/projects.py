@@ -2361,38 +2361,34 @@ def task_progress_reminder(short_name):
     pro = pro_features()
     if request.method == 'GET':
         reminder_info = project.info.get('progress_reminder', {})
-        recipients_group = reminder_info.get('recipients')
-        form.percentage.data = reminder_info.get('percentage') or 0
-        form.recipients_group.data = recipients_group if recipients_group else 'None'
+        form.remaining.data = reminder_info.get('target_remaining')
         return handle_content_type(dict(template='/projects/progress_reminder.html',
                                title=title,
                                form=form,
                                project=project_sanitized,
                                pro_features=pro))
 
-    if form.validate():
-        project = project_repo.get_by_shortname(short_name=project.short_name)
-        reminder_info = project.info.get('progress_reminder') or {}
-        reminder_info['recipients'] = 'None' if form.recipients_group.data is 'None' else form.recipients_group.data
-        reminder_info['percentage'] = form.percentage.data or 0
-        project.info['progress_reminder'] = reminder_info
-        project_repo.save(project)
-        msg = gettext("Project Task Progress Reminder updated!")
-        flash(msg, 'success')
-
-        return redirect_content_type(url_for('.tasks', short_name=project.short_name))
-    else:
-        # if not form.in_range():
-        #     flash(gettext('Timeout should be between {} seconds and {} minuntes')
-        #                   .format(form.min_seconds, form.max_minutes), 'error')
-        # else:
-        #     flash(gettext('Please correct the errors'), 'error')
+    remaining = form.remaining.data
+    n_tasks = cached_projects.n_tasks(project.id)
+    print("remaining......")
+    print(remaining)
+    if remaining is not None and (remaining < 0 or remaining > n_tasks):
+        flash(gettext('Target number should be between 0 and {}'.format(n_tasks)), 'error')
         return handle_content_type(dict(template='/projects/progress_reminder.html',
-                               title=title,
-                               form=form,
-                               project=project_sanitized,
-                               pro_features=pro))
+                                title=title,
+                                form=form,
+                                project=project_sanitized,
+                                pro_features=pro))
 
+    project = project_repo.get_by_shortname(short_name=project.short_name)
+    reminder_info = project.info.get('progress_reminder') or {}
+    reminder_info['target_remaining'] = remaining
+    reminder_info['sent'] = reminder_info.get('sent') or False
+    project.info['progress_reminder'] = reminder_info
+    project_repo.save(project)
+
+    flash(gettext("Project Task Progress Reminder updated!"), 'success')
+    return redirect_content_type(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/blog')
