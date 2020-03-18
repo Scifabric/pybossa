@@ -2381,6 +2381,7 @@ def task_progress_reminder(short_name):
     project = project_repo.get_by_shortname(short_name=project.short_name)
     reminder_info = project.info.get('progress_reminder') or {}
     reminder_info['target_remaining'] = remaining
+    reminder_info['sent'] = False
     project.info['progress_reminder'] = reminder_info
     project_repo.save(project)
 
