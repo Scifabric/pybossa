@@ -1001,7 +1001,6 @@ def import_task(short_name):
                 flash(gettext(msg), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
-        # TODO: send email
         check_and_send_project_progress(project.id)
         return handle_content_type(template_args)
 

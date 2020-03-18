@@ -34,7 +34,7 @@ from pybossa.model.webhook import Webhook
 from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.model.counter import Counter
-from pybossa.core import project_repo, result_repo, db, task_repo
+from pybossa.core import result_repo, db, task_repo
 from pybossa.jobs import webhook, notify_blog_users, check_and_send_project_progress
 from pybossa.jobs import push_notification
 from pybossa.cache import projects as cached_projects
@@ -143,9 +143,6 @@ def add_task_event(mapper, conn, target):
 @event.listens_for(Task, 'after_update')
 @event.listens_for(Task, 'after_delete')
 def calculate_and_send_progress_after_update_task(mapper, conn, target):
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    current_app.logger.info('after update/delete')
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
     check_and_send_project_progress(target.project_id, conn)
 
 

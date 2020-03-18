@@ -697,7 +697,6 @@ def delete_bulk_tasks(data):
 
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
-    # TODO: send email
     check_and_send_project_progress(project_id)
 
 
@@ -997,10 +996,6 @@ def notify_project_progress(info, email_addr, queue='high'):
                 timeout=timeout,
                 queue=queue)
     enqueue_job(job)
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    current_app.logger.info('Enqueue Job')
-    current_app.logger.info(mail_dict)
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
 
 def get_weekly_stats_update_projects():
@@ -1333,9 +1328,6 @@ def check_and_send_project_progress(project_id, conn=None):
     project = project_repo.get(project_id)
     if not project:
         return
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    current_app.logger.info('check_and_send_project_progress')
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     reminder = project.info.get('progress_reminder', {})
     target_remaining = reminder.get("target_remaining")
@@ -1344,35 +1336,17 @@ def check_and_send_project_progress(project_id, conn=None):
         return
 
     n_available_tasks = n_available_tasks(project.id)
-
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    current_app.logger.info('n_available_tasks: {}'.format(n_available_tasks))
-    current_app.logger.info('target_remaining: {}'.format(target_remaining))
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-
-
     if n_available_tasks > target_remaining:
         reminder['sent'] = False
-        current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-        current_app.logger.info('check_and_send_project_progress - set to False')
-        current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     elif not email_already_sent:
         # progress reached threshold and email not sent yet, send email
-        current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-        current_app.logger.info('check_and_send_project_progress - set to True')
-        current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-
         email_addr = [cached_users.get_user_email(user_id)
                         for user_id in project.owners_ids]
         info = dict(project_name=project.name,
                     n_available_tasks=n_available_tasks)
         notify_project_progress(info, email_addr)
         reminder['sent'] = True
-
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    current_app.logger.info('email sent, save to project')
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
 
     project.info['progress_reminder'] = reminder
     if conn is not None:
@@ -1382,11 +1356,6 @@ def check_and_send_project_progress(project_id, conn=None):
     else:
         current_app.logger.info('save with repo')
         project_repo.save(project)
-
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-    current_app.logger.info('project saved')
-    current_app.logger.info('^^^^^^^^^^^^^^^^^^^^^^^^^^^')
-
 
 def export_all_users(fmt, email_addr):
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',

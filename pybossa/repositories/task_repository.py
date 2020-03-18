@@ -338,7 +338,6 @@ class TaskRepository(Repository):
         self.update_task_state(project.id)
         self.db.session.commit()
         cached_projects.clean_project(project.id)
-        # TODO: send email
         check_and_send_project_progress(project.id)
         return tasks_not_updated
 

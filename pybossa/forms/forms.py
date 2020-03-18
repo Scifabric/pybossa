@@ -22,7 +22,7 @@ from flask import request
 from flask_wtf import FlaskForm as Form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from werkzeug.utils import secure_filename
-from wtforms import IntegerField, DecimalField, TextField, BooleanField, RadioField, \
+from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms import SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
