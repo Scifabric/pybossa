@@ -268,7 +268,7 @@ class TaskTimeoutForm(Form):
 
 
 class ProgressReminderForm(Form):
-    remaining = IntegerField(lazy_gettext('Notify when number of incomplete tasks drops to'))
+    remaining = IntegerField(lazy_gettext('Notify when incomplete tasks drops to the following number'))
 
 
 class TaskSchedulerForm(Form):
