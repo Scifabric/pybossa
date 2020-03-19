@@ -1350,11 +1350,9 @@ def check_and_send_project_progress(project_id, conn=None):
 
     project.info['progress_reminder'] = reminder
     if conn is not None:
-        current_app.logger.info('save with conn')
         sql = text(''' UPDATE project SET info=:info WHERE id=:id''')
         conn.execute(sql, dict(info=json.dumps(project.info), id=project_id))
     else:
-        current_app.logger.info('save with repo')
         project_repo.save(project)
 
 def export_all_users(fmt, email_addr):
