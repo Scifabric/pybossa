@@ -1338,7 +1338,6 @@ def check_and_send_project_progress(project_id, conn=None):
     n_available_tasks = n_available_tasks(project.id)
     if n_available_tasks > target_remaining:
         reminder['sent'] = False
-
     elif not email_already_sent:
         # progress reached threshold and email not sent yet, send email
         email_addr = [cached_users.get_user_email(user_id)

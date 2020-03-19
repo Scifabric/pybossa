@@ -33,7 +33,7 @@ class TestSendProgressReminder(Test):
     @patch('pybossa.cache.helpers.n_available_tasks')
     @patch('pybossa.jobs.notify_project_progress')
     def test_remaining_tasks_drop_below_configuration_0(self, notify, n_tasks):
-        """Send email if remaining tasks drops below, test with conn"""
+        """Send email if remaining tasks drops below, test with connection"""
         n_tasks.return_value = 0
         reminder = dict(target_remaining=0, sent=False)
         conn = MagicMock()
@@ -45,7 +45,7 @@ class TestSendProgressReminder(Test):
                                         featured=True,
                                         info={'progress_reminder':reminder})
 
-        check_and_send_project_progress(project_id)
+        check_and_send_project_progress(project_id, conn)
         assert notify.called
         assert project.info['progress_reminder']['sent']
 
