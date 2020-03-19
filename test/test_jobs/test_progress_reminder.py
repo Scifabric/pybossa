@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.jobs import check_and_send_project_progress
+from pybossa.jobs import check_and_send_project_progress, notify_project_progress
 from default import Test, with_context, flask_app
 from factories import BlogpostFactory
 from factories import TaskRunFactory
@@ -87,3 +87,10 @@ class TestSendProgressReminder(Test):
         assert not project.info['progress_reminder']['sent']
 
 
+    @with_context
+    @patch('pybossa.jobs.enqueue_job')
+    def test_notify_project_progress(self, mock):
+        info = dict(project_name="test project", n_available_tasks=10)
+        email_addr = ['user@user.com']
+        notify_project_progress(info, email_addr)
+        assert mock.called
