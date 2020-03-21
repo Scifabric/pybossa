@@ -153,6 +153,28 @@ def fix_task_date():
             db.engine.execute(query, created=fixed_created, id=task.id)
 
 
+def fix_task_run_created_date():
+    """Fix Date format in Task."""
+    import re
+    from datetime import datetime
+    with app.app_context():
+        query = text(
+            '''SELECT id, created FROM task_run WHERE created LIKE ('\x%')''')
+        results = db.engine.execute(query)
+        task_runs = results.fetchall()
+        for task_run in task_runs:
+            # It's a hex string
+            try:
+                hex_check = task_run.created.replace('\\x', '')
+                int(hex_check, 16)
+                fixed_created = bytes.fromhex(hex_check).decode()
+            except ValueError:
+                fixed_created = task_run.created
+            print(fixed_created)
+            query = text('''UPDATE task_run SET created=:created WHERE id=:id''')
+            db.engine.execute(query, created=fixed_created, id=task_run.id)
+
+
 def delete_hard_bounces():
     '''Delete fake accounts from hard bounces.'''
     del_users = 0
