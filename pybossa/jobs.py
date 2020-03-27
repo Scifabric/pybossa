@@ -1322,6 +1322,7 @@ def get_management_dashboard_stats(user_email):
 
 
 def check_and_send_task_notifications(project_id, conn=None):
+    from pybossa.core import project_repo
 
     project = project_repo.get(project_id)
     if not project:

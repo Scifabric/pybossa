@@ -16,21 +16,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.jobs import check_and_send_task_notifications, notify_task_progress
-from default import Test, with_context, flask_app
+from default import Test, db, with_context, flask_app
 from factories import BlogpostFactory
 from factories import TaskRunFactory
 from factories import ProjectFactory
 from factories import UserFactory
 from mock import patch, MagicMock
+from pybossa.jobs import check_and_send_task_notifications, notify_task_progress
 
 queue = MagicMock()
 queue.enqueue.return_value = True
 
-class TestSendProgressReminder(Test):
+class TestSendTaskNorification(Test):
 
     @with_context
-    @patch('pybossa.cache.helpers.n_available_tasks')
+    @patch('pybossa.jobs.n_available_tasks')
     @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_drop_below_configuration_0(self, notify, n_tasks):
         """Send email if remaining tasks drops below, test with connection"""
@@ -51,7 +51,7 @@ class TestSendProgressReminder(Test):
 
 
     @with_context
-    @patch('pybossa.cache.helpers.n_available_tasks')
+    @patch('pybossa.jobs.n_available_tasks')
     @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_drop_below_configuration_1(self, notify, n_tasks):
         """Send email if remaining tasks drops below"""
@@ -70,7 +70,7 @@ class TestSendProgressReminder(Test):
 
 
     @with_context
-    @patch('pybossa.cache.helpers.n_available_tasks')
+    @patch('pybossa.jobs.n_available_tasks')
     @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_drop_below_configuration_2(self, notify, n_tasks):
         """Do not sent multiple email"""
@@ -90,7 +90,7 @@ class TestSendProgressReminder(Test):
 
 
     @with_context
-    @patch('pybossa.cache.helpers.n_available_tasks')
+    @patch('pybossa.jobs.n_available_tasks')
     @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_do_not_drop_below_configuration(self, notify, n_tasks):
         """Do not send email if #remaining tasks is greater than configuration"""
