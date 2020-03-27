@@ -88,7 +88,6 @@ class TestSendTaskNorification(Test):
         assert project.info['progress_reminder']['sent']
 
 
-
     @with_context
     @patch('pybossa.jobs.n_available_tasks')
     @patch('pybossa.jobs.notify_task_progress')
@@ -107,6 +106,24 @@ class TestSendTaskNorification(Test):
         assert not notify.called
         assert not project.info['progress_reminder']['sent']
 
+
+    @with_context
+    @patch('pybossa.jobs.n_available_tasks')
+    @patch('pybossa.jobs.notify_task_progress')
+    def test_remaining_tasks_do_not_drop_below_configuration_2(self, notify, n_tasks):
+        """Do not send email if #remaining tasks is greater than configuration"""
+        n_tasks.return_value = 1
+        reminder = dict(target_remaining=0, sent=True)
+        project_id = '1'
+        project = ProjectFactory.create(id=project_id,
+                                        owners_ids=[],
+                                        published=True,
+                                        featured=True,
+                                        info={'progress_reminder':reminder})
+
+        check_and_send_task_notifications(project_id)
+        assert not notify.called
+        assert not project.info['progress_reminder']['sent']
 
     @with_context
     @patch('pybossa.jobs.enqueue_job')
