@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.jobs import check_and_send_project_progress, notify_project_progress
+from pybossa.jobs import check_and_send_task_notifications, notify_task_progress
 from default import Test, with_context, flask_app
 from factories import BlogpostFactory
 from factories import TaskRunFactory
@@ -31,7 +31,7 @@ class TestSendProgressReminder(Test):
 
     @with_context
     @patch('pybossa.cache.helpers.n_available_tasks')
-    @patch('pybossa.jobs.notify_project_progress')
+    @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_drop_below_configuration_0(self, notify, n_tasks):
         """Send email if remaining tasks drops below, test with connection"""
         n_tasks.return_value = 0
@@ -45,14 +45,14 @@ class TestSendProgressReminder(Test):
                                         featured=True,
                                         info={'progress_reminder':reminder})
 
-        check_and_send_project_progress(project_id, conn)
+        check_and_send_task_notifications(project_id, conn)
         assert notify.called
         assert project.info['progress_reminder']['sent']
 
 
     @with_context
     @patch('pybossa.cache.helpers.n_available_tasks')
-    @patch('pybossa.jobs.notify_project_progress')
+    @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_drop_below_configuration_1(self, notify, n_tasks):
         """Send email if remaining tasks drops below"""
         n_tasks.return_value = 0
@@ -64,14 +64,14 @@ class TestSendProgressReminder(Test):
                                         featured=True,
                                         info={'progress_reminder':reminder})
 
-        check_and_send_project_progress(project_id)
+        check_and_send_task_notifications(project_id)
         assert notify.called
         assert project.info['progress_reminder']['sent']
 
 
     @with_context
     @patch('pybossa.cache.helpers.n_available_tasks')
-    @patch('pybossa.jobs.notify_project_progress')
+    @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_drop_below_configuration_2(self, notify, n_tasks):
         """Do not sent multiple email"""
         n_tasks.return_value = 0
@@ -83,7 +83,7 @@ class TestSendProgressReminder(Test):
                                         featured=True,
                                         info={'progress_reminder':reminder})
 
-        check_and_send_project_progress(project_id)
+        check_and_send_task_notifications(project_id)
         assert not notify.called
         assert project.info['progress_reminder']['sent']
 
@@ -91,7 +91,7 @@ class TestSendProgressReminder(Test):
 
     @with_context
     @patch('pybossa.cache.helpers.n_available_tasks')
-    @patch('pybossa.jobs.notify_project_progress')
+    @patch('pybossa.jobs.notify_task_progress')
     def test_remaining_tasks_do_not_drop_below_configuration(self, notify, n_tasks):
         """Do not send email if #remaining tasks is greater than configuration"""
         n_tasks.return_value = 1
@@ -103,15 +103,15 @@ class TestSendProgressReminder(Test):
                                         featured=True,
                                         info={'progress_reminder':reminder})
 
-        check_and_send_project_progress(project_id)
+        check_and_send_task_notifications(project_id)
         assert not notify.called
         assert not project.info['progress_reminder']['sent']
 
 
     @with_context
     @patch('pybossa.jobs.enqueue_job')
-    def test_notify_project_progress(self, mock):
+    def test_notify_task_progress(self, mock):
         info = dict(project_name="test project", n_available_tasks=10)
         email_addr = ['user@user.com']
-        notify_project_progress(info, email_addr)
+        notify_task_progress(info, email_addr)
         assert mock.called

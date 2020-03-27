@@ -35,7 +35,7 @@ from pybossa.model.user import User
 from pybossa.model.result import Result
 from pybossa.model.counter import Counter
 from pybossa.core import result_repo, db, task_repo
-from pybossa.jobs import webhook, notify_blog_users, check_and_send_project_progress
+from pybossa.jobs import webhook, notify_blog_users, check_and_send_task_notifications
 from pybossa.jobs import push_notification
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -143,7 +143,7 @@ def add_task_event(mapper, conn, target):
 @event.listens_for(Task, 'after_update')
 @event.listens_for(Task, 'after_delete')
 def calculate_and_send_progress_after_update_task(mapper, conn, target):
-    check_and_send_project_progress(target.project_id, conn)
+    check_and_send_task_notifications(target.project_id, conn)
 
 
 @event.listens_for(User, 'after_insert')
@@ -283,7 +283,7 @@ def on_taskrun_submit(mapper, conn, target):
     is_completed = is_task_completed(conn, target.task_id, target.project_id)
     if is_completed:
         update_task_state(conn, target.task_id)
-        check_and_send_project_progress(target.project_id, conn)
+        check_and_send_task_notifications(target.project_id, conn)
 
     if is_completed and _published:
         update_feed(project_public)

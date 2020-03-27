@@ -68,7 +68,7 @@ from pybossa.jobs import (webhook, send_mail,
                           import_tasks, IMPORT_TASKS_TIMEOUT,
                           delete_bulk_tasks, TASK_DELETE_TIMEOUT,
                           export_tasks, EXPORT_TASKS_TIMEOUT,
-                          mail_project_report, check_and_send_project_progress)
+                          mail_project_report, check_and_send_task_notifications)
 from pybossa.forms.dynamic_forms import dynamic_project_form, dynamic_clone_project_form
 from pybossa.forms.projects_view_forms import *
 from pybossa.forms.admin_view_forms import SearchForm
@@ -1001,7 +1001,7 @@ def import_task(short_name):
                 flash(gettext(msg), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
-        check_and_send_project_progress(project.id)
+        check_and_send_task_notifications(project.id)
         return handle_content_type(template_args)
 
     if request.method == 'GET':
@@ -2344,16 +2344,16 @@ def task_timeout(short_name):
 
 
 
-@blueprint.route('/<short_name>/tasks/progress-reminder', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/tasks/task_notification', methods=['GET', 'POST'])
 @login_required
-def task_progress_reminder(short_name):
+def task_notification(short_name):
     project, owner, ps = project_by_shortname(short_name)
     project_sanitized, owner_sanitized = sanitize_project_owner(project,
                                                                     owner,
                                                                     current_user,
                                                                     ps)
-    title = project_title(project, gettext('Progress Reminder'))
-    form = ProgressReminderForm(request.body) if request.data else ProgressReminderForm()
+    title = project_title(project, gettext('Task Notification'))
+    form = TaskNotificationForm(request.body) if request.data else TaskNotificationForm()
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
@@ -2361,7 +2361,7 @@ def task_progress_reminder(short_name):
     if request.method == 'GET':
         reminder_info = project.info.get('progress_reminder', {})
         form.remaining.data = reminder_info.get('target_remaining')
-        return handle_content_type(dict(template='/projects/progress_reminder.html',
+        return handle_content_type(dict(template='/projects/task_notification.html',
                                title=title,
                                form=form,
                                project=project_sanitized,
@@ -2371,7 +2371,7 @@ def task_progress_reminder(short_name):
     n_tasks = cached_projects.n_tasks(project.id)
     if remaining is not None and (remaining < 0 or remaining > n_tasks):
         flash(gettext('Target number should be between 0 and {}'.format(n_tasks)), 'error')
-        return handle_content_type(dict(template='/projects/progress_reminder.html',
+        return handle_content_type(dict(template='/projects/task_notification.html',
                                 title=title,
                                 form=form,
                                 project=project_sanitized,
@@ -2384,7 +2384,7 @@ def task_progress_reminder(short_name):
     project.info['progress_reminder'] = reminder_info
     project_repo.save(project)
 
-    flash(gettext("Project Task Progress Reminder updated!"), 'success')
+    flash(gettext("Task notifications updated."), 'success')
     return redirect_content_type(url_for('.tasks', short_name=project.short_name))
 
 

@@ -21,7 +21,9 @@ import math
 import requests
 from flask import current_app, render_template
 from flask_mail import Message, Attachment
-from pybossa.core import mail, task_repo, importer, create_app
+import pybossa.cache.users as cached_users
+from pybossa.cache.helpers import n_available_tasks
+from pybossa.core import mail, project_repo, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users, UnicodeWriter
 import pybossa.dashboard.jobs as dashboard
@@ -39,6 +41,7 @@ from pybossa.cloud_store_api.connection import create_connection
 from collections import OrderedDict
 import json
 from StringIO import StringIO
+from sqlalchemy.sql import text
 from zipfile import ZipFile
 
 MINUTE = 60
@@ -419,7 +422,6 @@ def warm_cache():  # pragma: no cover
     projects_cached = []
     import pybossa.cache.projects as cached_projects
     import pybossa.cache.categories as cached_cat
-    import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
     from pybossa.util import rank
     from pybossa.core import user_repo
@@ -697,7 +699,7 @@ def delete_bulk_tasks(data):
 
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
-    check_and_send_project_progress(project_id)
+    check_and_send_task_notifications(project_id)
 
 
 def send_email_notifications():
@@ -977,11 +979,11 @@ def notify_blog_users(blog_id, project_id, queue='high'):
     return msg
 
 
-def notify_project_progress(info, email_addr, queue='high'):
+def notify_task_progress(info, email_addr, queue='high'):
     """ send email about the progress of task completion """
 
     subject = "Project progress reminder for {}".format(info['project_name'])
-    msg = """There are only {} tasks left incompleted in your project {}.
+    msg = """There are only {} tasks left as incomplete in your project {}.
           """.format(info['n_available_tasks'], info['project_name'])
     body = (u'Hello,\n\n{}\nThe {} team.'
             .format(msg, current_app.config.get('BRAND')))
@@ -1319,11 +1321,7 @@ def get_management_dashboard_stats(user_email):
     send_mail(mail_dict)
 
 
-def check_and_send_project_progress(project_id, conn=None):
-    from pybossa.cache.helpers import n_available_tasks
-    import pybossa.cache.users as cached_users
-    from pybossa.core import project_repo
-    from sqlalchemy.sql import text
+def check_and_send_task_notifications(project_id, conn=None):
 
     project = project_repo.get(project_id)
     if not project:
@@ -1335,24 +1333,32 @@ def check_and_send_project_progress(project_id, conn=None):
     if target_remaining is None:
         return
 
-    n_available_tasks = n_available_tasks(project.id)
-    if n_available_tasks > target_remaining:
+    n_remaining_tasks = n_available_tasks(project.id)
+
+    update_reminder = False
+    if n_remaining_tasks > target_remaining and email_already_sent:
+        current_app.logger.info('incomplete tasks increase over target remaining, reset reminder to active')
         reminder['sent'] = False
-    elif not email_already_sent:
-        # progress reached threshold and email not sent yet, send email
+        update_reminder = True
+
+    if n_remaining_tasks <= target_remaining and not email_already_sent:
+        # incomplete tasks drop to or below, and email not sent yet, send email
+        current_app.logger.info('incomplete tasks drop, send task notification to coowners')
         email_addr = [cached_users.get_user_email(user_id)
                         for user_id in project.owners_ids]
         info = dict(project_name=project.name,
-                    n_available_tasks=n_available_tasks)
-        notify_project_progress(info, email_addr)
+                    n_available_tasks=n_remaining_tasks)
+        notify_task_progress(info, email_addr)
         reminder['sent'] = True
+        update_reminder = True
 
-    project.info['progress_reminder'] = reminder
-    if conn is not None:
-        sql = text(''' UPDATE project SET info=:info WHERE id=:id''')
-        conn.execute(sql, dict(info=json.dumps(project.info), id=project_id))
-    else:
-        project_repo.save(project)
+    if update_reminder:
+        project.info['progress_reminder'] = reminder
+        if conn is not None:
+            sql = text(''' UPDATE project SET info=:info WHERE id=:id''')
+            conn.execute(sql, dict(info=json.dumps(project.info), id=project_id))
+        else:
+            project_repo.save(project)
 
 def export_all_users(fmt, email_addr):
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',
