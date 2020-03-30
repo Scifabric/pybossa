@@ -31,7 +31,7 @@ from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
 import os
 from datetime import datetime
-from pybossa.core import user_repo
+from pybossa.core import user_repo, auditlog_repo
 from rq.timeouts import JobTimeoutException
 import app_settings
 from pybossa.auditlogger import AuditLogger
@@ -53,6 +53,7 @@ MAX_RECIPIENTS = 50
 from pybossa.core import uploader
 from pybossa.exporter.json_export import JsonExporter
 
+auditlogger = AuditLogger(auditlog_repo, caller='web')
 
 def schedule_job(function, scheduler):
     """Schedule a job and return a log message."""
@@ -1340,7 +1341,8 @@ def check_and_send_task_notifications(project_id, conn=None):
     update_reminder = False
     if n_remaining_tasks > target_remaining and email_already_sent:
         current_app.logger.info(u'Project {}, the number of incomplete tasks: {} \
-                                exceeds target remaining: {}, reset Sent as True'
+                                exceeds target remaining: {}, \
+                                resetting the send notification flag to True'
                                 .format(project_id, n_remaining_tasks, target_remaining))
         reminder['sent'] = False
         update_reminder = True
@@ -1362,9 +1364,11 @@ def check_and_send_task_notifications(project_id, conn=None):
     if update_reminder:
         project.info['progress_reminder'] = reminder
         if conn is not None:
+            # Listener process is updating the task notification.
             sql = text(''' UPDATE project SET info=:info WHERE id=:id''')
             conn.execute(sql, dict(info=json.dumps(project.info), id=project_id))
         else:
+            # User is updating the task notification from the project settings.
             project_repo.save(project)
 
 def export_all_users(fmt, email_addr):
