@@ -34,6 +34,7 @@ from datetime import datetime
 from pybossa.core import user_repo
 from rq.timeouts import JobTimeoutException
 import app_settings
+from pybossa.auditlogger import AuditLogger
 from pybossa.cache import sentinel, management_dashboard_stats
 from pybossa.cache import settings, site_stats
 from pybossa.cache.users import get_users_for_report
@@ -1338,13 +1339,18 @@ def check_and_send_task_notifications(project_id, conn=None):
 
     update_reminder = False
     if n_remaining_tasks > target_remaining and email_already_sent:
-        current_app.logger.info('incomplete tasks increase over target remaining, reset reminder to active')
+        current_app.logger.info(u'Project {}, the number of incomplete tasks: {} \
+                                exceeds target remaining: {}, reset Sent as True'
+                                .format(project_id, n_remaining_tasks, target_remaining))
         reminder['sent'] = False
         update_reminder = True
 
     if n_remaining_tasks <= target_remaining and not email_already_sent:
         # incomplete tasks drop to or below, and email not sent yet, send email
-        current_app.logger.info('incomplete tasks drop, send task notification to coowners')
+        current_app.logger.info(u'Project {} the number of incomplete tasks: {}, \
+                                drops equal to or below target remaining: {}, \
+                                sending task notification to owners: {}'
+                                .format(project_id, n_remaining_tasks, target_remaining, project.owners_ids))
         email_addr = [cached_users.get_user_email(user_id)
                         for user_id in project.owners_ids]
         info = dict(project_name=project.name,

@@ -2378,9 +2378,13 @@ def task_notification(short_name):
                                 pro_features=pro))
 
     project = project_repo.get_by_shortname(short_name=project.short_name)
+
     reminder_info = project.info.get('progress_reminder') or {}
     reminder_info['target_remaining'] = remaining
     reminder_info['sent'] = False
+
+    auditlogger.log_event(project, current_user, 'update', 'task_notification',
+                        project.info.get('progress_reminder'), reminder_info)
     project.info['progress_reminder'] = reminder_info
     project_repo.save(project)
 
