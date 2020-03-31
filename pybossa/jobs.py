@@ -21,7 +21,9 @@ import math
 import requests
 from flask import current_app, render_template
 from flask_mail import Message, Attachment
-from pybossa.core import mail, task_repo, importer, create_app
+import pybossa.cache.users as cached_users
+from pybossa.cache.helpers import n_available_tasks
+from pybossa.core import mail, project_repo, task_repo, importer, create_app
 from pybossa.model.webhook import Webhook
 from pybossa.util import with_cache_disabled, publish_channel, mail_with_enabled_users, UnicodeWriter
 import pybossa.dashboard.jobs as dashboard
@@ -29,9 +31,10 @@ from pybossa.leaderboard.jobs import leaderboard
 from pbsonesignal import PybossaOneSignal
 import os
 from datetime import datetime
-from pybossa.core import user_repo
+from pybossa.core import user_repo, auditlog_repo
 from rq.timeouts import JobTimeoutException
 import app_settings
+from pybossa.auditlogger import AuditLogger
 from pybossa.cache import sentinel, management_dashboard_stats
 from pybossa.cache import settings, site_stats
 from pybossa.cache.users import get_users_for_report
@@ -39,6 +42,7 @@ from pybossa.cloud_store_api.connection import create_connection
 from collections import OrderedDict
 import json
 from StringIO import StringIO
+from sqlalchemy.sql import text
 from zipfile import ZipFile
 
 MINUTE = 60
@@ -49,6 +53,7 @@ MAX_RECIPIENTS = 50
 from pybossa.core import uploader
 from pybossa.exporter.json_export import JsonExporter
 
+auditlogger = AuditLogger(auditlog_repo, caller='web')
 
 def schedule_job(function, scheduler):
     """Schedule a job and return a log message."""
@@ -419,7 +424,6 @@ def warm_cache():  # pragma: no cover
     projects_cached = []
     import pybossa.cache.projects as cached_projects
     import pybossa.cache.categories as cached_cat
-    import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
     from pybossa.util import rank
     from pybossa.core import user_repo
@@ -697,6 +701,7 @@ def delete_bulk_tasks(data):
 
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)
+    check_and_send_task_notifications(project_id)
 
 
 def send_email_notifications():
@@ -974,6 +979,27 @@ def notify_blog_users(blog_id, project_id, queue='high'):
             users += 1
     msg = "%s users notified by email" % users
     return msg
+
+
+def notify_task_progress(info, email_addr, queue='high'):
+    """ send email about the progress of task completion """
+
+    subject = "Project progress reminder for {}".format(info['project_name'])
+    msg = """There are only {} tasks left as incomplete in your project {}.
+          """.format(info['n_available_tasks'], info['project_name'])
+    body = (u'Hello,\n\n{}\nThe {} team.'
+            .format(msg, current_app.config.get('BRAND')))
+    mail_dict = dict(recipients=email_addr,
+                        subject=subject,
+                        body=body)
+
+    timeout = current_app.config.get('TIMEOUT')
+    job = dict(name=send_mail,
+                args=[mail_dict],
+                kwargs={},
+                timeout=timeout,
+                queue=queue)
+    enqueue_job(job)
 
 
 def get_weekly_stats_update_projects():
@@ -1296,6 +1322,54 @@ def get_management_dashboard_stats(user_email):
     mail_dict = dict(recipients=[user_email], subject=subject, body=body)
     send_mail(mail_dict)
 
+
+def check_and_send_task_notifications(project_id, conn=None):
+    from pybossa.core import project_repo
+
+    project = project_repo.get(project_id)
+    if not project:
+        return
+
+    reminder = project.info.get('progress_reminder', {})
+    target_remaining = reminder.get("target_remaining")
+    email_already_sent = reminder.get("sent") or False
+    if target_remaining is None:
+        return
+
+    n_remaining_tasks = n_available_tasks(project.id)
+
+    update_reminder = False
+    if n_remaining_tasks > target_remaining and email_already_sent:
+        current_app.logger.info(u'Project {}, the number of incomplete tasks: {} \
+                                exceeds target remaining: {}, \
+                                resetting the send notification flag to True'
+                                .format(project_id, n_remaining_tasks, target_remaining))
+        reminder['sent'] = False
+        update_reminder = True
+
+    if n_remaining_tasks <= target_remaining and not email_already_sent:
+        # incomplete tasks drop to or below, and email not sent yet, send email
+        current_app.logger.info(u'Project {} the number of incomplete tasks: {}, \
+                                drops equal to or below target remaining: {}, \
+                                sending task notification to owners: {}'
+                                .format(project_id, n_remaining_tasks, target_remaining, project.owners_ids))
+        email_addr = [cached_users.get_user_email(user_id)
+                        for user_id in project.owners_ids]
+        info = dict(project_name=project.name,
+                    n_available_tasks=n_remaining_tasks)
+        notify_task_progress(info, email_addr)
+        reminder['sent'] = True
+        update_reminder = True
+
+    if update_reminder:
+        project.info['progress_reminder'] = reminder
+        if conn is not None:
+            # Listener process is updating the task notification.
+            sql = text(''' UPDATE project SET info=:info WHERE id=:id''')
+            conn.execute(sql, dict(info=json.dumps(project.info), id=project_id))
+        else:
+            # User is updating the task notification from the project settings.
+            project_repo.save(project)
 
 def export_all_users(fmt, email_addr):
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'locale',

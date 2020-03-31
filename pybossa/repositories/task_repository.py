@@ -203,6 +203,8 @@ class TaskRepository(Repository):
         self._delete_zip_files_from_store(project)
 
     def delete_task_by_id(self, project_id, task_id):
+        from pybossa.jobs import check_and_send_task_notifications
+
         args = dict(project_id=project_id, task_id=task_id)
         self.db.session.execute(text('''
                    DELETE FROM result WHERE project_id=:project_id
@@ -215,6 +217,7 @@ class TaskRepository(Repository):
                                     AND id=:task_id;'''), args)
         self.db.session.commit()
         cached_projects.clean_project(project_id)
+        check_and_send_task_notifications(project_id)
 
     def delete_valid_from_project(self, project, force_reset=False, filters=None):
         if not force_reset:
@@ -284,6 +287,7 @@ class TaskRepository(Repository):
         tasks with curr redundancy < new redundancy, with state as completed
         and were marked as exported = True
         """
+        from pybossa.jobs import check_and_send_task_notifications
 
         if n_answers < self.MIN_REDUNDANCY or n_answers > self.MAX_REDUNDANCY:
             raise ValueError("Invalid redundancy value: {}".format(n_answers))
@@ -334,6 +338,7 @@ class TaskRepository(Repository):
         self.update_task_state(project.id)
         self.db.session.commit()
         cached_projects.clean_project(project.id)
+        check_and_send_task_notifications(project.id)
         return tasks_not_updated
 
     def update_task_state(self, project_id):
