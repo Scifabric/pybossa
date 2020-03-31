@@ -27,7 +27,7 @@ from pybossa.jobs import check_and_send_task_notifications, notify_task_progress
 queue = MagicMock()
 queue.enqueue.return_value = True
 
-class TestSendTaskNorification(Test):
+class TestSendTaskNotification(Test):
 
     @with_context
     @patch('pybossa.jobs.n_available_tasks')
