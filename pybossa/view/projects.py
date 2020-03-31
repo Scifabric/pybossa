@@ -2360,27 +2360,21 @@ def task_progress_reminder(short_name):
     if request.method == 'GET':
         reminder_info = project.info.get('progress_reminder', {})
         recipients_group = reminder_info.get('recipients')
-        progress_precentage = reminder_info.get('percentage') or 0
-        # options = [('Do not notify', 'None'),
-        #            ('Notify only project owner', 'owner'),
-        #            ('Notify all project coowners', 'coowners')]
-        recipients_group = recipients_group if recipients_group else 'None'
-        print(recipients_group)
-
+        form.percentage.data = reminder_info.get('percentage') or 0
+        form.recipients_group.data = recipients_group if recipients_group else 'None'
         return handle_content_type(dict(template='/projects/progress_reminder.html',
                                title=title,
                                form=form,
-                               recipients_group=recipients_group,
-                               progress_precentage=progress_precentage,
                                project=project_sanitized,
                                pro_features=pro))
-"""
-    if form.validate() and form.in_range():
+
+    if form.validate():
         project = project_repo.get_by_shortname(short_name=project.short_name)
         reminder_info = project.info.get('progress_reminder') or {}
-        reminder_info['recipients'] = form.recipients if form.recipients is not None else None
-        reminder_info['percentage'] = form.percentage or 0
+        reminder_info['recipients'] = 'None' if form.recipients_group.data is 'None' else form.recipients_group.data
+        reminder_info['percentage'] = form.percentage.data or 0
         project.info['progress_reminder'] = reminder_info
+        project_repo.save(project)
         msg = gettext("Project Task Progress Reminder updated!")
         flash(msg, 'success')
 
@@ -2395,10 +2389,9 @@ def task_progress_reminder(short_name):
                                title=title,
                                form=form,
                                project=project_sanitized,
-                               owner=owner_sanitized,
                                pro_features=pro))
 
-"""
+
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):

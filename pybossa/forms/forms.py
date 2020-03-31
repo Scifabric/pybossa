@@ -271,7 +271,8 @@ class ProgressReminderForm(Form):
     recipients_choices = [('None', 'Do not notify'),
                           ('owner','Notify only project owner'),
                           ('coowners', 'Notify all project coowners')]
-    recipients_group = RadioField('TEST_LABEL', choices=recipients_choices, coerce=unicode)
+    recipients_group = RadioField(lazy_gettext('Choose recipients'),
+                                  choices=recipients_choices)
     percentage = IntegerField(lazy_gettext('Notify once the following percentage of tasks are completed (0 - 100)'),
                            [validators.NumberRange(min=0, max=100)])
 
