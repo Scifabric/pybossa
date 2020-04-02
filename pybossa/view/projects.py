@@ -1001,7 +1001,6 @@ def import_task(short_name):
                 flash(gettext(msg), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
-        check_and_send_task_notifications(project.id)
         return handle_content_type(template_args)
 
     if request.method == 'GET':
@@ -1039,6 +1038,7 @@ def _import_tasks(project, **form_data):
             You will receive an email when the tasks are ready."))
 
     if not report or report.total > 0: #success
+        check_and_send_task_notifications(project.id)
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
     else:
         return redirect_content_type(url_for('.import_task',

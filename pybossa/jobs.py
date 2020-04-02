@@ -799,7 +799,10 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         form_data['last_import_meta'] = report.metadata
         project.set_autoimporter(form_data)
         project_repo.save(project)
-    msg = report.message + u' to your project {0} by {1}'.format(project.name, current_user_fullname)
+    msg = report.message + u' to your project {0} by {1}. \
+        If you are expecting task notification, \
+        you may need to re-configure task notification in task setting.'
+        .format(project.name, current_user_fullname)
 
     subject = 'Tasks Import to your project %s' % project.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
