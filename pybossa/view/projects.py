@@ -1032,13 +1032,13 @@ def _import_tasks(project, **form_data):
         flash(report.message)
         if report.total > 0:
             cached_projects.delete_browse_tasks(project.id)
+            check_and_send_task_notifications(project.id)
     else:
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
 
     if not report or report.total > 0: #success
-        check_and_send_task_notifications(project.id)
         return redirect_content_type(url_for('.tasks', short_name=project.short_name))
     else:
         return redirect_content_type(url_for('.import_task',
