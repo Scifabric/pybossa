@@ -800,10 +800,10 @@ def import_tasks(project_id, current_user_fullname, from_auto=False, **form_data
         project.set_autoimporter(form_data)
         project_repo.save(project)
     msg = report.message + u' to your project {0} by {1}.'.format(project.name, current_user_fullname)
-    msg += 'If you are expecting task notification, \
+    msg_r = 'If you are expecting task notification, \
             you may need to re-configure task notification in task setting.'
     subject = 'Tasks Import to your project %s' % project.name
-    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
+    body = 'Hello,\n\n' + msg + '\n' + msg_r + '\n\nAll the best,\nThe %s team.'\
         % current_app.config.get('BRAND')
     mail_dict = dict(recipients=recipients, subject=subject, body=body)
     send_mail(mail_dict)

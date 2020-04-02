@@ -46,7 +46,8 @@ class TestImportTasksJob(Test):
         project = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % project.name
-        body = 'Hello,\n\n1 new task was imported successfully to your project %s by %s\n\nAll the best,\nThe PYBOSSA team.' % (project.name, uploader_name)
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s by %s.\nIf you are expecting task notification, \
+            you may need to re-configure task notification in task setting.\n\nAll the best,\nThe PYBOSSA team.' % (project.name, uploader_name)
         email_data = dict(recipients=[project.owner.email_addr],
                           subject=subject, body=body)
 
