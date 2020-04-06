@@ -1001,7 +1001,6 @@ def import_task(short_name):
                 flash(gettext(msg), 'error')
                 current_app.logger.exception(u'project: {} {}'.format(project.short_name, e))
         template_args['template'] = '/projects/importers/%s.html' % importer_type
-        check_and_send_task_notifications(project.id)
         return handle_content_type(template_args)
 
     if request.method == 'GET':
@@ -1033,6 +1032,7 @@ def _import_tasks(project, **form_data):
         flash(report.message)
         if report.total > 0:
             cached_projects.delete_browse_tasks(project.id)
+            check_and_send_task_notifications(project.id)
     else:
         importer_queue.enqueue(import_tasks, project.id, current_user.fullname, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
