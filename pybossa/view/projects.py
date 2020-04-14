@@ -3574,3 +3574,66 @@ def annotation_config(short_name):
                             'annotation_config', json.dumps(project.info.get('annotation_config')))
     flash(gettext('Project annotation configurations updated'), 'success')
     return redirect_content_type(url_for('.settings', short_name=project.short_name))
+
+@blueprint.route('/<short_name>/contact', methods=['POST'])
+@login_required
+def contact(short_name):
+    result = project_by_shortname(short_name)
+    project = result[0]
+
+    subject = u'GIGwork message for project {} by {}'.format(short_name, current_user.email_addr)
+    success_body = (
+        u'A GIGwork support request has been sent for the project: {project_name}.\n\n'
+        u'    User: {fullname} ({user_name}, {user_id})\n'
+        u'    Email: {email}\n'
+        u'    Message: {message}\n\n'
+        u'    Project Name: {project_name}\n'
+        u'    Project Short Name: {project_short_name} ({project_id})\n'
+        u'    Referring Url: {referrer}\n'
+        u'    Is Admin: {user_admin}\n'
+        u'    Is Subadmin: {user_subadmin}\n'
+        u'    Is Project Owner: {owner}\n'
+        u'    Total Tasks: {total_tasks}\n'
+        u'    Total Task Runs: {total_task_runs}\n'
+        u'    Available Task Runs: {remaining_task_runs}\n'
+        u'    Tasks Available to User: {tasks_available_user}\n'
+        u'    Tasks Completed by User: {tasks_completed_user}\n'
+    )
+
+    body = success_body.format(
+        fullname=current_user.fullname,
+        user_name=current_user.name,
+        user_id=current_user.id,
+        email=request.body.get("email", None),
+        message=request.body.get("message", None),
+        project_name=project.name,
+        project_short_name=project.short_name,
+        project_id=project.id,
+        referrer=request.headers.get("Referer"),
+        user_admin=current_user.admin,
+        user_subadmin=current_user.subadmin,
+        owner=request.body.get("projectOwner", False),
+        total_tasks=request.body.get("totalTasks", 0),
+        total_task_runs=request.body.get("totalTaskRuns", 0),
+        remaining_task_runs=request.body.get("remainingTasksRuns", 0),
+        tasks_available_user=request.body.get("tasksAvailableUser", 0),
+        tasks_completed_user=request.body.get("tasksCompletedUser", 0)
+    )
+
+    # Get email addresses for all owners of the project.
+    recipients = [user.email_addr for user in user_repo.get_users(project.owners_ids)]
+
+    # Send email.
+    email = dict(recipients=recipients,
+                 subject=subject,
+                 body=body)
+    mail_queue.enqueue(send_mail, email)
+
+    current_app.logger.info('Contact form email sent to {} at {} for project {} {} {}'.format(
+        current_user.name, recipients, current_user.id, project.name, short_name, project.id))
+
+    response = {
+        'success': True
+    }
+
+    return handle_content_type(response)
