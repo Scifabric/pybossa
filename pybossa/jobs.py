@@ -1332,6 +1332,7 @@ def check_and_send_task_notifications(project_id, conn=None):
 
     reminder = project.info.get('progress_reminder', {})
     target_remaining = reminder.get("target_remaining")
+    webhook = reminder.get('webhook')
     email_already_sent = reminder.get("sent") or False
     if target_remaining is None:
         return
@@ -1358,6 +1359,18 @@ def check_and_send_task_notifications(project_id, conn=None):
         info = dict(project_name=project.name,
                     n_available_tasks=n_remaining_tasks)
         notify_task_progress(info, email_addr)
+
+        if webhook:
+            current_app.logger.info(u'Project {} the number of incomplete tasks: {}, \
+                                drops equal to or below target remaining: {}, hitting webhook url: {}'
+                                .format(project_id, n_remaining_tasks, target_remaining, webhook))
+            headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+            data = dict(project_id=project_id,
+                        project_name=project.name,
+                        remianing_tasks=n_remaining_tasks,
+                        target_remaining=target_remaining)
+            webhook_response = requests.post(webhook, data=json.dumps(data), headers=headers)
+
         reminder['sent'] = True
         update_reminder = True
 

@@ -2360,6 +2360,7 @@ def task_notification(short_name):
     pro = pro_features()
     if request.method == 'GET':
         reminder_info = project.info.get('progress_reminder', {})
+        form.webhook.data = reminder_info.get('webhook')
         form.remaining.data = reminder_info.get('target_remaining')
         return handle_content_type(dict(template='/projects/task_notification.html',
                                title=title,
@@ -2368,6 +2369,7 @@ def task_notification(short_name):
                                pro_features=pro))
 
     remaining = form.remaining.data
+    webhook = form.webhook.data
     n_tasks = cached_projects.n_tasks(project.id)
     if remaining is not None and (remaining < 0 or remaining > n_tasks):
         flash(gettext('Target number should be between 0 and {}'.format(n_tasks)), 'error')
@@ -2381,6 +2383,7 @@ def task_notification(short_name):
 
     reminder_info = project.info.get('progress_reminder') or {}
     reminder_info['target_remaining'] = remaining
+    reminder_info['webhook'] = webhook
     reminder_info['sent'] = False
 
     auditlogger.log_event(project, current_user, 'update', 'task_notification',

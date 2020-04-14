@@ -269,6 +269,7 @@ class TaskTimeoutForm(Form):
 
 class TaskNotificationForm(Form):
     remaining = IntegerField(lazy_gettext('Notify when the number of remaining tasks is less than or equal to'))
+    webhook = TextField(description=lazy_gettext('Provide your webhook URL'))
 
 
 class TaskSchedulerForm(Form):
