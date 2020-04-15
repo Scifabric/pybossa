@@ -30,7 +30,13 @@ class TestProjectContact(Helper):
         message = u'hello'
 
         admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner, short_name='test-app', name='My New Project')
+
+        # Create co-owners.
+        coowner1 = UserFactory.create(name='My Co-Owner User 1', admin=True)
+        coowner2 = UserFactory.create(name='My Co-Owner User 2', subadmin=True)
+
+        # Create a project with a co-owner.
+        project = ProjectFactory.create(owner=owner, short_name='test-app', name='My New Project', owners_ids=[coowner1.id, coowner2.id])
 
         # Obtain a CSRF key.
         csrf = self.get_csrf('/account/signin')
@@ -46,17 +52,23 @@ class TestProjectContact(Helper):
         # Verify call to mail_queue.enqueue for sending the email.
         assert len(enqueue.call_args_list) == 1
 
-        # Verify contents of email.
+        # Get contents of email.
         str_message = str(enqueue.call_args_list[0])
+
+        # Verify message content.
         assert str_message.find('body') > -1
         assert str_message.find('Project Name: ' + project.name) > -1
         assert str_message.find('Project Short Name: ' + project.short_name) > -1
         assert str_message.find('Message: ' + message) > -1
 
-        # Verify recipients.
+        # Verify recipient for project owner.
         recipients_index = str_message.find('recipients')
         assert recipients_index > -1
         assert str_message.find(owner.email_addr) > recipients_index
+
+        # Verify recipients for project coowners.
+        assert str_message.find(coowner1.email_addr) > recipients_index
+        assert str_message.find(coowner2.email_addr) > recipients_index
 
         # Verify subject.
         subject_index = str_message.find('subject')
@@ -67,6 +79,72 @@ class TestProjectContact(Helper):
         data = json.loads(res.data)
         assert data.get('success') is True
 
+
+    @with_context
+    @patch('pybossa.view.projects.mail_queue.enqueue')
+    def test_project_contact_no_disabled_owner(self, enqueue):
+        """Test Project Contact not emailing a disabled co-owner."""
+        message = u'hello'
+
+        admin, owner, user = UserFactory.create_batch(3)
+
+        # Create a disabled user as a co-owner.
+        coowner = UserFactory.create(name='My Disabled Co-Owner User', enabled=False, subadmin=True)
+
+        # Create a project with a disabled co-owner.
+        project = ProjectFactory.create(owner=owner, short_name='test-app', name='My New Project', owners_ids=[coowner.id])
+
+        # Obtain a CSRF key.
+        csrf = self.get_csrf('/account/signin')
+
+        # Make a request to the api.
+        url = '/project/' + project.short_name + '/contact?api_key=' + user.api_key
+        data = dict(message=message)
+        res = self.app.post(url, headers={'X-CSRFToken': csrf}, content_type='application/json', data=json.dumps(data))
+
+        # Get contents of email.
+        str_message = str(enqueue.call_args_list[0])
+
+        # Verify recipient for project owner.
+        recipients_index = str_message.find('recipients')
+        assert recipients_index > -1
+        assert str_message.find(owner.email_addr) > recipients_index
+
+        # Verify no recipient for disabled co-owner.
+        assert str_message.find(coowner.email_addr) == -1
+
+    @with_context
+    @patch('pybossa.view.projects.mail_queue.enqueue')
+    def test_project_contact_no_non_admin_subadmin_owner(self, enqueue):
+        """Test Project Contact not emailing a co-owner who is not an admin nor subadmin."""
+        message = u'hello'
+
+        admin, owner, user = UserFactory.create_batch(3)
+
+        # Create a user as a co-owner that is not an admin nor subadmin.
+        coowner = UserFactory.create(name='My Non-Admin-Subadmin User')
+
+        # Create a project with a disabled co-owner.
+        project = ProjectFactory.create(owner=owner, short_name='test-app', name='My New Project', owners_ids=[coowner.id])
+
+        # Obtain a CSRF key.
+        csrf = self.get_csrf('/account/signin')
+
+        # Make a request to the api.
+        url = '/project/' + project.short_name + '/contact?api_key=' + user.api_key
+        data = dict(message=message)
+        res = self.app.post(url, headers={'X-CSRFToken': csrf}, content_type='application/json', data=json.dumps(data))
+
+        # Get contents of email.
+        str_message = str(enqueue.call_args_list[0])
+
+        # Verify recipient for project owner.
+        recipients_index = str_message.find('recipients')
+        assert recipients_index > -1
+        assert str_message.find(owner.email_addr) > recipients_index
+
+        # Verify no recipient for co-owner that is not an admin nor subadmin.
+        assert str_message.find(coowner.email_addr) == -1
 
     @with_context
     def test_project_contact_no_project(self):

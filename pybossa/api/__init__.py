@@ -398,48 +398,6 @@ def get_disqus_sso_api():
 
 
 @jsonpify
-@blueprint.route('/project/<short_name>/chat', methods=['POST'])
-@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def chat_notify(short_name):
-    """Email project owners upon a user initiating a chat session."""
-    if not current_user.is_authenticated:
-        return abort(401)
-
-    data = request.json
-    project = project_repo.get_by_shortname(short_name)
-    if not project:
-        return abort(400)
-
-    data = request.json
-    subject = u'Chat session started for project {} by {}'.format(short_name, current_user.email_addr)
-    success_body = (
-        u'A user has started a chat session on a project that you are an owner/co-owner for.\n\n'
-        '    Project Short Name: {short_name}\n'
-        '    User requesting assistance: {user}\n'
-        '    Message: {message}\n\n'
-        'Slack Url\n'
-        '{url}\n'
-        )
-
-    body = success_body.format(
-        short_name=project.short_name,
-        user=current_user.email_addr,
-        message=data.get('message'),
-        url=current_app.config.get('CHAT_URL', None))
-
-    # Get email addresses for all owners of the project.
-    recipients = [user.email_addr for user in user_repo.get_users(project.owners_ids)]
-
-    # Send email.
-    email = dict(recipients=recipients,
-                 subject=subject,
-                 body=body)
-    mail_queue.enqueue(send_mail, email)
-
-    return Response(json.dumps({'success': True}), 200, mimetype="application/json")
-
-
-@jsonpify
 @csrf.exempt
 @blueprint.route('/task/<int:task_id>/canceltask', methods=['POST'])
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))

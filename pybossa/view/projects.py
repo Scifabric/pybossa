@@ -3581,9 +3581,11 @@ def contact(short_name):
     result = project_by_shortname(short_name)
     project = result[0]
 
-    subject = u'GIGwork message for project {} by {}'.format(short_name, current_user.email_addr)
-    success_body = (
-        u'A GIGwork support request has been sent for the project: {project_name}.\n\n'
+    subject = current_app.config.get('CONTACT_SUBJECT', 'GIGwork message for project {short_name} by {email}')
+    subject = subject.replace('{short_name}', short_name).replace('{email}', current_user.email_addr)
+    body_header = current_app.config.get('CONTACT_BODY', 'A GIGwork support request has been sent for the project: {project_name}.')
+
+    success_body = body_header + '\n\n' + (
         u'    User: {fullname} ({user_name}, {user_id})\n'
         u'    Email: {email}\n'
         u'    Message: {message}\n\n'
@@ -3620,8 +3622,9 @@ def contact(short_name):
         tasks_completed_user=request.body.get("tasksCompletedUser", 0)
     )
 
-    # Get email addresses for all owners of the project.
-    recipients = [user.email_addr for user in user_repo.get_users(project.owners_ids)]
+    # Get the email addrs for the owner, and all co-owners of the project who have sub-admin/admin rights and are not disabled.
+    owners = user_repo.get_users(project.owners_ids)
+    recipients = [owner.email_addr for owner in owners if owner.enabled and (owner.id == project.owner_id or owner.admin or owner.subadmin)]
 
     # Send email.
     email = dict(recipients=recipients,
