@@ -44,7 +44,7 @@ class TestTaskNotificationConfig(web.Helper):
         data = {'remaining': 0, 'webhook':'http://google.com#test'}
         res = self.app.post(url, data=data)
         assert project.info['progress_reminder']['target_remaining'] == 0
-         assert project.info['progress_reminder']['webhook'] is 'http://google.com#test'
+        assert project.info['progress_reminder']['webhook'] is 'http://google.com#test'
         assert not project.info['progress_reminder']['sent'], project.info
 
     @with_context
