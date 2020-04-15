@@ -31,6 +31,7 @@ from flask import Markup, jsonify
 from flask_login import login_required, current_user
 from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
+import urlparse
 from rq import Queue
 from werkzeug.datastructures import MultiDict
 
@@ -2369,7 +2370,6 @@ def task_notification(short_name):
                                pro_features=pro))
 
     remaining = form.remaining.data
-    webhook = form.webhook.data
     n_tasks = cached_projects.n_tasks(project.id)
     if remaining is not None and (remaining < 0 or remaining > n_tasks):
         flash(gettext('Target number should be between 0 and {}'.format(n_tasks)), 'error')
@@ -2378,6 +2378,16 @@ def task_notification(short_name):
                                 form=form,
                                 project=project_sanitized,
                                 pro_features=pro))
+    webhook = form.webhook.data
+    if webhook:
+        scheme, netloc, _, _, _, _ = urlparse.urlparse(webhook)
+        if scheme not in ['http', 'https', 'ftp'] or not '.' in netloc:
+            flash(gettext('Invalid webhook URL'), 'error')
+            return handle_content_type(dict(template='/projects/task_notification.html',
+                                    title=title,
+                                    form=form,
+                                    project=project_sanitized,
+                                    pro_features=pro))
 
     project = project_repo.get_by_shortname(short_name=project.short_name)
 

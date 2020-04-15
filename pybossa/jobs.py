@@ -1374,6 +1374,17 @@ def check_and_send_task_notifications(project_id, conn=None):
             except Exception:
                 current_app.logger.warning(u'An error occured while posting to project {} webhook {}'
                                            .format(project_id, webhook))
+                reminder['webhook'] = ''
+                # send email to project owners
+                subject = 'Webhook failed from {}'.format(project_id)
+                body = '\n'.join(
+                    ['Hello,\n',
+                    'An error occurred while posting to webhook {} in project {}, please make sure the webhook is valid.',
+                    'Current webhook will be disabled, please re-activate it in task notification configuration.',
+                    'Thank you,\n',
+                    u'The {} team.']).format(webhook, project.name, current_app.config.get('BRAND'))
+                mail_dict = dict(recipients=email_addr, subject=subject, body=body)
+                send_mail(mail_dict)
 
         reminder['sent'] = True
         update_reminder = True
