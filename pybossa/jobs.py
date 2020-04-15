@@ -1371,6 +1371,7 @@ def check_and_send_task_notifications(project_id, conn=None):
                             remianing_tasks=n_remaining_tasks,
                             target_remaining=target_remaining)
                 webhook_response = requests.post(webhook, data=json.dumps(data), headers=headers)
+                current_app.logger.info(u'Webhook {} posted'.format(webhook))
             except Exception:
                 current_app.logger.warning(u'An error occured while posting to project {} webhook {}'
                                            .format(project_id, webhook))
