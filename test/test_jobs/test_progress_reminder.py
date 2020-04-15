@@ -147,10 +147,11 @@ class TestSendTaskNotification(Test):
         assert project.info['progress_reminder']['sent']
 
     @with_context
+    @patch('pybossa.jobs.send_mail')
     @patch('pybossa.jobs.requests')
     @patch('pybossa.jobs.n_available_tasks')
     @patch('pybossa.jobs.notify_task_progress')
-    def test_remaining_tasks_drop_below_configuration_hitting_webhook_failed(self, notify, n_tasks, req):
+    def test_remaining_tasks_drop_below_configuration_hitting_webhook_failed(self, notify, n_tasks, req, mail):
         """Send email if remaining tasks drops below, test with connection"""
         n_tasks.return_value = 0
         req.post.side_effect = Exception('not found')
@@ -166,6 +167,7 @@ class TestSendTaskNotification(Test):
 
         check_and_send_task_notifications(project_id, conn)
         assert req.post.called
+        assert mail.called
         assert project.info['progress_reminder']['sent']
 
     @with_context
