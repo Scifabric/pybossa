@@ -1375,7 +1375,7 @@ def check_and_send_task_notifications(project_id, conn=None):
                             target_remaining=target_remaining)
                 webhook_response = requests.post(webhook, data=json.dumps(data), headers=headers)
 
-                if webhook_response.status_code > 400:
+                if webhook_response.status_code >= 400:
                     reminder['webhook'] = ''
                     # send email to project owners
                     subject = 'Webhook failed from {}'.format(project_id)
