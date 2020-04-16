@@ -1360,6 +1360,9 @@ def check_and_send_task_notifications(project_id, conn=None):
                     n_available_tasks=n_remaining_tasks)
         notify_task_progress(info, email_addr)
 
+        reminder['sent'] = True
+        update_reminder = True
+
         if webhook:
             current_app.logger.info(u'Project {} the number of incomplete tasks: {}, \
                                 drops equal to or below target remaining: {}, hitting webhook url: {}'
@@ -1371,24 +1374,25 @@ def check_and_send_task_notifications(project_id, conn=None):
                             remianing_tasks=n_remaining_tasks,
                             target_remaining=target_remaining)
                 webhook_response = requests.post(webhook, data=json.dumps(data), headers=headers)
-                current_app.logger.info(u'Webhook {} posted'.format(webhook))
-            except Exception:
-                current_app.logger.warning(u'An error occured while posting to project {} webhook {}'
-                                           .format(project_id, webhook))
-                reminder['webhook'] = ''
-                # send email to project owners
-                subject = 'Webhook failed from {}'.format(project_id)
-                body = '\n'.join(
-                    ['Hello,\n',
-                    'An error occurred while posting to webhook {} in project {}, please make sure the webhook is valid.',
-                    'Current webhook will be disabled, please re-activate it in task notification configuration.',
-                    'Thank you,\n',
-                    u'The {} team.']).format(webhook, project.name, current_app.config.get('BRAND'))
-                mail_dict = dict(recipients=email_addr, subject=subject, body=body)
-                send_mail(mail_dict)
 
-        reminder['sent'] = True
-        update_reminder = True
+                if webhook_response.status_code > 400:
+                    reminder['webhook'] = ''
+                    # send email to project owners
+                    subject = 'Webhook failed from {}'.format(project_id)
+                    body = '\n'.join(
+                        ['Hello,\n',
+                        'The webhook {} returns {}, please make sure the webhook is valid.',
+                        'Current webhook will be disabled, please re-activate it in task notification configuration.',
+                        'Thank you,\n',
+                        u'The {} team.']).format(webhook, webhook_response.status_code, current_app.config.get('BRAND'))
+                    mail_dict = dict(recipients=email_addr, subject=subject, body=body)
+                    send_mail(mail_dict)
+                    raise Exception('webhook response error, returned {}'.format(webhook_response.status_code))
+                else:
+                    current_app.logger.info(u'Webhook {} posted'.format(webhook))
+            except Exception as e:
+                current_app.logger.exception(u'An error occured while posting to project {} webhook {}, {}'
+                                           .format(project_id, webhook, str(e)))
 
     if update_reminder:
         project.info['progress_reminder'] = reminder
