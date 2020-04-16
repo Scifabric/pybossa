@@ -126,6 +126,73 @@ class TestSendTaskNotification(Test):
         assert not project.info['progress_reminder']['sent']
 
     @with_context
+    @patch('pybossa.jobs.requests')
+    @patch('pybossa.jobs.n_available_tasks')
+    @patch('pybossa.jobs.notify_task_progress')
+    def test_remaining_tasks_drop_below_configuration_hitting_webhook(self, notify, n_tasks, req):
+        """Send email if remaining tasks drops below, test with connection"""
+        n_tasks.return_value = 0
+        reminder = dict(target_remaining=0, webhook="fake_url", sent=False)
+        conn = MagicMock()
+        conn.execute.return_value = None
+        project_id = '1'
+        project = ProjectFactory.create(id=project_id,
+                                        owners_ids=[],
+                                        published=True,
+                                        featured=True,
+                                        info={'progress_reminder':reminder})
+
+        check_and_send_task_notifications(project_id, conn)
+        assert req.post.called
+        assert project.info['progress_reminder']['sent']
+
+    @with_context
+    @patch('pybossa.jobs.requests')
+    @patch('pybossa.jobs.n_available_tasks')
+    @patch('pybossa.jobs.notify_task_progress')
+    def test_remaining_tasks_drop_below_configuration_hitting_webhook_failed(self, notify, n_tasks, req):
+        """Send email if remaining tasks drops below, test with connection"""
+        n_tasks.return_value = 0
+        req.post.side_effect = Exception('not found')
+        reminder = dict(target_remaining=0, webhook="fake_url", sent=False)
+        conn = MagicMock()
+        conn.execute.return_value = None
+        project_id = '1'
+        project = ProjectFactory.create(id=project_id,
+                                        owners_ids=[],
+                                        published=True,
+                                        featured=True,
+                                        info={'progress_reminder':reminder})
+
+        check_and_send_task_notifications(project_id, conn)
+        assert req.post.called
+        assert project.info['progress_reminder']['sent']
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    @patch('pybossa.jobs.requests')
+    @patch('pybossa.jobs.n_available_tasks')
+    @patch('pybossa.jobs.notify_task_progress')
+    def test_remaining_tasks_drop_below_configuration_hitting_webhook_return_400(self, notify, n_tasks, req, mail):
+        """Send email if remaining tasks drops below, test with connection"""
+        n_tasks.return_value = 0
+        req.post.return_value.status_code = 400
+        reminder = dict(target_remaining=0, webhook="fake_url", sent=False)
+        conn = MagicMock()
+        conn.execute.return_value = None
+        project_id = '1'
+        project = ProjectFactory.create(id=project_id,
+                                        owners_ids=[],
+                                        published=True,
+                                        featured=True,
+                                        info={'progress_reminder':reminder})
+
+        check_and_send_task_notifications(project_id, conn)
+        assert req.post.called
+        assert mail.called
+        assert project.info['progress_reminder']['sent']
+
+    @with_context
     @patch('pybossa.jobs.enqueue_job')
     def test_notify_task_progress(self, mock):
         info = dict(project_name="test project", n_available_tasks=10)

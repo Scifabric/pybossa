@@ -31,6 +31,7 @@ from flask import Markup, jsonify
 from flask_login import login_required, current_user
 from flask_babel import gettext
 from flask_wtf.csrf import generate_csrf
+import urlparse
 from rq import Queue
 from werkzeug.datastructures import MultiDict
 
@@ -2360,6 +2361,7 @@ def task_notification(short_name):
     pro = pro_features()
     if request.method == 'GET':
         reminder_info = project.info.get('progress_reminder', {})
+        form.webhook.data = reminder_info.get('webhook')
         form.remaining.data = reminder_info.get('target_remaining')
         return handle_content_type(dict(template='/projects/task_notification.html',
                                title=title,
@@ -2376,11 +2378,22 @@ def task_notification(short_name):
                                 form=form,
                                 project=project_sanitized,
                                 pro_features=pro))
+    webhook = form.webhook.data
+    if webhook:
+        scheme, netloc, _, _, _, _ = urlparse.urlparse(webhook)
+        if scheme not in ['http', 'https', 'ftp'] or not '.' in netloc:
+            flash(gettext('Invalid webhook URL'), 'error')
+            return handle_content_type(dict(template='/projects/task_notification.html',
+                                    title=title,
+                                    form=form,
+                                    project=project_sanitized,
+                                    pro_features=pro))
 
     project = project_repo.get_by_shortname(short_name=project.short_name)
 
     reminder_info = project.info.get('progress_reminder') or {}
     reminder_info['target_remaining'] = remaining
+    reminder_info['webhook'] = webhook
     reminder_info['sent'] = False
 
     auditlogger.log_event(project, current_user, 'update', 'task_notification',

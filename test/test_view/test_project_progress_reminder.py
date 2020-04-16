@@ -36,12 +36,34 @@ class TestTaskNotificationConfig(web.Helper):
         assert not project.info['progress_reminder']['sent'], project.info
 
     @with_context
+    def test_post_reminder_with_webhook(self):
+        ''' post correct configuration'''
+        project = ProjectFactory.create(published=True)
+        task = TaskFactory.create(id=1, project=project)
+        url = '/project/%s/tasks/task_notification?api_key=%s' % (project.short_name, project.owner.api_key)
+        data = {'remaining': 0, 'webhook':'http://google.com#test'}
+        res = self.app.post(url, data=data)
+        assert project.info['progress_reminder']['target_remaining'] == 0
+        assert project.info['progress_reminder']['webhook'] == 'http://google.com#test'
+        assert not project.info['progress_reminder']['sent'], project.info
+
+    @with_context
     def test_post_invalid_reminder(self):
         ''' should not post to project.info if check fails'''
         project = ProjectFactory.create(published=True)
         task = TaskFactory.create(id=1, project=project)
         url = '/project/%s/tasks/task_notification?api_key=%s' % (project.short_name, project.owner.api_key)
         data = {'remaining': 10}
+        res = self.app.post(url, data=data)
+        assert not project.info.get('progress_reminder'), project.info
+
+    @with_context
+    def test_post_invalid_reminder_webhook(self):
+        ''' should not post to project.info if check fails'''
+        project = ProjectFactory.create(published=True)
+        task = TaskFactory.create(id=1, project=project)
+        url = '/project/%s/tasks/task_notification?api_key=%s' % (project.short_name, project.owner.api_key)
+        data = {'remaining': 0, 'webhook':'not_a_url'}
         res = self.app.post(url, data=data)
         assert not project.info.get('progress_reminder'), project.info
 
