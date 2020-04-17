@@ -3607,7 +3607,7 @@ def contact(short_name):
         u'    Referring Url: {referrer}\n'
         u'    Is Admin: {user_admin}\n'
         u'    Is Subadmin: {user_subadmin}\n'
-        u'    Is Project Owner: {owner}\n'
+        u'    Project Owner: {owner}\n'
         u'    Total Tasks: {total_tasks}\n'
         u'    Total Task Runs: {total_task_runs}\n'
         u'    Available Task Runs: {remaining_task_runs}\n'
