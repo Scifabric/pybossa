@@ -1079,15 +1079,24 @@ def get_user_pref_db_clause(user_pref, user_email=None):
     return user_pref_sql + email_sql if user_email else user_pref_sql
 
 
+def is_int(s):
+    try:
+        return float(str(s)).is_integer()
+    except:
+        return False
+
+
 def validate_required_fields(data):
     invalid_fields = []
     required_fields = current_app.config.get("TASK_REQUIRED_FIELDS", {})
     for field_name, field_info in required_fields.iteritems():
-        field_val = field_info['val']
-        check_val = field_info['check_val']
+        field_val = field_info.get('val')
+        check_val = field_info.get('check_val')
+        int_val = field_info.get('require_int')
         import_data = data.get(field_name)
         if not import_data or \
-            (check_val and import_data not in field_val):
+            (check_val and import_data not in field_val) or \
+            (int_val and ('.' in import_data or not is_int(import_data))):
             invalid_fields.append(field_name)
     return invalid_fields
 
