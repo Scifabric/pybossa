@@ -562,6 +562,105 @@ class TestPybossaUtil(Test):
                 for item in row:
                     assert item in fake_csv[0], err_msg
 
+    @with_context
+    def csv_validate_required_fields(self, config, callback):
+        """Test validate_required_fields against csv data
+        with data_access, data_source_id, data_owner."""
+        with patch.dict(self.flask_app.config, config):
+            fake_csv = ('line,data_access,data_source_id,data_owner\n'
+                'test,"[""L4""]",123.0,456\n'
+                'test,"[""L4""]",123.6,456\n'
+                'test,"[""L4""]",abc,456\n'
+                'test,"[""L4""]",,456\n'
+                'test,"[""L4""]",123,456.0\n'
+                'test,"[""L4""]",123,456.6\n'
+                'test,"[""L4""]",123,abc\n'
+                'test,"[""L4""]",123,\n'
+                'test,,123,456\n'
+                'test,"[""L4""]",123,456')
+            csvreader = csv.reader(fake_csv.splitlines())
+            csviterator = iter(csvreader)
+
+            for index, row in enumerate(csviterator):
+                if index == 0:
+                    # Read csv header.
+                    headers = row
+                else:
+                    # Read csv data and check required fields.
+                    fvals = {headers[idx]: cell for idx, cell in enumerate(row)}
+                    invalid_fields = util.validate_required_fields(fvals)
+
+                    # Allow client to assert on result.
+                    callback(index, invalid_fields)
+
+    @with_context
+    def test_csv_validate_required_fields_accept_string(self):
+        """Test validate_required_fields ignore integer validation."""
+        config = {'TASK_REQUIRED_FIELDS': {
+            'data_access': {'val': None, 'check_val': False},
+            'data_owner': {'val': None, 'check_val': False},
+            'data_source_id': {'val': None, 'check_val': False}}}
+
+        def validate(index, invalid_fields):
+            if index == 4:
+                # data_source_id must have a value.
+                assert len(invalid_fields) == 1
+                assert 'data_source_id' in invalid_fields
+            elif index == 8:
+                # data_owner must have a value.
+                assert len(invalid_fields) == 1
+                assert 'data_owner' in invalid_fields
+            elif index == 9:
+                # data_access must have a value.
+                assert len(invalid_fields) == 1
+                assert 'data_access' in invalid_fields
+            else:
+                # data_source_id, data_owner, data_access are valid.
+                assert len(invalid_fields) == 0
+
+        # Validate csv data.
+        self.csv_validate_required_fields(config, validate)
+
+    @with_context
+    def test_csv_validate_required_fields_accept_integer(self):
+        """Test validate_required_fields include integer validation."""
+        config = {'TASK_REQUIRED_FIELDS': {
+            'data_access': {'val': None, 'check_val': False},
+            'data_owner': {'val': None, 'check_val': False, 'require_int': True},
+            'data_source_id': {'val': None, 'check_val': False, 'require_int': True}}}
+
+        def validate(index, invalid_fields):
+            if index < 5:
+                # data_source_id must be an integer.
+                assert len(invalid_fields) == 1
+                assert 'data_source_id' in invalid_fields
+            elif index < 9:
+                # data_owner must be an integer.
+                assert len(invalid_fields) == 1
+                assert 'data_owner' in invalid_fields
+            elif index == 9:
+                # data_access must have a value.
+                assert len(invalid_fields) == 1
+                assert 'data_access' in invalid_fields
+            else:
+                # data_source_id, data_owner, data_access are valid.
+                assert len(invalid_fields) == 0
+
+        # Validate csv data.
+        self.csv_validate_required_fields(config, validate)
+
+    def test_is_int(self):
+        """Test is_int method."""
+        assert util.is_int(1) is True
+        assert util.is_int('1') is True
+        assert util.is_int(1.0) is True
+        assert util.is_int('1.0') is True
+        assert util.is_int(1.1) is False
+        assert util.is_int('1.1') is False
+        assert util.is_int('a') is False
+        assert util.is_int(None) is False
+        assert util.is_int(True) is False
+
     def test_publish_channel_private(self):
         """Test publish_channel private method works."""
         sentinel = MagicMock()
