@@ -22,7 +22,7 @@ from flask import request
 from flask_wtf import FlaskForm as Form
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from werkzeug.utils import secure_filename
-from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
+from wtforms import IntegerField, DecimalField, TextField, BooleanField, HiddenField,\
     SelectField, validators, TextAreaField, PasswordField, FieldList, SelectMultipleField
 from wtforms import SelectMultipleField
 from wtforms.fields.html5 import EmailField, URLField
@@ -620,6 +620,7 @@ class UpdateProfileForm(Form):
     subscribed = BooleanField(lazy_gettext('Get email notifications'))
 
     locale = SelectField(lazy_gettext('Language'))
+    ckan_api = HiddenField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
     restrict = BooleanField(lazy_gettext('Restrict processing'))
 
