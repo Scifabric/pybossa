@@ -1096,7 +1096,7 @@ def validate_required_fields(data):
         import_data = data.get(field_name)
         if not import_data or \
             (check_val and import_data not in field_val) or \
-            (int_val and ('.' in import_data or not is_int(import_data))):
+            (int_val and ('.' in str(import_data) or not is_int(import_data))):
             invalid_fields.append(field_name)
     return invalid_fields
 

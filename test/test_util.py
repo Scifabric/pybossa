@@ -661,6 +661,21 @@ class TestPybossaUtil(Test):
         assert util.is_int(None) is False
         assert util.is_int(True) is False
 
+    @with_context
+    def test_integer_required_cast_string(self):
+        """Test importing an integer (BBDS) with validate_required_fields."""
+        config = {'TASK_REQUIRED_FIELDS': {
+            'data_access': {'val': None, 'check_val': False},
+            'data_owner': {'val': None, 'check_val': False, 'require_int': True},
+            'data_source_id': {'val': None, 'check_val': False, 'require_int': True}}}
+
+        # While csv imports as string values, we explicitly set an integer value.
+        data = {'data_access': "1", 'data_owner': 5, 'data_source_id': '2'}
+
+        with patch.dict(self.flask_app.config, config):
+            invalid_fields = util.validate_required_fields(data)
+            assert len(invalid_fields) == 0
+
     def test_publish_channel_private(self):
         """Test publish_channel private method works."""
         sentinel = MagicMock()
