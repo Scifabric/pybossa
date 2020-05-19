@@ -118,7 +118,7 @@ class TestNewtaskPasswd(TestAPI):
     @with_context
     def test_newtask_extends_expiration_by_timeout(self):
         """Test API project new_task extends expiration according to timeout"""
-        project = ProjectFactory.create(info={'timeout': 120*60})
+        project = ProjectFactory.create(info={'timeout': 120*60, 'data_classification': dict(input_data="L4 - public", output_data="L4 - public")})
         project.set_password('the_password')
         project_repo.save(project)
         TaskFactory.create_batch(2, project=project, info={'question': 'answer'})
@@ -147,7 +147,7 @@ class TestNewtaskPasswd(TestAPI):
     @with_context
     def test_newtask_expired_cookie(self):
         """Test API project new_task expired cookie"""
-        project = ProjectFactory.create(info={'timeout': 60})
+        project = ProjectFactory.create(info={'timeout': 60, 'data_classification': dict(input_data="L4 - public", output_data="L4 - public")})
         project.set_password('the_password')
         project_repo.save(project)
         TaskFactory.create_batch(2, project=project, info={'question': 'answer'})
