@@ -6,6 +6,7 @@ from default import db, with_context
 from factories import ProjectFactory
 from helper import web
 from pybossa import data_access
+from default import flask_app
 
 
 class TestProjectSettings(web.Helper):
@@ -30,8 +31,14 @@ class TestProjectSettings(web.Helper):
     def test_project_update_amp_store(self):
         with patch.dict(data_access.data_access_levels, self.patched_levels()):        
             project = ProjectFactory.create(
-                published=True, info={'data_access': ['L1'],
-                'annotation_config': {'amp_store': True}})
+                published=True,
+                info={
+                    'annotation_config': {'amp_store': True},
+                    'data_classification': {
+                        'input_data': 'L3 - community',
+                        'output_data': 'L4 - public'
+                    }
+                })
             url = '/project/%s/update?api_key=%s' % (project.short_name, project.owner.api_key)
             res = self.app_get_json(url)
             data = json.loads(res.data)

@@ -362,8 +362,10 @@ def new():
 
     # Sort list of subproducts (value) for each product (key).
     prodsubprods = {key:sorted(value) for key, value in current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).items()}
-
-    form = dynamic_project_form(ProjectForm, request.body, data_access_levels, prodsubprods)
+    data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
+        for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', ('', False))
+    ]
+    form = dynamic_project_form(ProjectForm, request.body, data_access_levels, prodsubprods, data_classes)
 
     def respond(errors):
         response = dict(template='projects/new.html',
@@ -398,7 +400,11 @@ def new():
         'sync': {'enabled': False},
         'product': form.product.data,
         'subproduct': form.subproduct.data,
-        'kpi': float(form.kpi.data)
+        'kpi': float(form.kpi.data),
+        'data_classification': {
+            'input_data': form.input_data_class.data,
+            'output_data': form.output_data_class.data
+        }
     }
     category_by_default = cached_cat.get_all()[0]
 
@@ -442,6 +448,8 @@ def clone_project(project, form):
     proj_dict['info'].pop('passwd_hash', None)
     proj_dict['info'].pop('quiz', None)
     proj_dict['info'].pop('enrichments', None)
+    proj_dict['info'].pop('data_classification', None)
+    proj_dict['info'].pop('data_access', None)
 
     if  bool(data_access_levels) and not form.get('copy_users', False):
         proj_dict['info'].pop('project_users', None)
@@ -458,7 +466,10 @@ def clone_project(project, form):
     proj_dict['info']['task_presenter'] = re.sub(regex, r"\1{}\3".format(form['short_name']), task_presenter)
 
     proj_dict['short_name'] = form['short_name']
-
+    proj_dict['info']['data_classification'] = {
+        'input_data': form['input_data_class'],
+        'output_data': form['output_data_class']
+    }
     new_project = Project(**proj_dict)
     new_project.set_password(form['password'])
     project_repo.save(new_project)
@@ -477,7 +488,13 @@ def clone(short_name):
                                                                 current_user,
                                                                 ps)
     ensure_authorized_to('read', project)
-    form = dynamic_clone_project_form(ProjectCommonForm, request.form or None, data_access_levels, obj=project)
+    data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
+        for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', ('', False))
+    ]
+    form = dynamic_clone_project_form(ProjectCommonForm, request.form or None, data_access_levels, data_classes=data_classes, obj=project)
+    project.input_data_class = project.info.get('data_classification', {}).get('input_data')
+    project.output_data_class = project.info.get('data_classification', {}).get('output_data')
+
     if request.method == 'POST':
         ensure_authorized_to('create', Project)
         if not form.validate():
@@ -496,7 +513,6 @@ def clone(short_name):
                                     json.dumps(project_sanitized),
                                     json.dumps(new_project))
             return redirect_content_type(url_for('.details', short_name=new_project['short_name']))
-
     return handle_content_type(dict(
         template='/projects/clone_project.html',
         action_url=url_for('project.clone', short_name=project.short_name),
@@ -750,6 +766,10 @@ def update(short_name):
         new_project.info['product'] = form.product.data
         new_project.info['subproduct'] = form.subproduct.data
         new_project.info['kpi'] = float(form.kpi.data)
+        new_project.info['data_classification'] = {
+            'input_data': form.input_data_class.data,
+            'output_data': form.output_data_class.data
+        }
 
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
@@ -766,7 +786,10 @@ def update(short_name):
 
     # Sort list of subproducts (value) for each product (key).
     prodsubprods = {key:sorted(value) for key, value in current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).items()}
-
+    data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
+        for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', ('', False))
+    ]
+    
     title = project_title(project, "Update")
     if request.method == 'GET':
         sync = project.info.get('sync')
@@ -775,9 +798,11 @@ def update(short_name):
         project.product = project.info.get('product')
         project.subproduct = project.info.get('subproduct')
         project.kpi = project.info.get('kpi')
+        project.input_data_class = project.info.get('data_classification', {}).get('input_data')
+        project.output_data_class = project.info.get('data_classification', {}).get('output_data')
         ensure_amp_config_applied_to_project(project, project.info.get('annotation_config', {}))
         form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
-                                    products=prodsubprods)
+                                    products=prodsubprods, data_classes=data_classes)
         ensure_data_access_assignment_to_form(project.info, form)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
@@ -792,7 +817,7 @@ def update(short_name):
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
         form = dynamic_project_form(ProjectUpdateForm, request.body, data_access_levels,
-                                    products=prodsubprods)
+                                    products=prodsubprods, data_classes=data_classes)
 
         categories = cached_cat.get_all()
         categories = sorted(categories,

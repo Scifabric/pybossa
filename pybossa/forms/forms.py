@@ -54,6 +54,7 @@ from iiif_prezi.loader import ManifestReader
 from wtforms.validators import NumberRange
 from wtforms.fields.html5 import DateField
 from wtforms_components import DateRange
+from pybossa.forms.fields.select_with_props import SelectFieldWithProps
 
 
 EMAIL_MAX_LENGTH = 254
@@ -102,7 +103,10 @@ class ProjectCommonForm(Form):
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)],
                     render_kw={'placeholder': 'Minimum length {} characters, 1 uppercase, 1 lowercase and 1 numeric.'.format(PROJECT_PWD_MIN_LEN)})
-
+    input_data_class = SelectFieldWithProps(lazy_gettext('Input Data Classifier'),
+                                            validators=[validators.Required()], choices=[], default='')
+    output_data_class = SelectFieldWithProps(lazy_gettext('Output Data Classifier'),
+                                             validators=[validators.Required()], choices=[], default='')
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
 
@@ -119,6 +123,7 @@ class ProjectForm(ProjectCommonForm):
 
     kpi = DecimalField(lazy_gettext('KPI - Estimate of amount of minutes to complete one task (0.1-120)'), places=2,
         validators=[validators.Required(), NumberRange(Decimal('0.1'), 120)])
+
 
 class ProjectUpdateForm(ProjectForm):
     id = IntegerField(label=None, widget=HiddenInput())

@@ -54,6 +54,7 @@ class ProjectFactory(BaseFactory):
             'sched': 'breadth_first',
             'product': 'abc',
             'subproduct': 'def',
-            'kpi': 0.5
+            'kpi': 0.5,
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
             }
     owners_ids = factory.LazyAttribute(lambda project: [project.owner.id])

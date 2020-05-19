@@ -1876,7 +1876,8 @@ class TestWeb(web.Helper):
         avatar = (io.BytesIO(b'test'), 'test_file.jpg')
         payload = dict(btn='Upload', avatar=avatar,
                        id=project.id, x1=0, y1=0,
-                       x2=100, y2=100)
+                       x2=100, y2=100, input_data_class='L4 - public',
+                       output_data_class='L4 - public')
         res = self.app.post(url, follow_redirects=True,
                             content_type="multipart/form-data", data=payload)
         assert res.status_code == 200
@@ -2675,7 +2676,13 @@ class TestWeb(web.Helper):
         self.register()
         self.signin()
         owner = db.session.query(User).first()
-        project = ProjectFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
+        project = ProjectFactory.create(
+            info={
+                'passwd_hash': 'mysecret',
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            },
+            owner=owner
+        )
 
         self.update_project(id=project.id, short_name=project.short_name,
                             new_protect='false', new_password='')
@@ -3435,7 +3442,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_message_is_flashed_contributing_to_project_without_presenter(self):
         """Test task_presenter check is not raised."""
-        project = ProjectFactory.create(info={})
+        project = ProjectFactory.create(info={'data_classification': dict(input_data="L4 - public", output_data="L4 - public")})
         task = TaskFactory.create(project=project)
         newtask_url = '/project/%s/newtask' % project.short_name
         task_url = '/project/%s/task/%s' % (project.short_name, task.id)
@@ -7762,9 +7769,10 @@ class TestWeb(web.Helper):
         self.signin(email=admin.email_addr, password='1234')
 
         project = ProjectFactory.create(info={
-                'data_access': ["L1"]
+                'data_access': ["L4"],
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
             })
-        task = Task(project_id=project.id, info={'data_access': ['L1']})
+        task = Task(project_id=project.id, info={'data_access': ['L4']})
         task_repo.save(task)
 
         url = "/api/project/1/taskgold"
@@ -8708,7 +8716,7 @@ class TestWeb(web.Helper):
     def test_projects_account(self):
         """Test projecs on profiles are good."""
         owner, contributor = UserFactory.create_batch(2)
-        info = dict(passwd_hash='foo', foo='bar')
+        info = dict(passwd_hash='foo', foo='bar', data_classification=dict(input_data="L4 - public", output_data="L4 - public"))
         project = ProjectFactory.create(owner=owner, info=info)
         TaskRunFactory.create(project=project, user=contributor)
 
@@ -9043,13 +9051,17 @@ class TestWeb(web.Helper):
                 'email_addr': 'new@fake.com',
                 'btn': 'Profile'}
         res = self.app.post(url, data=data, follow_redirects=True)
-
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        res = self.app.post(url, data=data, follow_redirects=True)
+        import pdb; pdb.set_trace()
         assert b'Use a valid email account' in str(res.data), res.data
 
     @with_context
     def test_make_random_gold(self):
-        project = ProjectFactory.create(info={'sched': 'user_pref_scheduler'})
+        project = ProjectFactory.create(info={
+            'sched': 'user_pref_scheduler',
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+        })
         user = project.owner
         # with no tasks available
         url = u'/project/{}/make-random-gold?api_key={}'.format(project.short_name, user.api_key)
@@ -9343,7 +9355,14 @@ class TestWebUserMetadataUpdate(web.Helper):
 
         admin = UserFactory.create()
         self.signin_user(admin)
-        project = ProjectFactory.create(info= {'sched': 'user_pref_scheduler', 'timeout': 60 * 60}, owner=admin)
+        project = ProjectFactory.create(
+            info= {
+                'sched': 'user_pref_scheduler',
+                'timeout': 60 * 60,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            },
+            owner=admin
+        )
         task = TaskFactory.create(project=project)
         payload = {'projectname': project.short_name}
 
@@ -9401,7 +9420,13 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         quiz = {'enabled':True,'questions':10,'passing':5}
-        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        project = ProjectFactory.create(
+            owner=admin,
+            info={
+                'quiz':quiz,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            }
+        )
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         quiz['completion_mode'] = 'all_questions'
         self.update_project(project, quiz)
@@ -9415,7 +9440,13 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
-        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        project = ProjectFactory.create(
+            owner=admin,
+            info={
+                'quiz':quiz,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            }
+        )
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         assert admin.get_quiz_not_started(project)
         quiz['completion_mode'] ='all_questions'
@@ -9432,7 +9463,13 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
-        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        project = ProjectFactory.create(
+            owner=admin,
+            info={
+                'quiz':quiz,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            }
+        )
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         assert admin.get_quiz_not_started(project)
         quiz['users'] = [{ 'quiz': {'config': {'enabled': True, 'reset': True}}}]
@@ -9444,7 +9481,13 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
-        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        project = ProjectFactory.create(
+            owner=admin,
+            info={
+                'quiz':quiz,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            }
+        )
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         assert admin.get_quiz_not_started(project)
         quiz['users'] = [{'id': admin.id, 'quiz': {'config': {'enabled': True, 'reset': True}}}]
@@ -9457,7 +9500,13 @@ class TestWebQuizModeUpdate(web.Helper):
         admin = UserFactory.create()
         self.signin_user(admin)
         quiz = {'enabled':True,'questions':10,'passing':5,'completion_mode':'short_circuit'}
-        project = ProjectFactory.create(owner=admin, info={'quiz':quiz})
+        project = ProjectFactory.create(
+            owner=admin,
+            info={
+                'quiz':quiz,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            }
+        )
         TaskFactory.create_batch(20, project=project, n_answers=1, calibration=1)
         quiz['questions'] = 100
         response = self.update_project(project, quiz)
