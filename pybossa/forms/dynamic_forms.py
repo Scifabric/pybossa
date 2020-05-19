@@ -31,12 +31,6 @@ def dynamic_project_form(class_type, form_data, data_access_levels, products=Non
         pass
 
     if data_access_levels:
-        data_access = Select2Field(
-            lazy_gettext('Access Level(s)'),
-            [validators.Required()],
-            choices=data_access_levels['valid_access_levels'],
-            default=[])
-        ProjectFormExtraInputs.data_access = data_access
         ProjectFormExtraInputs.amp_store = BooleanField(
             lazy_gettext('Opt in to store annotations on Annotation Management Platform'),
             render_kw={'checked': True})

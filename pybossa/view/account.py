@@ -705,7 +705,6 @@ def update_profile(name):
     Returns Jinja2 template.
 
     """
-    import pdb; pdb.set_trace()
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
@@ -804,7 +803,6 @@ def _handle_avatar_update(user, avatar_form):
 
 
 def _handle_profile_update(user, update_form):
-    import pdb; pdb.set_trace()
     acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
     if update_form.validate_on_submit():
         user.id = update_form.id.data

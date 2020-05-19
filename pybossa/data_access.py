@@ -144,17 +144,6 @@ def get_data_access_db_clause_for_task_assignment(user_id):
 
 
 @when_data_access()
-def ensure_data_access_assignment_to_form(obj, form):
-    access_levels = obj.get('data_access', [])
-    if not valid_access_levels(access_levels):
-        raise BadRequest('Invalid access levels')
-    form.data_access.data = access_levels
-    if 'checked' in form.amp_store.render_kw:
-        amp_store_status = obj.get('annotation_config', {}).get('amp_store', False)
-        form.amp_store.render_kw['checked'] = amp_store_status
-
-
-@when_data_access()
 def ensure_data_access_assignment_from_form(obj, form):
     access_levels = form.data_access.data
     if not valid_access_levels(access_levels):

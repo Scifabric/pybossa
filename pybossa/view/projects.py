@@ -92,8 +92,7 @@ from pybossa.syncer import NotEnabled, SyncUnauthorized
 from pybossa.syncer.project_syncer import ProjectSyncer
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
 from datetime import datetime
-from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_to_form,
-    ensure_data_access_assignment_from_form, subadmins_are_privileged,
+from pybossa.data_access import (data_access_levels, subadmins_are_privileged,
     ensure_annotation_config_from_form, ensure_amp_config_applied_to_project)
 import app_settings
 from copy import deepcopy
@@ -418,7 +417,6 @@ def new():
                       owners_ids=[current_user.id])
 
     project.set_password(form.password.data)
-    ensure_data_access_assignment_from_form(project.info, form)
     ensure_annotation_config_from_form(project.info, form)
 
     project_repo.save(project)
@@ -754,7 +752,6 @@ def update(short_name):
             new_project.allow_anonymous_contributors = fuzzyboolean(form.allow_anonymous_contributors.data)
             new_project.category_id = form.category_id.data
             new_project.email_notif = form.email_notif.data
-            ensure_data_access_assignment_from_form(new_project.info, form)
             ensure_annotation_config_from_form(new_project.info, form)
 
         if form.password.data:
@@ -803,7 +800,6 @@ def update(short_name):
         ensure_amp_config_applied_to_project(project, project.info.get('annotation_config', {}))
         form = dynamic_project_form(ProjectUpdateForm, None, data_access_levels, obj=project,
                                     products=prodsubprods, data_classes=data_classes)
-        ensure_data_access_assignment_to_form(project.info, form)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
         categories = sorted(categories,
