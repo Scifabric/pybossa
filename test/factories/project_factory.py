@@ -29,6 +29,8 @@ class ProjectFactory(BaseFactory):
         project = model_class(*args, **kwargs)
         if 'passwd_hash' not in project.info:
             project.set_password('hello')
+        if 'data_classification' not in project.info:
+            project.info['data_classification'] = dict(input_data="L4 - public", output_data="L4 - public")
         project_repo.save(project)
         return project
 
