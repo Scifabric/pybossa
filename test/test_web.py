@@ -1876,8 +1876,7 @@ class TestWeb(web.Helper):
         avatar = (io.BytesIO(b'test'), 'test_file.jpg')
         payload = dict(btn='Upload', avatar=avatar,
                        id=project.id, x1=0, y1=0,
-                       x2=100, y2=100, input_data_class='L4 - public',
-                       output_data_class='L4 - public')
+                       x2=100, y2=100)
         res = self.app.post(url, follow_redirects=True,
                             content_type="multipart/form-data", data=payload)
         assert res.status_code == 200
