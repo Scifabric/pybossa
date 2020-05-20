@@ -115,14 +115,12 @@ class TestAccessLevels(Test):
     @with_context
     def test_task_save_sufficient_permissions(self):
         patched_levels = self.patched_levels(
-            valid_project_levels_for_task_level={'A': ['B']},
-            valid_task_levels_for_project_level={'A': ['B']}
+            valid_project_levels_for_task_level={'L4': ['L4']},
+            valid_task_levels_for_project_level={'L4': ['L4']}
         )
         with patch.dict(data_access.data_access_levels, patched_levels):
-            project = ProjectFactory.create(info={
-                'data_access': ['A']
-            })
-            task = Task(project_id=project.id, info={'data_access': ['A']})
+            project = ProjectFactory.create()
+            task = Task(project_id=project.id, info={'data_access': ['L4']})
             task_repo.save(task)
 
     @with_context
