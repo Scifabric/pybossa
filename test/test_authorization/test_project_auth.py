@@ -213,7 +213,7 @@ class TestProjectAuthorization(Test):
     def test_owner_cannot_publish_if_project_has_no_presenter(self):
         """Test owner cannot publish a project that has no presenter"""
         owner = UserFactory.build_batch(2)[1]
-        project = ProjectFactory.create(owner=owner, published=False)
+        project = ProjectFactory.create(owner=owner, published=False, info={})
         TaskFactory.create(project=project)
 
         assert project.owner.id == self.mock_authenticated.id, project.owner
@@ -245,7 +245,7 @@ class TestProjectAuthorization(Test):
     def test_admin_cannot_publish_if_project_has_no_presenter(self):
         """Test admins cannot publish a project that has no presenter"""
         owner = UserFactory.build_batch(2)[1]
-        project = ProjectFactory.create(owner=owner, published=False)
+        project = ProjectFactory.create(owner=owner, published=False, info={})
         TaskFactory.create(project=project)
 
         assert_raises(Forbidden, ensure_authorized_to, 'publish', project)

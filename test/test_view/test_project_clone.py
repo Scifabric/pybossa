@@ -53,7 +53,7 @@ class TestProjectClone(Helper):
         admin = UserFactory.create()
         project = ProjectFactory.create(id=40, short_name='oldname', owner=admin)
 
-        data = {'short_name': 'newname', 'name': 'newname', 'password': 'Test123'}
+        data = {'short_name': 'newname', 'name': 'newname', 'password': 'Test123', 'input_data_class': 'L4 - public','output_data_class': 'L4 - public'}
         url = '/project/%s/clone?api_key=%s' % (project.short_name, project.owner.api_key)
         res = self.app.post(url, data=data)
 
@@ -93,7 +93,7 @@ class TestProjectClone(Helper):
                                         owner=admin)
 
         with patch.dict(data_access_levels, self.patch_data_access_levels):
-            data = {'short_name': 'newproj', 'name': 'newproj', 'password': 'Test123', 'copy_users': True}
+            data = {'short_name': 'newproj', 'name': 'newproj', 'password': 'Test123', 'copy_users': True, 'input_data_class': 'L4 - public','output_data_class': 'L4 - public'}
             url = '/project/%s/clone?api_key=%s' % (project.short_name, project.owner.api_key)
             res = self.app.post(url, data=data)
             new_project = project_repo.get(1)
@@ -129,7 +129,7 @@ class TestProjectClone(Helper):
                                         owner=user2)
 
         with patch.dict(data_access_levels, self.patch_data_access_levels):
-            data = {'short_name': 'newproj', 'name': 'newproj', 'password': 'Test123'}
+            data = {'short_name': 'newproj', 'name': 'newproj', 'password': 'Test123', 'input_data_class': 'L4 - public','output_data_class': 'L4 - public'}
             url = '/project/%s/clone?api_key=%s' % (project.short_name, admin.api_key)
             res = self.app.post(url, data=data)
             new_project = project_repo.get(1)

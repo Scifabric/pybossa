@@ -72,7 +72,8 @@ class TestJsonProject(web.Helper):
 
             # New Project
             project = dict(name='project1', short_name='project1', long_description='lore ipsum',
-                           password='TestPwd1', product='abc', subproduct='def', kpi=0.5)
+                           password='TestPwd1', product='abc', subproduct='def', kpi=0.5,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             print csrf
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
@@ -100,7 +101,8 @@ class TestJsonProject(web.Helper):
             # new project
             url = '/project/new'
             project = dict(name='greatwar', short_name='gr8w', long_description='great war',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=1)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=1,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -113,7 +115,8 @@ class TestJsonProject(web.Helper):
             # update project
             url = '/project/%s/update' % project['short_name']
             project = dict(name='greatwar', description=proj_repo.description, id=proj_repo.id,
-                           category_id=proj_repo.category_id, product='west', subproduct='westeros', kpi=2)
+                           category_id=proj_repo.category_id, product='west', subproduct='westeros', kpi=2,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
             assert data.get('status') == SUCCESS, data
@@ -125,7 +128,8 @@ class TestJsonProject(web.Helper):
             # incorrect vals results error
             url = '/project/new'
             project = dict(name='greatwar2', short_name='gr8w2', long_description='great war',
-                           password='NightW1', product='wrongp', subproduct='wrongsubp', kpi='aa')
+                           password='NightW1', product='wrongp', subproduct='wrongsubp', kpi='aa',
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -148,7 +152,8 @@ class TestJsonProject(web.Helper):
             # Valid kpi at minimum threshold of 0.1.
             url = '/project/new'
             project = dict(name='kpimin', short_name='kpimin', long_description='kpimin',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=0.1)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.1,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -159,7 +164,8 @@ class TestJsonProject(web.Helper):
             # Valid kpi at maximum threshold of 120.
             url = '/project/new'
             project = dict(name='kpimax', short_name='kpimax', long_description='kpimax',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=120)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=120,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -183,7 +189,8 @@ class TestJsonProject(web.Helper):
             # Valid kpi with 2 decimal places.
             url = '/project/new'
             project = dict(name='kpitwodecimals', short_name='kpitwodecimals', long_description='kpitwodecimals',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=0.16)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.16,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -207,7 +214,8 @@ class TestJsonProject(web.Helper):
             # Invalid kpi below minimum threshold of 0.1.
             url = '/project/new'
             project = dict(name='kpibelowmin', short_name='kpibelowmin', long_description='kpibelowmin',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=0.01)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.01,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -232,7 +240,8 @@ class TestJsonProject(web.Helper):
             # Invalid kpi above maximum threshold of 120.
             url = '/project/new'
             project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=121)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=121,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -257,7 +266,8 @@ class TestJsonProject(web.Helper):
             # Valid kpi at minimum threshold of 0.1.
             url = '/project/new'
             project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=0.1)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=0.1,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -281,7 +291,8 @@ class TestJsonProject(web.Helper):
             """Test PROJECT valid kpi range at max threshold."""
             url = '/project/new'
             project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
-                           password='NightW1', product='north', subproduct='winterfell', kpi=120)
+                           password='NightW1', product='north', subproduct='winterfell', kpi=120,
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -305,7 +316,8 @@ class TestJsonProject(web.Helper):
             # Missing kpi value.
             url = '/project/new'
             project = dict(name='kpiabovemax', short_name='kpiabovemax', long_description='kpiabovemax',
-                           password='NightW1', product='north', subproduct='winterfell')
+                           password='NightW1', product='north', subproduct='winterfell',
+                           input_data_class='L4 - public', output_data_class='L4 - public')
             csrf = self.get_csrf(url)
             res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
             data = json.loads(res.data)
@@ -337,18 +349,20 @@ class TestJsonProject(web.Helper):
                 url = '/project/new'
                 project = dict(name='kpimin', short_name='kpimin', long_description='kpimin',
                             password='NightW1', product='north', subproduct='winterfell',
-                            kpi=0.1, data_access=['King', 'Queen'])
+                            kpi=0.1, input_data_class='L4 - public', output_data_class='L4 - public')
                 csrf = self.get_csrf(url)
                 res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
                 data = json.loads(res.data)
                 assert data.get('status') == SUCCESS, data
                 proj_repo = project_repo.get(1)
-                assert proj_repo.info['data_access'] == project['data_access']
+                assert proj_repo.info['data_classification']['input_data'] == project['input_data_class']
+                assert proj_repo.info['data_classification']['output_data'] == project['output_data_class']
 
                 # update project
                 url = '/project/%s/update' % project['short_name']
                 project = dict(name='greatwar', description=proj_repo.description, id=proj_repo.id,
-                            category_id=proj_repo.category_id, product='west', subproduct='westeros', kpi=2, data_access=['King'])
+                            category_id=proj_repo.category_id, product='west', subproduct='westeros', kpi=2,
+                            input_data_class='L3 - community', output_data_class='L3 - community')
                 res = self.app_post_json(url, headers={'X-CSRFToken': csrf}, data=project)
                 data = json.loads(res.data)
                 assert data.get('status') == SUCCESS, data
@@ -356,5 +370,6 @@ class TestJsonProject(web.Helper):
                 assert proj_repo.info['product'] == project['product'], 'product has not been set as expected'
                 assert proj_repo.info['subproduct'] == project['subproduct'], 'subproduct has not been set as expected'
                 assert proj_repo.info['kpi'] == project['kpi'], 'kpi has not been set as expected'
-                assert proj_repo.info['data_access'] == project['data_access']
+                assert proj_repo.info['data_classification']['input_data'] == project['input_data_class'], 'input_data_class has not been set as expected'
+                assert proj_repo.info['data_classification']['output_data'] == project['output_data_class'], 'output_data_class has not been set as expected'
 
