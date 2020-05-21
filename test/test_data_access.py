@@ -17,6 +17,8 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from default import with_context, db, Test
 from mock import patch
+from werkzeug.exceptions import BadRequest
+from collections import namedtuple
 from factories import ProjectFactory, TaskFactory, UserFactory
 from nose.tools import nottest, assert_raises
 from pybossa.core import user_repo, task_repo
@@ -152,3 +154,32 @@ class TestAccessLevels(Test):
             assert res
             res = data_access.valid_user_type_based_data_access(data[2]['user_type'], data[2]['access_levels'])[0]
             assert not res
+
+    def test_ensure_data_access_assignment_from_form(self):
+        class TestForm:
+            data_access = namedtuple('data_access', ['data'])
+
+        form = TestForm()
+        form.data_access.data = ['L5']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            assert_raises(BadRequest, data_access.ensure_data_access_assignment_from_form, dict(), form)
+
+        form.data_access.data = ['L3']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            data = dict()
+            data_access.ensure_data_access_assignment_from_form(data, form)
+            assert data['data_access'] == ['L3']
+
+    def test_ensure_annotation_config_from_form(self):
+        class TestForm:
+            amp_store = namedtuple('amp_store', ['data'])
+            amp_pvf = namedtuple('amp_pvf', ['data'])
+
+        form = TestForm()
+        form.amp_store.data = True
+        form.amp_pvf.data = 'GIG 999'
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            data = dict()
+            data_access.ensure_annotation_config_from_form(data, form)
+            assert data['annotation_config']['amp_store'] == True
+            assert data['annotation_config']['amp_pvf'] == 'GIG 999'
