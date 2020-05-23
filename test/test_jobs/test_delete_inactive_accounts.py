@@ -16,12 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import dateutil.relativedelta
 from pybossa.jobs import get_delete_inactive_accounts
 from pybossa.jobs import get_notify_inactive_accounts
 from default import Test, with_context, rebuild_db
 from factories import TaskRunFactory, UserFactory, ProjectFactory
 from pybossa.core import user_repo, task_repo, db
 from pybossa.model.task_run import TaskRun
+from pybossa.model.user import User
 import datetime
 from dateutil.relativedelta import relativedelta
 import calendar
@@ -92,12 +94,16 @@ class TestEngageUsers(Test):
             args = job['args'][0]
             email = args['recipients'][0]
             assert email in emails, (email, emails)
+            job['name'](*job['args'])
         job = jobs[0]
         args = job['args'][0]
         assert job['queue'] == 'monthly', job['queue']
         assert len(args['recipients']) == 1
         assert args['recipients'][0] == tr_year.user.email_addr, args['recipients'][0]
         assert "deleted the next month" in args['subject']
+        user = User.query.get(tr_year.user.id)
+        assert tr_year.user.notified_at is not None, jobs
+        assert tr_year.user.notified_at.strftime('%Y-%m-%d') == today.strftime('%Y-%m-%d')
 
     @with_context
     def test_delete_jobs(self):
@@ -127,6 +133,26 @@ class TestEngageUsers(Test):
         # User with a recent contribution
         tr3 = TaskRunFactory.create(user=user)
         user = user_repo.get(tr.user_id)
+
+        jobs = []
+        jobs_generator = get_notify_inactive_accounts()
+        for job in jobs_generator:
+            jobs.append(job)
+            job['name'](*job['args'])
+        msg = "There should be one job."
+        assert len(jobs) == 1, (msg, len(jobs))
+
+        # The user will get today (the day that the tests are run) as their notified_at value
+        # We need to change it to one month ago, to trigger the delete action
+        assert tr_year.user.notified_at is not None, jobs
+        assert tr_year.user.notified_at.strftime('%Y-%m-%d') == today.strftime('%Y-%m-%d')
+
+        one_month_ago = today - dateutil.relativedelta.relativedelta(months=1)
+        tr_year.user.notified_at = one_month_ago
+        db.session.add(tr_year.user)
+        db.session.commit()
+
+        assert tr_year.user.notified_at.strftime('%Y-%m-%d') == one_month_ago.strftime('%Y-%m-%d')
 
         jobs_generator = get_delete_inactive_accounts()
         jobs = []
