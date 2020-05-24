@@ -132,7 +132,8 @@ requirements = [
     "wrapt==1.10.11",
     "WTForms>=1.0.5",
     "WTForms-Components>=0.10.3",
-    "yacryptopan==1.0.0"
+    "yacryptopan==1.0.0",
+    "email_validator==1.1.1"
 ]
 
 setup(
