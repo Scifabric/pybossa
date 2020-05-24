@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import datetime
 import io
 import os.path
 import json
@@ -26,6 +27,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                        AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
+from pybossa.model.user import User
 from pybossa.core import db, anonymizer
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
@@ -533,6 +535,15 @@ class TestTaskrunAPI(TestAPI):
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
+        assert project.owner.notified_at is None
+
+        project.owner.notified_at = datetime.datetime.now()
+        db.session.add(project.owner)
+        db.session.commit()
+
+        user = User.query.get(project.owner.id)
+        assert user.notified_at is not None
+
         # Now with everything fine
         data = dict(
             project_id=task.project_id,
@@ -543,6 +554,9 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        # Check that notified_at has been updated to None
+        user = User.query.get(project.owner.id)
+        assert user.notified_at is None, user.notified_at
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson)
@@ -1298,7 +1312,7 @@ class TestTaskrunAPI(TestAPI):
         data = json.loads(res.data)
         assert res.status_code == 415, data
 
-        # reserved key 
+        # reserved key
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,
@@ -1384,7 +1398,7 @@ class TestTaskrunAPI(TestAPI):
         assert res.status_code == 403, data
 
 
-        # reserved key 
+        # reserved key
         img = (io.BytesIO(b'test'), 'test_file.jpg')
 
         payload = dict(project_id=project.id,

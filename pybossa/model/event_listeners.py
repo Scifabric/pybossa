@@ -252,6 +252,12 @@ def on_taskrun_submit(mapper, conn, target):
         project_private['webhook'] = _webhook
         push_webhook(project_private, target.task_id, result_id)
 
+    # Every time a registered user contributes a taskrun its notified_at column is reset
+    # so the job for deleting inactive accounts, is not triggered
+    if target.user_id:
+        sql = f"update \"user\" set notified_at=null where \"user\".id={target.user_id};"
+        conn.execute(sql)
+
 
 @event.listens_for(Blogpost, 'after_insert')
 @event.listens_for(Blogpost, 'after_update')
