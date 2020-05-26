@@ -793,7 +793,7 @@ class UserPrefMetadataForm(Form):
         data_access = Select2Field(
             lazy_gettext('Data Access(s)'), [validators.Required(),
                 pb_validator.UserTypeValiadator()],
-            choices=data_access.data_access_levels['valid_access_levels'], default="")
+            choices=data_access.data_access_levels['valid_user_access_levels'], default="")
     review = TextAreaField(
         lazy_gettext('Additional comments'), default="")
 
