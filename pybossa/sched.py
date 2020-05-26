@@ -24,7 +24,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.counter import Counter
 from pybossa.core import db, sentinel, project_repo, task_repo
-from redis_lock import LockManager, get_active_user_count, register_active_user
+from redis_lock import LockManager, get_active_user_count, register_active_user, unregister_active_user
 from contributions_guard import ContributionsGuard
 from werkzeug.exceptions import BadRequest, Forbidden
 import random
@@ -440,6 +440,11 @@ def release_lock(task_id, user_id, timeout, pipeline=None, execute=True):
     user_tasks_key = get_user_tasks_key(user_id)
     lock_manager.release_lock(task_users_key, user_id, pipeline=pipeline)
     lock_manager.release_lock(user_tasks_key, task_id, pipeline=pipeline)
+
+    project_ids = get_task_ids_project_id([task_id])
+    if project_ids:
+        unregister_active_user(project_ids[0], user_id, sentinel.master)
+
     if execute:
         pipeline.execute()
 

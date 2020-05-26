@@ -21,6 +21,7 @@ from datetime import timedelta
 
 
 ACTIVE_USER_KEY = 'pybossa:active_users_in_project:{}'
+EXPIRE_LOCK_DELAY = 5
 
 
 def get_active_user_key(project_id):
@@ -42,6 +43,12 @@ def register_active_user(project_id, user_id, conn, ttl=2*60*60):
     key = get_active_user_key(project_id)
     conn.hset(key, user_id, now + ttl)
     conn.expire(key, ttl)
+
+
+def unregister_active_user(project_id, user_id, conn):
+    now = time()
+    key = get_active_user_key(project_id)
+    conn.hset(key, user_id, now + EXPIRE_LOCK_DELAY)
 
 
 class LockManager(object):
@@ -102,7 +109,7 @@ class LockManager(object):
         :param client_id: id of client holding the lock
         """
         cache = pipeline or self._redis
-        cache.hset(resource_id, client_id, time() + 5)
+        cache.hset(resource_id, client_id, time() + EXPIRE_LOCK_DELAY)
 
     def get_locks(self, resource_id):
         """

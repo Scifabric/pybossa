@@ -229,3 +229,11 @@ def n_unexpired_gold_tasks(project_id):
     ''')
     result = session.execute(query, dict(project_id=project_id))
     return result.scalar()
+
+
+def n_locked_tasks(project_id):
+    """Return the number of locked tasks in the project."""
+    from pybossa.core import sentinel
+    from pybossa.redis_lock import get_active_user_count
+
+    return get_active_user_count(project_id, sentinel.master)

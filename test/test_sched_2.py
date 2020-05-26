@@ -19,13 +19,42 @@
 from helper import sched
 from default import with_context
 import json
+import time
 from mock import patch
-
+from factories import TaskFactory, ProjectFactory, TaskRunFactory, UserFactory
+from pybossa.redis_lock import get_active_user_count, register_active_user, unregister_active_user, EXPIRE_LOCK_DELAY
+from pybossa.core import sentinel
 
 class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
         self.endpoints = ['project', 'task', 'taskrun']
+
+    @with_context
+    def test_get_active_users_lock(self):
+        """ Test number of locked tasks"""
+        user = UserFactory.create(id=500)
+        project = ProjectFactory.create(owner=user,info={'sched':'default'})
+        TaskFactory.create_batch(2, project=project, n_answers=2)
+
+        # Register the active user as a locked task.
+        register_active_user(project.id, user.id, sentinel.master)
+        # Verify the count of locked tasks for this project equals 1.
+        count = get_active_user_count(project.id, sentinel.master)
+        assert count == 1
+
+        # Unregister the active user as a locked task.
+        unregister_active_user(project.id, user.id, sentinel.master)
+        # Verify the count of locked tasks for this project equals 1.
+        # There is a delay before the lock is released.
+        count = get_active_user_count(project.id, sentinel.master)
+        assert count == 1
+
+        # Confirm lock released after a delay.
+        time.sleep(EXPIRE_LOCK_DELAY + 1)
+        count = get_active_user_count(project.id, sentinel.master)
+        assert not count
+
 
     # Tests
     @with_context
