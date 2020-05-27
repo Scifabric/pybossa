@@ -184,3 +184,25 @@ class TestAccessLevels(Test):
             data_access.ensure_annotation_config_from_form(data, form)
             assert data['annotation_config']['amp_store'] == True
             assert data['annotation_config']['amp_pvf'] == 'GIG 999'
+
+    def test_ensure_user_data_access_assignment_from_form(self):
+        class TestForm:
+            data_access = namedtuple('data_access', ['data'])
+
+        form = TestForm()
+        form.data_access.data = ['L5']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            assert_raises(BadRequest, data_access.ensure_user_data_access_assignment_from_form, dict(), form)
+
+        form.data_access.data = ['L3']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            data = dict()
+            data_access.ensure_user_data_access_assignment_from_form(data, form)
+            assert data['data_access'] == ['L3']
+
+    def test_copy_user_data_access_levels(self):
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            target = dict()
+            access_level = ['L3']
+            data_access.copy_user_data_access_levels(target, access_level)
+            assert target['data_access'] == access_level
