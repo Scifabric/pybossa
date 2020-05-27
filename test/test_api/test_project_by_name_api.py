@@ -63,10 +63,26 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_project_query(self):
         """ Test API project query"""
-        project1 = ProjectFactory.create(updated='2015-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
-        projects = ProjectFactory.create_batch(8, info={'total': 150, 'task_presenter': 'foo'})
+        project1 = ProjectFactory.create(
+            updated='2015-01-01T14:37:30.642119',
+            info={
+                'total': 150,
+                'task_presenter': 'foo',
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            })
+        projects = ProjectFactory.create_batch(8,
+            info={
+                'total': 150,
+                'task_presenter': 'foo',
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            })
 
-        project2 = ProjectFactory.create(updated='2019-01-01T14:37:30.642119', info={'total': 150, 'task_presenter': 'foo'})
+        project2 = ProjectFactory.create(
+            updated='2019-01-01T14:37:30.642119',
+            info={
+                'total': 150,
+                'task_presenter': 'foo',
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")})
         projects.insert(0, project1)
         projects.append(project2)
 
@@ -84,7 +100,12 @@ class TestProjectAPI(TestAPI):
     def test_project_query_with_context(self):
         """ Test API project query with context."""
         user = UserFactory.create()
-        project_oc = ProjectFactory.create(owner=user, info={'total': 150})
+        project_oc = ProjectFactory.create(
+            owner=user,
+            info={
+                'total': 150,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            })
         ProjectFactory.create()
 
         # Test a non-existant ID
@@ -132,7 +153,10 @@ class TestProjectAPI(TestAPI):
         user_two = UserFactory.create()
         project_oc = ProjectFactory.create(owner=user, short_name='test-app',
                                            name='My New Project',
-                                           info=dict(foo='fox'))
+                                           info=dict(
+                                               foo='fox',
+                                               data_classification=dict(input_data="L4 - public", output_data="L4 - public")
+                                            ))
         ProjectFactory.create()
         # Test for real field
         url = "/api/projectbyname/test-app?api_key=" + user.api_key

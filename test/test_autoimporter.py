@@ -424,7 +424,10 @@ class TestAutoimporterBehaviour(web.Helper):
         self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        project = ProjectFactory.create(owner=owner, info={
+            'autoimporter': autoimporter,
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+        })
         url = "/project/%s/tasks/autoimporter" % project.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -457,7 +460,10 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        project = ProjectFactory.create(owner=owner, info={
+            'autoimporter': autoimporter,
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+        })
         url = "/project/%s/tasks/autoimporter" % project.short_name
         data = {'form_name': 'gdocs', 'googledocs_url': 'http://another.com'}
 
@@ -472,7 +478,10 @@ class TestAutoimporterBehaviour(web.Helper):
         self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        project = ProjectFactory.create(owner=owner, info={
+            'autoimporter': autoimporter,
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+        })
         url = "/project/%s/tasks/autoimporter/delete" % project.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)

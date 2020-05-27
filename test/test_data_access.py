@@ -17,6 +17,8 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from default import with_context, db, Test
 from mock import patch
+from werkzeug.exceptions import BadRequest
+from collections import namedtuple
 from factories import ProjectFactory, TaskFactory, UserFactory
 from nose.tools import nottest, assert_raises
 from pybossa.core import user_repo, task_repo
@@ -36,7 +38,8 @@ class TestAccessLevels(Test):
             valid_project_levels_for_task_level=dict(
                 L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
             valid_task_levels_for_project_level=dict(
-                L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])
+                L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]),
+            valid_user_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")]
         )
         patch_data_access_levels.update(kwargs)
         return patch_data_access_levels
@@ -115,14 +118,12 @@ class TestAccessLevels(Test):
     @with_context
     def test_task_save_sufficient_permissions(self):
         patched_levels = self.patched_levels(
-            valid_project_levels_for_task_level={'A': ['B']},
-            valid_task_levels_for_project_level={'A': ['B']}
+            valid_project_levels_for_task_level={'L4': ['L4']},
+            valid_task_levels_for_project_level={'L4': ['L4']}
         )
         with patch.dict(data_access.data_access_levels, patched_levels):
-            project = ProjectFactory.create(info={
-                'data_access': ['A']
-            })
-            task = Task(project_id=project.id, info={'data_access': ['A']})
+            project = ProjectFactory.create()
+            task = Task(project_id=project.id, info={'data_access': ['L4']})
             task_repo.save(task)
 
     @with_context
@@ -154,3 +155,54 @@ class TestAccessLevels(Test):
             assert res
             res = data_access.valid_user_type_based_data_access(data[2]['user_type'], data[2]['access_levels'])[0]
             assert not res
+
+    def test_ensure_data_access_assignment_from_form(self):
+        class TestForm:
+            data_access = namedtuple('data_access', ['data'])
+
+        form = TestForm()
+        form.data_access.data = ['L5']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            assert_raises(BadRequest, data_access.ensure_data_access_assignment_from_form, dict(), form)
+
+        form.data_access.data = ['L3']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            data = dict()
+            data_access.ensure_data_access_assignment_from_form(data, form)
+            assert data['data_access'] == ['L3']
+
+    def test_ensure_annotation_config_from_form(self):
+        class TestForm:
+            amp_store = namedtuple('amp_store', ['data'])
+            amp_pvf = namedtuple('amp_pvf', ['data'])
+
+        form = TestForm()
+        form.amp_store.data = True
+        form.amp_pvf.data = 'GIG 999'
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            data = dict()
+            data_access.ensure_annotation_config_from_form(data, form)
+            assert data['annotation_config']['amp_store'] == True
+            assert data['annotation_config']['amp_pvf'] == 'GIG 999'
+
+    def test_ensure_user_data_access_assignment_from_form(self):
+        class TestForm:
+            data_access = namedtuple('data_access', ['data'])
+
+        form = TestForm()
+        form.data_access.data = ['L5']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            assert_raises(BadRequest, data_access.ensure_user_data_access_assignment_from_form, dict(), form)
+
+        form.data_access.data = ['L3']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            data = dict()
+            data_access.ensure_user_data_access_assignment_from_form(data, form)
+            assert data['data_access'] == ['L3']
+
+    def test_copy_user_data_access_levels(self):
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            target = dict()
+            access_level = ['L3']
+            data_access.copy_user_data_access_levels(target, access_level)
+            assert target['data_access'] == access_level

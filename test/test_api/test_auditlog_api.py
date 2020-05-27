@@ -30,7 +30,12 @@ auditlog_repo = AuditlogRepository(db)
 class TestAuditlogAPI(TestAPI):
 
     def create_auditlogs(self):
-        project = ProjectFactory.create(info={'task_presenter': 'version1', 'task_guidelines': 'version1'})
+        project = ProjectFactory.create(
+            info={
+                'task_presenter': 'version1',
+                'task_guidelines': 'version1',
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            })
 
         AuditlogFactory.create(project_id=project.id,
             project_short_name=project.short_name,

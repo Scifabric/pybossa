@@ -39,7 +39,11 @@ class TestUpdateGoldStats(Test):
                 }
             }
         }
-        project = ProjectFactory.create(info={'answer_fields': answer_fields})
+        project = ProjectFactory.create(
+            info={
+                'answer_fields': answer_fields,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            })
         task = TaskFactory.create(project=project, calibration=1, gold_answers={'hello': 'A'})
         task_run = TaskRunFactory.create(task=task, info={'hello': 'A'})
 
@@ -58,7 +62,11 @@ class TestUpdateGoldStats(Test):
                 }
             }
         }
-        project = ProjectFactory.create(info={'answer_fields': answer_fields})
+        project = ProjectFactory.create(
+            info={
+                'answer_fields': answer_fields,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+            })
         task = TaskFactory.create(project=project, calibration=1, gold_answers={'hello': 'A'})
         task_run = TaskRunFactory.create(task=task, info={'hello': 'B'})
         stat = PerformanceStatsFactory.create(user_id=task_run.user_id,

@@ -29,6 +29,7 @@ from pybossa.core import uploader
 from werkzeug.exceptions import BadRequest
 import pandas.io.sql as sqlio
 import pandas as pd
+from flask import current_app
 
 
 class ProjectRepository(Repository):
@@ -58,6 +59,8 @@ class ProjectRepository(Repository):
         self._empty_strings_to_none(project)
         self._creator_is_owner(project)
         self._verify_has_password(project)
+        self._verify_data_classification(project)
+
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -70,6 +73,7 @@ class ProjectRepository(Repository):
         self._empty_strings_to_none(project)
         self._creator_is_owner(project)
         self._verify_has_password(project)
+        self._verify_data_classification(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -147,6 +151,35 @@ class ProjectRepository(Repository):
     def _verify_has_password(self, project):
         if not project.info.get('passwd_hash'):
             raise BadRequest('Project must have a password')
+
+    def _verify_data_classification(self, project):
+        # validate data classification
+        if not project.info.get('data_classification'):
+            raise BadRequest('Project must have a data classification for input and output data')
+
+        input_data_class = project.info.get('data_classification', {}).get('input_data')
+        output_data_class = project.info.get('data_classification', {}).get('output_data')
+        if not (input_data_class and output_data_class):
+            raise BadRequest('Project must have input data classification and output data classification')
+
+        data_classification = current_app.config.get('DATA_CLASSIFICATION', [])
+        valid_data_classes = current_app.config.get('VALID_DATA_CLASSES', [])
+        if input_data_class not in valid_data_classes:
+            raise BadRequest('Project must have valid input data classification')
+        if output_data_class not in valid_data_classes:
+            raise BadRequest('Project must have valid output data classification')
+        input_output_data_access = [input_data_class.split('-')[0].strip(), output_data_class.split('-')[0].strip()]
+
+        # set data access level with highest level between input and output data access classifications
+        valid_data_access = current_app.config.get('VALID_ACCESS_LEVELS', [])
+        data_access = []
+        for data_access_level in valid_data_access:
+            if data_access_level in input_output_data_access:
+                data_access = data_access_level
+                break
+        if data_access:
+            project.info['data_access'] = [data_access]
+
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):

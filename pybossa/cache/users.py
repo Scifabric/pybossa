@@ -479,9 +479,9 @@ def get_announcements_cached(user, announcement_levels):
 
 
 def get_users_for_data_access(data_access):
-    from pybossa.data_access import get_data_access_db_clause
+    from pybossa.data_access import get_user_data_access_db_clause
 
-    clause = get_data_access_db_clause(data_access)
+    clause = get_user_data_access_db_clause(data_access)
     if not clause:
         return None
 
