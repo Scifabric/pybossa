@@ -32,6 +32,7 @@ class TestFileproxy(web.Helper):
 
     def get_key(self, create_connection):
         key = MagicMock()
+        key.content_disposition = "inline"
         bucket = MagicMock()
         bucket.get_key.return_value = key
         conn = MagicMock()
