@@ -103,9 +103,9 @@ class ProjectCommonForm(Form):
                                         min_len=PROJECT_PWD_MIN_LEN,
                                         special=False)],
                     render_kw={'placeholder': 'Minimum length {} characters, 1 uppercase, 1 lowercase and 1 numeric.'.format(PROJECT_PWD_MIN_LEN)})
-    input_data_class = SelectFieldWithProps(lazy_gettext('Input Data Classifier'),
+    input_data_class = SelectFieldWithProps(lazy_gettext('Input Data Classification'),
                                             validators=[validators.Required()], choices=[], default='')
-    output_data_class = SelectFieldWithProps(lazy_gettext('Output Data Classifier'),
+    output_data_class = SelectFieldWithProps(lazy_gettext('Output Data Classification'),
                                              validators=[validators.Required()], choices=[], default='')
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
