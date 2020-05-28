@@ -118,8 +118,10 @@ def encrypted_file(store, bucket, project_id, path):
             raise InternalServerError('An Error Occurred')
 
     response = Response(decrypted, content_type=key.content_type)
-    response.headers.add('Content-Encoding', key.content_encoding)
-    response.headers.add('Content-Disposition', key.content_disposition)
+    if key.content_encoding:
+        response.headers.add('Content-Encoding', key.content_encoding)
+    if key.content_disposition:
+        response.headers.add('Content-Disposition', key.content_disposition)
     return response
 
 
