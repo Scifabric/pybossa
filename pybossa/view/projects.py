@@ -3196,7 +3196,9 @@ def project_config(short_name):
             project_repo.save(project)
             flash(gettext('Configuration updated successfully'), 'success')
         except Exception as e:
-            return ErrorStatus().format_exception(e, 'project-config', 'POST')
+            current_app.logger.error('project-config post error. project id %d, data %s, error %s ',
+                    project.id, request.data, str(e))
+            flash(gettext('An error occurred.'), 'error')
 
 
     ext_config = project.info.get('ext_config', {})
