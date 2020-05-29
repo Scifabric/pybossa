@@ -247,5 +247,7 @@ def valid_user_type_based_data_access(user_type, access_levels):
 @when_data_access()
 def set_default_amp_store(project):
     annotation_config = project['info'].get('annotation_config', {})
-    annotation_config['amp_store'] = True
+    input_data = project['info'].get('input_data') or ''
+    output_data = project['info'].get('output_data') or ''
+    annotation_config['amp_store'] = ('L1' in str(input_data) + str(output_data) == False)
     project['info']['annotation_config'] = annotation_config
