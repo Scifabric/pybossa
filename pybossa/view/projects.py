@@ -3180,7 +3180,7 @@ def project_config(short_name):
             cf = {}
             for field in content.get('fields') or {}:
                 name = field['name']
-                if config_dict[name]:
+                if config_dict.get(name) and config_dict[name]:
                     cf[name] = config_dict[name]
             if cf:
                 new_config[fieldname] = cf
@@ -3195,8 +3195,8 @@ def project_config(short_name):
                 project.info['data_access'] = data.get('data_access')
             project_repo.save(project)
             flash(gettext('Configuration updated successfully'), 'success')
-        except Exception:
-            flash(gettext('An error occurred.'), 'error')
+        except Exception as e:
+            return ErrorStatus().format_exception(e, 'project-config', 'POST')
 
 
     ext_config = project.info.get('ext_config', {})
