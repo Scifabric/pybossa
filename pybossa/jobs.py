@@ -499,8 +499,10 @@ def warn_old_project_owners():
     return True
 
 
-def send_mail(message_dict):
+def send_mail(message_dict, user_id=None):
     """Send email."""
+    from pybossa.core import db
+    from pybossa.model.user import User
     message = Message(**message_dict)
     spam = False
     for r in message_dict['recipients']:
@@ -510,6 +512,11 @@ def send_mail(message_dict):
             break
     if not spam:
         mail.send(message)
+        if user_id:
+            user = User.query.get(user_id)
+            user.notified_at = datetime.now()
+            db.session.add(user)
+            db.session.commit()
 
 
 def import_tasks(project_id, from_auto=False, **form_data):
@@ -930,7 +937,7 @@ def get_notify_inactive_accounts(queue='monthly'):
                              html=html)
 
             job = dict(name=send_mail,
-                       args=[mail_dict],
+                       args=[mail_dict, user.id],
                        kwargs={},
                        timeout=timeout,
                        queue=queue)
@@ -943,19 +950,9 @@ def get_delete_inactive_accounts(queue='bimonthly'):
     from pybossa.model.user import User
     from pybossa.core import db
     timeout = current_app.config.get('TIMEOUT')
-    time = current_app.config.get('USER_INACTIVE_DELETE')
+    time = current_app.config.get('USER_DELETE_AFTER_NOTIFICATION', '1 month')
 
-    sql = text('''SELECT "user".id from "user", task_run
-               WHERE "user".id = task_run.user_id AND "user".id NOT IN
-               (SELECT user_id FROM task_run
-               WHERE user_id IS NOT NULL
-               AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               >= NOW() - '{} month'::INTERVAL
-               GROUP BY user_id
-               ORDER BY user_id) AND
-               "user".admin=false
-               GROUP BY "user".id ORDER BY "user".id
-               ;'''.format(time))
+    sql = text("select * from \"user\" where notified_at < NOW() - INTERVAL '" + time + "';")
 
     results = db.slave_session.execute(sql)
 
