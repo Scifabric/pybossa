@@ -255,7 +255,7 @@ def on_taskrun_submit(mapper, conn, target):
     # Every time a registered user contributes a taskrun its notified_at column is reset
     # so the job for deleting inactive accounts, is not triggered
     if target.user_id:
-        sql = "update \"user\" set notified_at=null where \"user\".id=" + target.user_id + ";"
+        sql = "update \"user\" set notified_at=null where \"user\".id=%s;" % target.user_id
         conn.execute(sql)
 
 
