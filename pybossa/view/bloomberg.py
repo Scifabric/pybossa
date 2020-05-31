@@ -19,10 +19,12 @@
 from flask import Blueprint, request, flash, url_for, redirect, current_app, abort
 from flask_babel import gettext
 from pybossa.core import user_repo, csrf
-from pybossa.view.account import _sign_in_user
+from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
 from pybossa.util import is_own_url_or_else
+from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
+import json
 
 blueprint = Blueprint('bloomberg', __name__)
 
@@ -70,11 +72,31 @@ def handle_bloomberg_response():
         current_app.logger.error('BSSO auth error(s): %s %s', errors, error_reason)
         flash(gettext('There was a problem during the sign in process.'), 'error')
         return redirect(url_for('home.home'))
-    if auth.is_authenticated:
+    elif auth.is_authenticated:
         attributes = auth.get_attributes()
-        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
+        #WHY IS EMAILADDRESS NOT WORKING?
+        #user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
+        user = user_repo.get_by(email_addr=unicode(attributes['Email'][0]).lower())
         return _sign_in_user(user, next_url=request.form.get('RelayState'))
-    else:
+    elif not auth.is_authenticated:
         current_app.logger.error('BSSO authentication failed')
         flash(gettext('Authentication failed.'), 'error')
         return redirect(url_for('home.home'))
+    else:
+        _u_data = auth.get_attributes()
+        user_data = {}
+        try:
+            user_data['fullname']   = _u_data['FirstName'][0] + " " + _u_data['LastName'][0]
+            user_data['email_addr'] = _u_data['Email'][0]
+            user_data['name']       = _u_data['LoginID'][0]
+            create_account(user_data)
+            #WHY IS EMAILADDRESS NOT WORKING?
+            #user = user_repo.get_by(email_addr=unicode(_u_data['emailAddress'][0]).lower())
+            user = user_repo.get_by(email_addr=u'jdoe1@bloomberg.net')
+            return _sign_in_user(user, next_url=request.form.get('RelayState'))
+        except DBIntegrityError as dberror:
+            print(dberror)
+            return
+        except Exception as ex:
+            print(ex)
+            return
