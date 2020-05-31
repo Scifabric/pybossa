@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import datetime
 import io
 import os.path
 import json
@@ -26,6 +27,7 @@ from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                        AnonymousTaskRunFactory, UserFactory)
 from pybossa.repositories import ProjectRepository, TaskRepository
 from pybossa.repositories import ResultRepository
+from pybossa.model.user import User
 from pybossa.core import db, anonymizer
 from pybossa.auth.errcodes import *
 from pybossa.model.task_run import TaskRun
@@ -205,7 +207,7 @@ class TestTaskrunAPI(TestAPI):
         err_msg = "It should get the last item first."
         taskruns_by_id = sorted(taskruns, key=lambda x: x['id'], reverse=True)
         for i in range(20):
-            print data[i]['id']
+            print((data[i]['id']))
             assert taskruns_by_id[i]['id'] == data[i]['id'], (taskruns_by_id[i]['id'], data[i]['id'])
 
     @with_context
@@ -488,7 +490,7 @@ class TestTaskrunAPI(TestAPI):
 
         res = self.app.get('/api/taskrun?task_id=%s&all=1' % task.id)
         tmp = json.loads(res.data)
-        print len(tmp)
+        print((len(tmp)))
         for tr in tmp:
             assert tr['user_ip'] == anonymizer.ip('127.0.0.0')
             assert tr['user_ip'] != '127.0.0.0'
@@ -533,6 +535,15 @@ class TestTaskrunAPI(TestAPI):
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
+        assert project.owner.notified_at is None
+
+        project.owner.notified_at = datetime.datetime.now()
+        db.session.add(project.owner)
+        db.session.commit()
+
+        user = User.query.get(project.owner.id)
+        assert user.notified_at is not None
+
         # Now with everything fine
         data = dict(
             project_id=task.project_id,
@@ -543,6 +554,9 @@ class TestTaskrunAPI(TestAPI):
         tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
+        # Check that notified_at has been updated to None
+        user = User.query.get(project.owner.id)
+        assert user.notified_at is None, user.notified_at
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson)

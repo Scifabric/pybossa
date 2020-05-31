@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
+from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger, Date
 from sqlalchemy.schema import Column
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
@@ -66,6 +66,7 @@ class User(db.Model, DomainObject, UserMixin):
     consent = Column(Boolean, default=False)
     info = Column(MutableDict.as_mutable(JSONB), default=dict())
     user_pref = Column(JSONB)
+    notified_at = Column(Date, default=None)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')
