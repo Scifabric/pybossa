@@ -159,7 +159,7 @@ def fix_task_run_created_date():
     from datetime import datetime
     with app.app_context():
         query = text(
-            '''SELECT id, created FROM task_run WHERE created LIKE ('\x%')''')
+            '''SELECT id, created FROM task_run WHERE created LIKE ('\\x%')''')
         results = db.engine.execute(query)
         task_runs = results.fetchall()
         for task_run in task_runs:
