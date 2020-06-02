@@ -80,15 +80,15 @@ def handle_bloomberg_response():
         flash(gettext('Authentication failed.'), 'error')
         return redirect(url_for('home.home'))
     else:
-        _u_data = auth.get_attributes()
+        attributes = auth.get_attributes()
         user_data = {}
         try:
-            user_data['fullname']   = _u_data['FirstName'][0] + " " + _u_data['LastName'][0]
-            user_data['email_addr'] = _u_data['Email'][0]
-            user_data['name']       = _u_data['LoginID'][0]
+            user_data['fullname']   = attributes['FirstName'][0] + " " + attributes['LastName'][0]
+            user_data['email_addr'] = attributes['emailAddress'][0]
+            user_data['name']       = attributes['LoginID'][0]
             user_data['password']   = u"pAssw0rd"
             create_account(user_data)
-            user = user_repo.get_by(email_addr=unicode(_u_data['emailAddress'][0]).lower())
+            user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         except DBIntegrityError as dberror:
             print(dberror)
