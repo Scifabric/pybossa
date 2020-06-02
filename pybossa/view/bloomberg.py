@@ -74,9 +74,7 @@ def handle_bloomberg_response():
         return redirect(url_for('home.home'))
     elif auth.is_authenticated:
         attributes = auth.get_attributes()
-        #WHY IS EMAILADDRESS NOT WORKING?
-        #user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
-        user = user_repo.get_by(email_addr=unicode(attributes['Email'][0]).lower())
+        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         return _sign_in_user(user, next_url=request.form.get('RelayState'))
     elif not auth.is_authenticated:
         current_app.logger.error('BSSO authentication failed')
@@ -90,9 +88,7 @@ def handle_bloomberg_response():
             user_data['email_addr'] = _u_data['Email'][0]
             user_data['name']       = _u_data['LoginID'][0]
             create_account(user_data)
-            #WHY IS EMAILADDRESS NOT WORKING?
-            #user = user_repo.get_by(email_addr=unicode(_u_data['emailAddress'][0]).lower())
-            user = user_repo.get_by(email_addr=u'jdoe1@bloomberg.net')
+            user = user_repo.get_by(email_addr=unicode(_u_data['emailAddress'][0]).lower())
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         except DBIntegrityError as dberror:
             print(dberror)
