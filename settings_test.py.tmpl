@@ -210,3 +210,11 @@ WIZARD_STEPS = OrderedDict([
         'enable_checks': {'always': True},
         'visible_checks': {'and': ['project_publish'], 'or': []}})
 ])
+DATA_CLASSIFICATION = [
+    ('L1 - internal', False),
+    ('L2 - propriertary', False),
+    ('L3 - community', True),
+    ('L4 - public', True)
+]
+VALID_DATA_CLASSES = [data_class for data_class, enabled in DATA_CLASSIFICATION if enabled and data_class]
+VALID_ACCESS_LEVELS = sorted(set(data_class.split('-')[0].strip() for data_class in VALID_DATA_CLASSES))

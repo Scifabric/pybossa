@@ -33,6 +33,8 @@ class TestApiCommon(TestAPI):
     def setUp(self):
         super(TestApiCommon, self).setUp()
 
+    data_classification=dict(input_data="L4 - public", output_data="L4 - public")
+
     @with_context
     @patch('pybossa.api.task.TaskAPI._verify_auth')
     def test_limits_query(self, auth):
@@ -125,7 +127,15 @@ class TestApiCommon(TestAPI):
     def test_get_query_with_api_key_and_all(self):
         """ Test API GET query with an API-KEY requesting all results"""
         admin, owner, user = UserFactory.create_batch(3)
-        project = ProjectFactory.create(owner=owner, info={'total': 150, 'onesignal': 'something', 'onesignal_app_id': 1}, published=True)
+        project = ProjectFactory.create(
+            owner=owner,
+            info={
+                'total': 150,
+                'onesignal': 'something',
+                'onesignal_app_id': 1,
+                'data_classification': self.data_classification
+            },
+            published=True)
         task = TaskFactory.create(project=project, info={'url': 'my url'})
         taskrun = TaskRunFactory.create(task=task, user=admin,
                                         info={'answer': 'annakarenina'})
@@ -230,7 +240,7 @@ class TestApiCommon(TestAPI):
     def test_get_query_with_api_key_context(self):
         """ Test API GET query with an API-KEY requesting only APIKEY results."""
         users = UserFactory.create_batch(4)
-        project_oc = ProjectFactory.create(owner=users[0], info={'total': 150})
+        project_oc = ProjectFactory.create(owner=users[0], info={'total': 150, 'data_classification': self.data_classification})
         projects = ProjectFactory.create_batch(3, owner=users[1])
         task_oc = TaskFactory.create(project=project_oc, info={'url': 'my url'})
         taskrun_oc = TaskRunFactory.create(task=task_oc, user=users[0],

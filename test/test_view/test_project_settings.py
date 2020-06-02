@@ -6,6 +6,7 @@ from default import db, with_context
 from factories import ProjectFactory
 from helper import web
 from pybossa import data_access
+from default import flask_app
 
 
 class TestProjectSettings(web.Helper):
@@ -21,7 +22,8 @@ class TestProjectSettings(web.Helper):
             valid_project_levels_for_task_level=dict(
                 L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
             valid_task_levels_for_project_level=dict(
-                L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])
+                L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]),
+            valid_user_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")]
         )
         patch_data_access_levels.update(kwargs)
         return patch_data_access_levels
@@ -30,8 +32,14 @@ class TestProjectSettings(web.Helper):
     def test_project_update_amp_store(self):
         with patch.dict(data_access.data_access_levels, self.patched_levels()):        
             project = ProjectFactory.create(
-                published=True, info={'data_access': ['L1'],
-                'annotation_config': {'amp_store': True}})
+                published=True,
+                info={
+                    'annotation_config': {'amp_store': True},
+                    'data_classification': {
+                        'input_data': 'L3 - community',
+                        'output_data': 'L4 - public'
+                    }
+                })
             url = '/project/%s/update?api_key=%s' % (project.short_name, project.owner.api_key)
             res = self.app_get_json(url)
             data = json.loads(res.data)

@@ -287,6 +287,40 @@ class TestProjectRepositoryForProjects(Test):
         assert_raises(WrongObjectError, self.project_repo.delete, bad_object)
 
 
+    @with_context
+    def test_project_save_without_data_classification_fails(self):
+        """Test save fails if the project has no data classification"""
+
+        # project w/o data classification raises error
+        project = ProjectFactory.build(info=dict())
+        project.set_password('hello')
+        assert self.project_repo.get(project.id) is None
+        assert_raises(BadRequest, self.project_repo.save, project)
+
+        # project w/o input data classification raises error
+        project = ProjectFactory.build(info=dict(data_classification=dict(output_data="a")))
+        project.set_password('hello')
+        assert self.project_repo.get(project.id) is None
+        assert_raises(BadRequest, self.project_repo.save, project)
+
+        # project w/o output data classification raises error
+        project = ProjectFactory.build(info=dict(data_classification=dict(input_data="a")))
+        project.set_password('hello')
+        assert self.project_repo.get(project.id) is None
+        assert_raises(BadRequest, self.project_repo.save, project)
+
+        # project w/ incorrect input data classification raises error
+        project = ProjectFactory.build(info=dict(data_classification=dict(input_data="a", output_data="a")))
+        project.set_password('hello')
+        assert self.project_repo.get(project.id) is None
+        assert_raises(BadRequest, self.project_repo.save, project)
+
+        # project w/ incorrect output data classification raises error
+        project = ProjectFactory.build(info=dict(data_classification=dict(input_data="L3 - community", output_data="a")))
+        project.set_password('hello')
+        assert self.project_repo.get(project.id) is None
+        assert_raises(BadRequest, self.project_repo.save, project)
+
 
 class TestProjectRepositoryForCategories(Test):
 

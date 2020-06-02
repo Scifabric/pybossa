@@ -44,7 +44,7 @@ class TestAuditlogAPI(Test):
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': False,
-                'info': dict(passwd_hash="hello"),
+                'info': dict(passwd_hash="hello", data_classification=dict(input_data="L4 - public", output_data="L4 - public")),
                 'zip_download': True
                 }
         url = '/api/project?api_key=%s' % (user.api_key)
@@ -87,8 +87,7 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_project_update_attributes(self):
         """Test Auditlog API project update attributes works."""
-        project = ProjectFactory.create(info=dict(list=[0]))
-
+        project = ProjectFactory.create(info=dict(list=[0], data_classification=dict(input_data="L4 - public", output_data="L4 - public")))
         data = {'name': 'New Name',
                 'short_name': project.short_name,
                 'description': 'new_description',
@@ -154,6 +153,7 @@ class TestAuditlogAPI(Test):
                 'description': 'new_description',
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': False,
+                'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
                 }
         url = '/api/project/%s?api_key=%s' % (project.id, user.api_key)
         self.app.put(url, data=json.dumps(data))
@@ -192,7 +192,7 @@ class TestAuditlogAPI(Test):
 
         owner_id = project.owner.id
         owner_name = project.owner.name
-        data = {'info': {'sched': 'depth_first'}}
+        data = {'info': {'sched': 'depth_first', 'data_classification': dict(input_data="L4 - public", output_data="L4 - public")}}
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(project_id=project.id)
@@ -215,7 +215,7 @@ class TestAuditlogAPI(Test):
 
         owner_id = project.owner.id
         owner_name = project.owner.name
-        data = {'info': {'sched': 'depth_first', 'task_presenter': 'new'}}
+        data = {'info': {'sched': 'depth_first', 'task_presenter': 'new', 'data_classification': dict(input_data="L4 - public", output_data="L4 - public")}}
         attributes = data['info'].keys()
         url = '/api/project/%s?api_key=%s' % (project.id, project.owner.api_key)
         self.app.put(url, data=json.dumps(data))
@@ -250,7 +250,9 @@ class TestAuditlogWEB(web.Helper):
                      'btn': 'Save',
                      'product': 'abc',
                      'subproduct': 'def',
-                     'kpi': 0.5}
+                     'kpi': 0.5,
+                     'input_data_class': 'L4 - public',
+                     'output_data_class': 'L4 - public'}
         self.editor = {'editor': 'Some HTML code!', 'task-presenter': ''}
 
     @with_context
@@ -695,7 +697,10 @@ class TestAuditlogWEB(web.Helper):
         self.signin()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        project = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        project = ProjectFactory.create(owner=owner, info={
+            'autoimporter': autoimporter,
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
+        })
         short_name = project.short_name
 
         attribute = 'autoimporter'

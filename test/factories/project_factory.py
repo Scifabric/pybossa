@@ -29,6 +29,8 @@ class ProjectFactory(BaseFactory):
         project = model_class(*args, **kwargs)
         if 'passwd_hash' not in project.info:
             project.set_password('hello')
+        if 'data_classification' not in project.info:
+            project.info['data_classification'] = dict(input_data="L4 - public", output_data="L4 - public")
         project_repo.save(project)
         return project
 
@@ -54,6 +56,7 @@ class ProjectFactory(BaseFactory):
             'sched': 'breadth_first',
             'product': 'abc',
             'subproduct': 'def',
-            'kpi': 0.5
+            'kpi': 0.5,
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public")
             }
     owners_ids = factory.LazyAttribute(lambda project: [project.owner.id])

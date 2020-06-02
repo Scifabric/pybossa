@@ -144,14 +144,18 @@ class Test(object):
     cat_1 = 'thinking'
     cat_2 = 'sensing'
 
-    def create(self,sched='default'):
+    def create(self,sched='default', input_data_class='L4 - public', output_data_class='L4 - public'):
         root, user,user2 = self.create_users()
         info = {
             'total': 150,
             'long_description': 'hello world',
             'task_presenter': 'TaskPresenter',
-            'sched': sched
+            'sched': sched,
+            'data_classification': {
+                'input_data': input_data_class,
+                'output_data': output_data_class
             }
+        }
 
         project = self.create_project(info)
         project.owner = user

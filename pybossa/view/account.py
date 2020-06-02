@@ -61,8 +61,8 @@ from pybossa.forms.account_view_forms import *
 from pybossa import otp
 import time
 from pybossa.sched import release_user_locks
-from pybossa.data_access import (data_access_levels, ensure_data_access_assignment_from_form,
-    copy_data_access_levels)
+from pybossa.data_access import (data_access_levels, ensure_user_data_access_assignment_from_form,
+    copy_user_data_access_levels)
 import app_settings
 from flask import make_response
 import six
@@ -386,7 +386,7 @@ def register():
                            email_addr=form.email_addr.data,
                            password=form.password.data,
                            consent=form.consent.data)
-        ensure_data_access_assignment_from_form(account, form)
+        ensure_user_data_access_assignment_from_form(account, form)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             project_slugs=form.project_slug.data
@@ -482,7 +482,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
 
-    copy_data_access_levels(new_user.info, user_data.get('data_access'))
+    copy_user_data_access_levels(new_user.info, user_data.get('data_access'))
     user_repo.save(new_user)
     if not ldap_disabled:
         flash(gettext('Thanks for signing-up'), 'success')
@@ -1121,7 +1121,7 @@ def add_metadata(name):
 
     user_pref, metadata = get_user_pref_and_metadata(name, form)
     user.info['metadata'] = metadata
-    ensure_data_access_assignment_from_form(user.info, form)
+    ensure_user_data_access_assignment_from_form(user.info, form)
     user.user_pref = user_pref
     user_repo.update(user)
     cached_users.delete_user_pref_metadata(user)

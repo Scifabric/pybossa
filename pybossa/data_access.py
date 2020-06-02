@@ -33,7 +33,8 @@ if app_settings.config.get('ENABLE_ACCESS_CONTROL'):
         valid_task_levels_for_user_level=app_settings.config['VALID_TASK_LEVELS_FOR_USER_LEVEL'],
         valid_project_levels_for_task_level=app_settings.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'],
         valid_task_levels_for_project_level=app_settings.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'],
-        valid_access_levels_for_user_types = app_settings.config['VALID_ACCESS_LEVELS_FOR_USER_TYPES']
+        valid_access_levels_for_user_types = app_settings.config['VALID_ACCESS_LEVELS_FOR_USER_TYPES'],
+        valid_user_access_levels=app_settings.config['VALID_USER_ACCESS_LEVELS']
     )
 
 
@@ -79,16 +80,18 @@ def valid_access_levels(levels):
     access_levels = [level[0] for level in access_levels]
     return all(l in access_levels for l in levels)
 
+def valid_user_access_levels(levels):
+    """check if levels are valid levels"""
+    access_levels = data_access_levels['valid_user_access_levels']
+    access_levels = [level[0] for level in access_levels]
+    return all(l in access_levels for l in levels)
 
 @when_data_access(otherwise_return=True)
 def can_assign_user(levels, user_levels):
     """check if user be assigned to an object(project/task) based on
     whether user_levels matches objects levels """
-    if not (valid_access_levels(levels) and valid_access_levels(user_levels)):
+    if not (valid_user_access_levels(levels) and valid_user_access_levels(user_levels)):
         return False
-
-    access_levels = data_access_levels['valid_access_levels']
-    access_levels = [level[0] for level in access_levels]
 
     valid_user_levels_for_project_task_level = data_access_levels['valid_user_levels_for_project_task_level']
     valid_task_levels_for_user_level = data_access_levels['valid_task_levels_for_user_level']
@@ -109,9 +112,9 @@ def get_all_access_levels(levels, implicit_levels):
     return all_levels
 
 
-def get_data_access_db_clause(access_levels):
+def get_user_data_access_db_clause(access_levels):
 
-    if not valid_access_levels(access_levels):
+    if not valid_user_access_levels(access_levels):
         return
 
     valid_user_levels_for_project_task_level = data_access_levels['valid_user_levels_for_project_task_level']
@@ -129,7 +132,7 @@ def get_data_access_db_clause_for_task_assignment(user_id):
     from pybossa.cache.users import get_user_access_levels_by_id
 
     user_levels = get_user_access_levels_by_id(user_id)
-    if not valid_access_levels(user_levels):
+    if not valid_user_access_levels(user_levels):
         raise BadRequest('Invalid user access level')
 
     valid_task_levels_for_user_level = data_access_levels['valid_task_levels_for_user_level']
@@ -144,20 +147,17 @@ def get_data_access_db_clause_for_task_assignment(user_id):
 
 
 @when_data_access()
-def ensure_data_access_assignment_to_form(obj, form):
-    access_levels = obj.get('data_access', [])
-    if not valid_access_levels(access_levels):
-        raise BadRequest('Invalid access levels')
-    form.data_access.data = access_levels
-    if 'checked' in form.amp_store.render_kw:
-        amp_store_status = obj.get('annotation_config', {}).get('amp_store', False)
-        form.amp_store.render_kw['checked'] = amp_store_status
-
-
-@when_data_access()
 def ensure_data_access_assignment_from_form(obj, form):
     access_levels = form.data_access.data
     if not valid_access_levels(access_levels):
+        raise BadRequest('Invalid access levels')
+    obj['data_access'] = access_levels
+
+
+@when_data_access()
+def ensure_user_data_access_assignment_from_form(obj, form):
+    access_levels = form.data_access.data
+    if not valid_user_access_levels(access_levels):
         raise BadRequest('Invalid access levels')
     obj['data_access'] = access_levels
 
@@ -197,10 +197,14 @@ def ensure_valid_access_levels(access_levels):
     if not valid_access_levels(access_levels):
         raise ValueError(u'Invalid access levels {}'.format(', '.join(access_levels)))
 
+@when_data_access()
+def ensure_valid_user_access_levels(access_levels):
+    if not valid_user_access_levels(access_levels):
+        raise ValueError(u'Invalid access levels {}'.format(', '.join(access_levels)))
 
 @when_data_access()
-def copy_data_access_levels(target, access_levels):
-    ensure_valid_access_levels(access_levels)
+def copy_user_data_access_levels(target, access_levels):
+    ensure_valid_user_access_levels(access_levels)
     target['data_access'] = access_levels
 
 
@@ -208,7 +212,7 @@ def ensure_user_assignment_to_project(project):
     from pybossa.cache.users import get_users_access_levels
 
     access_levels = project.info.get('data_access')
-    ensure_valid_access_levels(access_levels)
+    ensure_valid_user_access_levels(access_levels)
     if not project.info.get('project_users'):
         return
 
