@@ -88,11 +88,13 @@ def handle_bloomberg_response():
             user_data['name']       = _u_data['LoginID'][0]
             user_data['password']   = u"pAssw0rd"
             create_account(user_data)
-            user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
+            user = user_repo.get_by(email_addr=unicode(_u_data['emailAddress'][0]).lower())
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         except DBIntegrityError as dberror:
             print(dberror)
-            return
+            flash(gettext('There was a problem logging into your account. Please contact a Gigwork administrator'), 'error')
+            return redirect(url_for('home.home'))
         except Exception as ex:
             print(ex)
-            return
+            flash(gettext('We were unable to log you into an account. Please contact a Gigwork administrator.'), 'error')
+            return redirect(url_for('home.home'))
