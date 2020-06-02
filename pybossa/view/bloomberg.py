@@ -24,7 +24,6 @@ from urlparse import urlparse
 from pybossa.util import is_own_url_or_else
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
-import json
 
 blueprint = Blueprint('bloomberg', __name__)
 
@@ -87,8 +86,9 @@ def handle_bloomberg_response():
             user_data['fullname']   = _u_data['FirstName'][0] + " " + _u_data['LastName'][0]
             user_data['email_addr'] = _u_data['Email'][0]
             user_data['name']       = _u_data['LoginID'][0]
+            user_data['password']   = u"pAssw0rd"
             create_account(user_data)
-            user = user_repo.get_by(email_addr=unicode(_u_data['emailAddress'][0]).lower())
+            user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         except DBIntegrityError as dberror:
             print(dberror)
