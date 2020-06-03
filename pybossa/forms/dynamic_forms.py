@@ -31,12 +31,9 @@ def dynamic_project_form(class_type, form_data, data_access_levels, products=Non
         pass
 
     if data_access_levels:
-        kw={'checked': not obj or obj.amp_store}
-        print(kw)
         ProjectFormExtraInputs.amp_store = BooleanField(
             lazy_gettext('Opt in to store annotations on Annotation Management Platform'),
             render_kw = {'checked': not obj or obj.amp_store})
-            # render_kw={'checked': False if obj and obj.amp_store is False else True})
         ProjectFormExtraInputs.amp_pvf = TextField(
             lazy_gettext('Annotation Store PVF'),
             [validators.Regexp('^([A-Z]{3,4}\s\d+)?$')]) #[validators.Regexp('^$|[A-Z]\s\d')])
