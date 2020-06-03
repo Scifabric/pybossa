@@ -250,8 +250,5 @@ def set_default_amp_store(project):
     input_data = project['info'].get('data_classification', {}).get('input_data') or ''
     output_data = project['info'].get('data_classification', {}).get('output_data') or ''
     # Set amp_store default to False if 'L1' is in input or output data classifications.
-    if 'L1' in (str(input_data) + str(output_data)):
-        annotation_config['amp_store'] = False
-    else:
-        annotation_config['amp_store'] = True
+     annotation_config['amp_store'] = False if 'L1' in (str(input_data) + str(output_data)) else True
     project['info']['annotation_config'] = annotation_config
