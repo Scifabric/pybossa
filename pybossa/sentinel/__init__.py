@@ -43,5 +43,6 @@ class Sentinel(object):
             self.connection = None
             self.master = StrictRedis(host=app.config.get('REDIS_HOST', 'localhost'),
                                       port=app.config.get('REDIS_PORT', 6379),
-                                      db=redis_db)
+                                      db=redis_db,
+                                      password=app.config.get('REDIS_PASSWORD'))
             self.slave = self.master
