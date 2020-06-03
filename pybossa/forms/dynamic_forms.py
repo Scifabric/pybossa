@@ -32,7 +32,8 @@ def dynamic_project_form(class_type, form_data, data_access_levels, products=Non
 
     if data_access_levels:
         ProjectFormExtraInputs.amp_store = BooleanField(
-            lazy_gettext('Opt in to store annotations on Annotation Management Platform'))
+            lazy_gettext('Opt in to store annotations on Annotation Management Platform'),
+            render_kw = {'checked': obj and obj.amp_store})
         ProjectFormExtraInputs.amp_pvf = TextField(
             lazy_gettext('Annotation Store PVF'),
             [validators.Regexp('^([A-Z]{3,4}\s\d+)?$')]) #[validators.Regexp('^$|[A-Z]\s\d')])
