@@ -21,7 +21,7 @@ from flask_babel import gettext
 from pybossa.core import user_repo, csrf
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
-from pybossa.util import is_own_url_or_else
+from pybossa.util import is_own_url_or_else, generate_password
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
@@ -75,10 +75,6 @@ def handle_bloomberg_response():
         attributes = auth.get_attributes()
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         return _sign_in_user(user, next_url=request.form.get('RelayState'))
-    elif not auth.is_authenticated:
-        current_app.logger.error('BSSO authentication failed')
-        flash(gettext('Authentication failed.'), 'error')
-        return redirect(url_for('home.home'))
     else:
         attributes = auth.get_attributes()
         user_data = {}
@@ -86,15 +82,11 @@ def handle_bloomberg_response():
             user_data['fullname']   = attributes['FirstName'][0] + " " + attributes['LastName'][0]
             user_data['email_addr'] = attributes['emailAddress'][0]
             user_data['name']       = attributes['LoginID'][0]
-            user_data['password']   = u"pAssw0rd"
+            user_data['password']   = generate_password()
             create_account(user_data)
-            user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
+            user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
-        except DBIntegrityError as dberror:
-            print(dberror)
-            flash(gettext('There was a problem logging into your account. Please contact a Gigwork administrator'), 'error')
-            return redirect(url_for('home.home'))
-        except Exception as ex:
-            print(ex)
+        except Exception as error:
+            current_app.logger.exception('Auto-account creation error: %s', error)
             flash(gettext('We were unable to log you into an account. Please contact a Gigwork administrator.'), 'error')
             return redirect(url_for('home.home'))

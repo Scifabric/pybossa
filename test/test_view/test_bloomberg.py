@@ -65,3 +65,13 @@ class TestBloomberg(Test):
         mock_one_login.return_value = mock_auth
         res = self.app.post('/bloomberg/login')
         assert res.status_code == 302, res.status_code
+
+    @with_context
+    @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
+    def test_login_create_account_fail(self, mock_one_login):
+        mock_auth = MagicMock()
+        mock_auth.get_errors.return_value = False
+        mock_auth.is_authenticated.return_value = True
+        mock_one_login.return_value = mock_auth
+        res = self.app.post('/bloomberg/login', content_type='multipart/form-data', data={'UUID': ['1234567'], 'FirstName': ['test'], 'LastName': ['test'], 'PVFLevels': ['PVF_GUTS_3'], 'Email': ['test@bloomberg.net'], 'LoginID': ['test']})
+        assert res.status_code ==302
