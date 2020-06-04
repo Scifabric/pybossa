@@ -486,7 +486,7 @@ class TestProjectAPI(TestAPI):
             info=dict(
                 passwd_hash="hello",
                 task_presenter='taskpresenter',
-                data_classification=dict(input_data="L4 - public", output_data="L4 - public")
+                data_classification=dict(input_data="L1 - internal", output_data="L4 - public")
             ))
         new_project3 = json.dumps(new_project3)
         res = self.app.post('/api/project', headers=headers,
