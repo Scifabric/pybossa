@@ -87,6 +87,6 @@ def handle_bloomberg_response():
             user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         except Exception as error:
-            current_app.logger.exception('Auto-account creation error: %s', error)
+            current_app.logger.exception('Auto-account creation error: %s, for user attributes: %s', error, attributes)
             flash(gettext('We were unable to log you into an account. Please contact a Gigwork administrator.'), 'error')
             return redirect(url_for('home.home'))
