@@ -31,14 +31,10 @@ class TestAccessLevels(Test):
     def patched_levels(**kwargs):
         patch_data_access_levels = dict(
             valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
-            valid_user_levels_for_project_task_level=dict(
+            valid_user_levels_for_project_level=dict(
                 L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
-            valid_task_levels_for_user_level=dict(
+            valid_project_levels_for_user_level=dict(
                 L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
-            valid_project_levels_for_task_level=dict(
-                L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
-            valid_task_levels_for_project_level=dict(
-                L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]),
             valid_user_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")]
         )
         patch_data_access_levels.update(kwargs)
@@ -70,73 +66,6 @@ class TestAccessLevels(Test):
             user_levels = ["L1"]
             assign_users = data_access.can_assign_user(proj_levels, user_levels)
             assert assign_users, "user with level L1 can work on project with level L2; user should be assigned"
-
-    @with_context
-    def test_get_valid_project_levels_for_task(self):
-        task = TaskFactory.create(info={})
-        patched_levels = self.patched_levels(
-            valid_project_levels_for_task_level={'A': ['B']}
-        )
-        with patch.dict(data_access.data_access_levels, patched_levels):
-            assert data_access.get_valid_project_levels_for_task(task) == set()
-            task.info['data_access'] = ['A']
-            assert data_access.get_valid_project_levels_for_task(task) == set(['B'])
-
-    @with_context
-    def test_get_valid_task_levels_for_project(self):
-        patched_levels = self.patched_levels(
-            valid_task_levels_for_project_level={'A': ['B'], 'B': ['C']}
-        )
-        with patch.dict(data_access.data_access_levels, patched_levels):
-            project = ProjectFactory.create(info={})
-            assert data_access.get_valid_task_levels_for_project(project) == set()
-            project.info['data_access'] = ['A', 'B']
-            assert data_access.get_valid_task_levels_for_project(project) == set(['B', 'C'])
-
-    @with_context
-    def test_ensure_task_assignment_to_project(self):
-        project = ProjectFactory.create(info={})
-        task = TaskFactory.create(info={})
-        patched_levels = self.patched_levels(
-            valid_project_levels_for_task_level={'A': ['A']},
-            valid_task_levels_for_project_level={'A': ['A']}
-        )
-        with patch.dict(data_access.data_access_levels, patched_levels):
-            with assert_raises(Exception):
-                data_access.ensure_task_assignment_to_project(task, project)
-            project.info['data_access'] = ['A']
-            with assert_raises(Exception):
-                data_access.ensure_task_assignment_to_project(task, project)
-            project.info['data_access'] = []
-            task.info['data_access'] = ['A']
-            with assert_raises(Exception):
-                data_access.ensure_task_assignment_to_project(task, project)
-            project.info['data_access'] = ['A', 'B']
-            task.info['data_access'] = ['A']
-            data_access.ensure_task_assignment_to_project(task, project)
-
-    @with_context
-    def test_task_save_sufficient_permissions(self):
-        patched_levels = self.patched_levels(
-            valid_project_levels_for_task_level={'L4': ['L4']},
-            valid_task_levels_for_project_level={'L4': ['L4']}
-        )
-        with patch.dict(data_access.data_access_levels, patched_levels):
-            project = ProjectFactory.create()
-            task = Task(project_id=project.id, info={'data_access': ['L4']})
-            task_repo.save(task)
-
-    @with_context
-    def test_task_save_insufficient_permissions(self):
-        patched_levels = self.patched_levels(
-            valid_project_levels_for_task_level={'A': ['B']},
-            valid_task_levels_for_project_level={'B': ['C']}
-        )
-        with patch.dict(data_access.data_access_levels, patched_levels):
-            project = ProjectFactory.create(info={'data_access': ['B']})
-            with assert_raises(Exception):
-                task = Task(project_id=project.id, info={'data_access': ['A']})
-                task_repo.save(task)
 
     @with_context
     def test_user_type_based_access_levels(self):

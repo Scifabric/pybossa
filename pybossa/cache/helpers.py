@@ -25,7 +25,6 @@ from pybossa.cache import memoize, ONE_HOUR
 from pybossa.cache.projects import n_results, overall_progress
 from pybossa.model.project_stats import ProjectStats
 from pybossa.cache import users as cached_users
-from pybossa.data_access import get_data_access_db_clause_for_task_assignment
 
 session = db.slave_session
 
@@ -174,7 +173,6 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
     """
     from pybossa.sched import Schedulers
 
-    allowed_task_levels_clause = get_data_access_db_clause_for_task_assignment(user_id)
     n_tasks = 0
     if user_id is None or user_id <= 0:
         return n_tasks
@@ -188,8 +186,8 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                AND state !='enrich'
                AND id NOT IN
                (SELECT task_id FROM task_run WHERE
-               project_id=:project_id AND user_id=:user_id) {}
-               ; '''.format(allowed_task_levels_clause)
+               project_id=:project_id AND user_id=:user_id)
+               ; '''
     else:
         user_pref_list = cached_users.get_user_preferences(user_id)
         sql = '''
@@ -199,8 +197,8 @@ def n_available_tasks_for_user(project, user_id=None, user_ip=None):
                AND id NOT IN
                (SELECT task_id FROM task_run WHERE
                project_id=:project_id AND user_id=:user_id)
-               AND ({}) {} ;
-               '''.format(user_pref_list, allowed_task_levels_clause)
+               AND ({})
+               ;'''.format(user_pref_list)
     sqltext = text(sql)
     try:
         result = session.execute(sqltext, dict(project_id=project_id, user_id=user_id, assign_user=assign_user))
