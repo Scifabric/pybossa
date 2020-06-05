@@ -20,6 +20,7 @@ from flask import current_app
 
 from rq import Queue
 from sqlalchemy import event
+from slackclient import SlackClient
 
 from flask import url_for
 
@@ -124,6 +125,17 @@ def add_task_event(mapper, conn, target):
     tmp = Project().to_public_json(tmp)
     obj.update(tmp)
     update_feed(obj)
+
+    # Notify volunteers (slack)
+    if current_app.config.get('SLACK_TOKEN'):
+        scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'http')
+        launch_url = url_for('project.presenter', short_name=tmp['short_name'], _scheme=scheme, _external=True)
+
+        slack_client = SlackClient(current_app.config['SLACK_TOKEN'])
+        slack_client.api_call("chat.postMessage",
+            channel="#" + tmp['short_name'],
+            text="New task! " + launch_url
+        )
 
 
 @event.listens_for(User, 'after_insert')

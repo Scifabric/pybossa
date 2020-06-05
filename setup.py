@@ -116,6 +116,7 @@ requirements = [
     "SecretStorage==3.1.0",
     "simplejson==3.16.0",
     "six==1.12.0",
+    "slackclient",
     "soupsieve==1.6.1",
     "speaklater==1.3",
     "SQLAlchemy>=1.3.0",
