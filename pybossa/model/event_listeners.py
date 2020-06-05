@@ -20,7 +20,7 @@ from flask import current_app
 
 from rq import Queue
 from sqlalchemy import event
-from slackclient import SlackClient
+from slack import SlackClient
 
 from flask import url_for
 
