@@ -67,6 +67,7 @@ class TestBloomberg(Test):
         assert res.status_code == 302, res.status_code
 
     @with_context
+    @patch('pybossa.view.account._sign_in_user', autospec=True)
     @patch('pybossa.view.bloomberg.create_account', autospec=True)
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
     def test_login_create_account_fail(self, mock_one_login, mock_create_account):
@@ -77,7 +78,7 @@ class TestBloomberg(Test):
         mock_auth.is_authenticated = False
         mock_one_login.return_value = mock_auth
         mock_auth.get_attributes.return_value = {'UUID': [u'1234567'], 'FirstName': [u'test'], 'emailAddress': ['test@test.com'], 'LastName': [u'test'], 'PVFLevels': [u'PVF_GUTS_3'], 'LoginID': [u'test']}
-        mock_create_account.return_value = None
+        mock_create_account.side_effect = Exception()
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_create_account.called
         assert res.status_code == 302, res.status_code
