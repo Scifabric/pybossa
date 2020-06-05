@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+import requests
+
 from datetime import datetime
 from flask import current_app
 
@@ -136,6 +138,27 @@ def add_task_event(mapper, conn, target):
             channel="#" + tmp['short_name'],
             text="New task! " + launch_url
         )
+
+    # Notify volunteers
+    if current_app.config.get('ONESIGNAL_APP_ID'):
+        scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'http')
+        launch_url = url_for('project.presenter', short_name=tmp['short_name'], _scheme=scheme, _external=True)
+
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Authorization': 'Basic ' + current_app.config.get('ONESIGNAL_API_KEY')
+        }
+
+        body = {
+            'app_id': current_app.config.get('ONESIGNAL_APP_ID'),
+            'priority': 10,
+            'filters': [{'field': 'tag', 'key': target.project_id, 'relation': 'exists'}],
+            'contents': {'en': 'New task!'},
+            'headings': {'en': tmp['name']},
+            'url': launch_url
+        }
+
+        requests.post(url="https://onesignal.com/api/v1/notifications", headers=headers, json=body)
 
 
 @event.listens_for(User, 'after_insert')
