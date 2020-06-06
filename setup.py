@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
 
+with open('pybossa/version.txt') as f:
+    version = f.readline()
+__version__ = version.rstrip()
+
 requirements = [
     "alembic==0.9.10",
     "arrow==0.12.1",
@@ -138,7 +142,7 @@ requirements = [
 
 setup(
     name = 'pybossa',
-    version = '3.1.2',
+    version = __version__,
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

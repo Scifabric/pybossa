@@ -1,0 +1,223 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [3.1.3](https://github.com/Scifabric/pybossa/compare/v3.1.2...v3.1.3) (2020-06-06)
+
+
+### Bug Fixes
+
+* handle properly unicode error for fixing taskrun issue. ([01a4d1b](https://github.com/Scifabric/pybossa/commit/01a4d1ba3ef11c45d11857dbf19c78f3ee45c405))
+* Python3 syntax fixes ([#1981](https://github.com/Scifabric/pybossa/issues/1981)) ([865991f](https://github.com/Scifabric/pybossa/commit/865991f782e139076539595e0b8d2a1821053b06))
+* **gdpr:** delete inactive accounts. ([#1979](https://github.com/Scifabric/pybossa/issues/1979)) ([6d3569c](https://github.com/Scifabric/pybossa/commit/6d3569c7dc832f29d6a8a96ac66cac18db8fee48))
+* **vagrant:** update playbook and requirements ([#1968](https://github.com/Scifabric/pybossa/issues/1968)) ([3fb38dc](https://github.com/Scifabric/pybossa/commit/3fb38dc3162b12591878e0226e275df0bc29eb63))
+
+# Changelog
+
+## v3.0.0 (2019-12-28)
+
+#### Fixes
+
+* (test): use sorted instead of sort()
+* (test): use sorted instead of sort()
+* (stats): use utc for time.
+* (stats): use utc time.
+* (test): use UTC time zone in query.
+* (test): use b type
+#### Others
+
+* (readme): update info.
+* (cli): migrate to python3.
+
+## v2.13.1 (2019-10-26)
+
+#### Fixes
+
+* (cve): pillow.
+* (README): update badges.
+* (redis): revert disable redis.
+* (redis): cache was bad handled.
+* (tests): return String instead of Response.
+* (tests): mock with return string.
+* (cve): Use new werkzeug.
+* (werkzeug): address CVE issue.
+* (settings): add missing settings.
+#### Others
+
+* (docker): use custom python2.7 ldap.
+
+## v2.12.2 (2019-06-06)
+
+
+## v2.12.1 (2019-04-27)
+
+
+## v2.12.0 (2019-04-10)
+
+
+## v2.11.1 (2018-11-13)
+
+
+## v2.11.0 (2018-10-23)
+
+
+## v2.10.3 (2018-09-04)
+
+
+## v2.10.0 (2018-08-23)
+
+
+## v2.9.5 (2018-06-01)
+
+
+## v2.9.4 (2018-05-18)
+
+
+## v2.9.3 (2018-05-14)
+
+
+## v2.9.2 (2018-02-26)
+
+
+## v2.9.0 (2018-02-06)
+
+
+## v2.8.0 (2017-10-05)
+
+
+## v2.7.2 (2017-10-03)
+
+
+## v2.7.1 (2017-09-27)
+
+
+## v2.7.0 (2017-09-21)
+
+
+## v2.6.3 (2017-09-05)
+
+
+## v2.6.2 (2017-08-28)
+
+
+## v2.6.1 (2017-08-16)
+
+
+## v2.6.0 (2017-08-08)
+
+
+## v2.5.4 (2017-08-07)
+
+
+## v2.5.2 (2017-06-27)
+
+
+## v2.5.0 (2017-06-21)
+
+
+## v2.4.3 (2017-06-15)
+
+
+## v2.4.2 (2017-06-14)
+
+
+## v2.4.1 (2017-06-09)
+
+
+## v2.4.0 (2017-06-08)
+
+
+## v2.3.7 (2017-05-09)
+
+
+## v2.3.6 (2017-03-29)
+
+
+## v2.3.0 (2016-08-03)
+
+
+## v2.2.0 (2016-05-23)
+
+
+## v2.0.0 (2016-05-03)
+
+
+## v1.6.1 (2016-04-07)
+
+
+## v1.6.0 (2016-04-04)
+
+
+## v1.5.1 (2016-02-16)
+
+
+## v1.5.0 (2016-02-08)
+
+
+## v1.4.1 (2016-01-28)
+
+
+## v1.4.0 (2016-01-26)
+
+
+## v1.3.0 (2015-12-17)
+
+
+## v1.2.2 (2015-12-09)
+
+
+## v1.2.1 (2015-12-03)
+
+
+## v1.2.0 (2015-11-24)
+
+
+## v1.1.3 (2015-11-20)
+
+
+## v1.1.2 (2015-10-06)
+
+
+## v1.1.1 (2015-09-30)
+
+
+## v1.1.0 (2015-09-30)
+
+
+## v1.0.0 (2015-09-21)
+
+
+## v0.2.4 (2015-09-21)
+
+
+## v0.2.3 (2015-08-19)
+
+
+## v0.2.2 (2015-05-11)
+
+
+## 2014-08-20 (2014-08-20)
+
+
+## 2014-08-19 (2014-08-19)
+
+
+## 2014-08-14 (2014-08-14)
+
+
+## v0.2.1 (2013-12-04)
+
+
+## v0.2.0 (2013-11-26)
+
+
+## v0.1.3 (2013-11-22)
+
+
+## v0.1.2 (2013-11-22)
+
+
+## v0.1.1 (2013-10-01)
+
+
+## v0.1.0 (2013-08-01)

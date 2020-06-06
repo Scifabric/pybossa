@@ -1,0 +1,8 @@
+{
+  "bumpFiles": [
+    {
+      "filename": "pybossa/version.txt",
+      "type": "plain-text"
+    }
+  ]
+}

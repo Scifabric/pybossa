@@ -1,7 +1,7 @@
 [![Scifabric](https://img.shields.io/badge/made%20by-scifabric-blue.svg)](https://scifabric.com/)
 [![Build Status](https://circleci.com/gh/Scifabric/pybossa/tree/master.svg?style=shield)](https://circleci.com/gh/Scifabric/pybossa)
  [![Coverage Status](https://img.shields.io/coveralls/Scifabric/pybossa.svg)](https://coveralls.io/r/Scifabric/pybossa?branch=master)
-[![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Join the chat at https://gitter.im/Scifabric/pybossa](https://badges.gitter.im/Scifabric/pybossa.svg)](https://gitter.im/Scifabric/pybossa?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
+[![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com) [![License](http://img.shields.io/badge/license-agplv3-b75bb6.svg)](http://www.gnu.org/licenses/agpl-3.0.html) [![Join the chat at https://gitter.im/Scifabric/pybossa](https://badges.gitter.im/Scifabric/pybossa.svg)](https://gitter.im/Scifabric/pybossa?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/12868/PyBossa/pybossa.svg)](https://zenodo.org/badge/latestdoi/12868/PyBossa/pybossa)
 [![Scifabric's Patreon](https://img.shields.io/badge/support%20us%20on-patreon-orange.svg)](https://www.patreon.com/bePatron?u=4979179)
 
@@ -33,7 +33,7 @@ PYBOSSA allows data capture for further analysis made by users in a transparent 
 
 PYBOSSA runs in python >= 3.6. While 3.8 has been released recently, it needs testing before officially support it.
 
-If you have a python2.7 server, please, checkout the python2.7 branch and use that one for your server. 
+If you have a python2.7 server, please, checkout the python2.7 branch and use that one for your server.
 
 ## Get professional support
 
@@ -42,8 +42,8 @@ You can hire us to help you with your PYBOSSA project or server (specially for p
 
 ### Supporting PYBOSSA
 
-PYBOSSA is an open source project. Its ongoing development is made possible thanks to the support by these awesome 
-[backers](https://github.com/Scifabric/pybossa/blob/master/BACKERS.md). If you'd like to join them, check out 
+PYBOSSA is an open source project. Its ongoing development is made possible thanks to the support by these awesome
+[backers](https://github.com/Scifabric/pybossa/blob/master/BACKERS.md). If you'd like to join them, check out
 [Scifabric's Patreon campaign](https://www.patreon.com/scifabric).
 
 
@@ -54,7 +54,7 @@ Actividad subvencionada por el Ministerio de Educación, Cultura y Deporte
 
 # See it in Action
 
-PYBOSSA powers [Solar Maps](https://solarmaps.greenpeace.es/) and [MicroPast](http://crowdsourced.micropasts.org/), [LibCrowds](https://www.libcrowds.com/) and many more projects.
+PYBOSSA powers [Nightup](https://nightup.icfo.eu/) and [MicroPast](http://crowdsourced.micropasts.org/), [LibCrowds](https://www.libcrowds.com/), [Lost at Night](https://lostatnight.org/) and many more projects.
 
 For a full list of PYBOSSA projects, check our [case studies](https://scifabric.com/) and [blog](https://scifabric.com/blog/).
 
@@ -89,6 +89,14 @@ If you want to contribute to the project, please, check the
 
 It has the instructions to become a contributor.
 
+## Pull requests
+
+Please, use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) when sending your pull requests, as well as tests and documentation for your fix or improvement. It will help us to fully understand what you are solving or improving, and it will let the community know what's going one with the new feature or fix.
+
+# Changelog
+
+Read [CHANGELOG](CHANGELOG.md)
+
 ## Acknowledgments
 
 * [Citizen Cyberscience Centre](http://www.citizencyberlab.org/)
@@ -108,7 +116,7 @@ crowd-source human problem-solving skills!
 
 ## Copyright / License
 
-Copyright 2019 [Scifabric LTD](https://scifabric.com).
+Copyright 2020 [Scifabric LTD](https://scifabric.com).
 
 Source Code License: The GNU Affero General Public License, either version 3 of the License
 or (at your option) any later version. (see COPYING file)
