@@ -67,7 +67,6 @@ class TestBloomberg(Test):
         assert res.status_code == 302, res.status_code
 
     @with_context
-    @patch('pybossa.view.account._sign_in_user', autospec=True)
     @patch('pybossa.view.bloomberg.create_account', autospec=True)
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
     def test_login_create_account_fail(self, mock_one_login, mock_create_account):
