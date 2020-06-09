@@ -60,7 +60,7 @@ class TestImporterPublicMethods(Test):
         tasks = task_repo.filter_tasks_by(project_id=project.id)
 
         assert len(tasks) == 2, len(tasks)
-        assert result.message == '2 new tasks were imported successfully ', result
+        assert result.message == '2 new tasks were imported successfully. ', result
         importer_factory.assert_called_with(**form_data)
 
     @with_context
@@ -91,7 +91,7 @@ class TestImporterPublicMethods(Test):
 
         result = self.importer.create_tasks(task_repo, project, **form_data)
 
-        assert result.message == '1 new task was imported successfully ', result.message
+        assert result.message == '1 new task was imported successfully. ', result.message
         assert result.total == 1, result.total
         assert result.metadata == metadata, result.metadata
 
@@ -193,7 +193,7 @@ class TestImporterPublicMethods(Test):
             result = self.importer.create_tasks(task_repo, project, **form_data)
             importer_factory.assert_called_with(**form_data)
             upload_from_string.assert_called()
-            assert result.message == '1 new task was imported successfully ', result
+            assert result.message == '1 new task was imported successfully. ', result
 
             # validate task created has private fields url, gold_answers url
             # calibration and exported flag set
@@ -251,7 +251,7 @@ class TestImporterPublicMethods(Test):
             result = self.importer.create_tasks(task_repo, project, **form_data)
             importer_factory.assert_called_with(**form_data)
             upload_from_string.assert_called()
-            assert result.message == '1 new task was imported successfully ', result.message
+            assert result.message == '1 new task was imported successfully. ', result.message
 
             # validate task created has private fields url, gold_answers url
             # calibration and exported flag set
