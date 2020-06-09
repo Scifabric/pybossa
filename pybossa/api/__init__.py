@@ -42,7 +42,7 @@ import dateutil.parser
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel, anonymizer
 from pybossa.ratelimit import ratelimit
-from pybossa.cache.projects import n_tasks
+from pybossa.cache.projects import n_tasks, n_completed_tasks
 import pybossa.sched as sched
 from pybossa.util import sign_task
 from pybossa.error import ErrorStatus
@@ -69,7 +69,7 @@ from werkzeug.exceptions import MethodNotAllowed, Forbidden
 from completed_task import CompletedTaskAPI
 from completed_task_run import CompletedTaskRunAPI
 from pybossa.cache.helpers import (n_available_tasks, n_available_tasks_for_user,
-    n_unexpired_gold_tasks)
+    n_unexpired_gold_tasks, n_locked_tasks)
 from pybossa.sched import (get_project_scheduler_and_timeout, get_scheduler_and_timeout,
                            has_lock, release_lock, Schedulers, get_locks)
 from pybossa.jobs import send_mail
@@ -339,7 +339,9 @@ def user_progress(project_id=None, short_name=None):
             response = dict(
                 done=taskrun_count,
                 total=n_tasks(project.id),
+                completed=n_completed_tasks(project.id),
                 remaining=num_available_tasks,
+                locked=n_locked_tasks(project.id),
                 remaining_for_user=num_available_tasks_for_user,
                 quiz=current_user.get_quiz_for_project(project),
                 guidelines_updated=guidelines_updated
