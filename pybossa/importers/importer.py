@@ -244,7 +244,7 @@ class Importer(object):
             msg = str(n) + " " + gettext('new tasks were imported successfully. ')
         msg += str(validator)
         if data_access_levels and 'data_access' in importer.headers():
-            msg += gettext('Task data_access column will not be compared against projects data access.')
+            msg += gettext('Task data_access column will not impact data classification. This is done at project level only.')
         return ImportReport(message=msg, metadata=metadata, total=n)
 
     def count_tasks_to_import(self, **form_data):
