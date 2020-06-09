@@ -372,30 +372,18 @@ ENABLE_ACCESS_CONTROL = True
 VALID_ACCESS_LEVELS  = [("L1", "L1"), ("L2", "L2"),
         ("L3", "L3"), ("L4", "L4")]
 
-# Given project/task level, return valid user levels
-# Project/task with L1, users only with level L1 permitted
-# Project/task with L2, users with levels L1, L2 permitted ...
-# Key: project/task level, Value: implicit valid user levels
-VALID_USER_LEVELS_FOR_PROJECT_TASK_LEVEL = dict(L1=[],
+# Given project level, return valid user levels
+# Project with L1, users only with level L1 permitted
+# Project with L2, users with levels L1, L2 permitted ...
+# Key: project level, Value: implicit valid user levels
+VALID_USER_LEVELS_FOR_PROJECT_LEVEL = dict(L1=[],
     L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"])
 
 # Given a user level, return valid project/task levels
 # Users with L1 can work on project/tasks with level L2, L3, L4
 # Key: user level, Value: implicit valid levels for project/task
-VALID_TASK_LEVELS_FOR_USER_LEVEL = dict(L1=["L2", "L3", "L4"],
+VALID_PROJECT_LEVELS_FOR_USER_LEVEL = dict(L1=["L2", "L3", "L4"],
     L2=["L3", "L4"], L3=["L4"], L4=[])
-
-# Given the access control level for a task (key), a project must have one of
-# the access control levels in the value list in order for the task to be
-# assignable to the project.
-VALID_PROJECT_LEVELS_FOR_TASK_LEVEL = dict(
-    L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"])
-
-# Given the access control level of a project (key), a task must be one of
-# the access control levels in the value list in order for the task to be
-# assignable to the project.
-VALID_TASK_LEVELS_FOR_PROJECT_LEVEL = dict(
-    L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"])
 
 # Valid data access levels depending on user types
 VALID_ACCESS_LEVELS_FOR_USER_TYPES = {

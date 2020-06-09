@@ -538,10 +538,8 @@ class TestNTaskAvailable(sched.Helper):
         user = UserFactory.create(id=501, info=dict(data_access=["L1"]))
         patch_data_access_levels = dict(
             valid_access_levels=[("L1", "L1"), ("L2", "L2")],
-            valid_user_levels_for_project_task_level=dict(L1=[], L2=["L1"]),
-            valid_task_levels_for_user_level=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"]),
-            valid_project_levels_for_task_level=dict(L1=["L1"], L2=["L1", "L2"]),
-            valid_task_levels_for_project_level=dict(L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"])
+            valid_user_levels_for_project_level=dict(L1=[], L2=["L1"]),
+            valid_project_levels_for_user_level=dict(L1=["L2", "L3", "L4"], L2=["L3", "L4"]),
         )
 
         user_repo.save(owner)
