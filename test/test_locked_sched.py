@@ -40,14 +40,10 @@ class TestLockedSched(sched.Helper):
 
     patch_data_access_levels = dict(
         valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
-        valid_user_levels_for_project_task_level=dict(
+        valid_user_levels_for_project_level=dict(
             L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
-        valid_task_levels_for_user_level=dict(
+        valid_project_levels_for_user_level=dict(
             L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
-        valid_project_levels_for_task_level=dict(
-            L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
-        valid_task_levels_for_project_level=dict(
-            L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]),
         valid_user_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")]
     )
 
@@ -312,84 +308,43 @@ class TestLockedSched(sched.Helper):
 
     @with_context
     def test_tasks_assigned_as_per_user_access_levels_l2(self):
-        """ Test tasks assigned by locked scheduler are as per access levels set for user, task and project"""
+        """ Test tasks assigned by locked scheduler are as per access levels set for user and project"""
 
         from pybossa import data_access
         from test_api import get_pwd_cookie
 
         owner = UserFactory.create(id=500)
-        user_l2 = UserFactory.create(id=502, info=dict(data_access=["L2"]))
+        user_l1 = UserFactory.create(id=502, info=dict(data_access=["L1"]))
+        user_l2 = UserFactory.create(id=503, info=dict(data_access=["L2"]))
 
-        project = ProjectFactory.create(owner=owner, info=dict(data_access=["L1", "L2"]))
-        project.info['sched'] = Schedulers.locked
-        project_repo.save(project)
+        project1 = ProjectFactory.create(owner=owner, info=dict(data_access=["L1"]))
+        project1.info['sched'] = Schedulers.locked
+        project_repo.save(project1)
 
-        project2 = ProjectFactory.create(owner=owner, info=dict(data_access=["L1", "L2"]))
+        project2 = ProjectFactory.create(owner=owner, info=dict(data_access=["L2"]))
         project2.info['sched'] = Schedulers.user_pref
         project_repo.save(project2)
 
-        task1 = TaskFactory.create(project=project, info=dict(question='q1', data_access=["L1"]), n_answers=1)
-        task2 = TaskFactory.create(project=project, info=dict(question='q2', data_access=["L2"]), n_answers=1)
-        task3 = TaskFactory.create(project=project2, info=dict(question='q3', data_access=["L1"]), n_answers=1)
-        task4 = TaskFactory.create(project=project2, info=dict(question='q4', data_access=["L2"]), n_answers=1)
+        taskp11 = TaskFactory.create(project=project1, info=dict(question='q1'), n_answers=1)
+        taskp12 = TaskFactory.create(project=project1, info=dict(question='q2'), n_answers=1)
+        taskp21 = TaskFactory.create(project=project2, info=dict(question='q3'), n_answers=1)
+        taskp22 = TaskFactory.create(project=project2, info=dict(question='q4'), n_answers=1)
 
-        self.set_proj_passwd_cookie(project, user_l2)
+        self.set_proj_passwd_cookie(project1, user_l1)
         with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
             res = self.app.get('api/project/{}/newtask?api_key={}'
-                               .format(project.id, user_l2.api_key))
+                               .format(project1.id, user_l1.api_key))
             assert res.status_code == 200, res.status_code
 
             data = json.loads(res.data)
-            assert data['id'] == task2.id, 'user_l2 should have obtained task {}'.format(task2.id)
-            assert data['info']['data_access'] == task2.info['data_access'], \
-                'user_l2 should have obtained task with level {}'.format(task1.info['data_access'])
+            assert data['id'] == taskp11.id, 'user_l1 should have obtained task {}'.format(taskp11.id)
 
             self.set_proj_passwd_cookie(project2, user_l2)
             res = self.app.get('api/project/{}/newtask?api_key={}'
                                .format(project2.id, user_l2.api_key))
             assert res.status_code == 200, res.status_code
             data = json.loads(res.data)
-            assert data['id'] == task4.id, 'user_l2 should have obtained task {}'.format(task4.id)
-            assert data['info']['data_access'] == task4.info['data_access'], \
-                'user_l1 should have obtained task with level {}'.format(task4.info['data_access'])
-
-    @with_context
-    def test_tasks_assigned_as_per_user_access_levels_l4(self):
-        """ Test tasks assigned by locked scheduler are as per access levels set for user, task and project"""
-
-        from pybossa import data_access
-        from test_api import get_pwd_cookie
-
-        owner = UserFactory.create(id=500)
-        user_l4 = UserFactory.create(id=502, info=dict(data_access=["L4"]))
-
-        project = ProjectFactory.create(owner=owner, info=dict(data_access=["L1", "L2"]))
-        project.info['sched'] = Schedulers.locked
-        project_repo.save(project)
-
-        project2 = ProjectFactory.create(owner=owner, info=dict(data_access=["L1", "L2"]))
-        project2.info['sched'] = Schedulers.user_pref
-        project_repo.save(project2)
-
-        task1 = TaskFactory.create(project=project, info=dict(question='q1', data_access=["L1"]), n_answers=1)
-        task2 = TaskFactory.create(project=project, info=dict(question='q2', data_access=["L2"]), n_answers=1)
-        task3 = TaskFactory.create(project=project, info=dict(question='q3', data_access=["L2"]), n_answers=1)
-        task4 = TaskFactory.create(project=project, info=dict(question='q4', data_access=["L2"]), n_answers=1)
-
-        self.set_proj_passwd_cookie(project, user_l4)
-        with patch.dict(data_access.data_access_levels, self.patch_data_access_levels):
-            res = self.app.get('api/project/{}/newtask?api_key={}'
-                               .format(project.id, user_l4.api_key))
-            assert res.status_code == 200, res.status_code
-            data = json.loads(res.data)
-            assert not data, 'user_l4 with L4 access should not have obtained any task under locked scheduler'
-
-            self.set_proj_passwd_cookie(project2, user_l4)
-            res = self.app.get('api/project/{}/newtask?api_key={}'
-                               .format(project2.id, user_l4.api_key))
-            assert res.status_code == 200, res.status_code
-            data = json.loads(res.data)
-            assert not data, 'user_l4 with L4 access should not have obtained any task under user pref scheduler'
+            assert data['id'] == taskp21.id, 'user_l2 should have obtained task {}'.format(taskp21.id)
 
     @with_context
     def test_locked_sched_gold_task(self):

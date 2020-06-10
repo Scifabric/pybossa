@@ -40,6 +40,7 @@ from pybossa.cloud_store_api.s3 import upload_json_data
 import hashlib
 from flask import url_for
 from pybossa.task_creator_helper import set_gold_answers, upload_files_priv, get_task_expiration
+from pybossa.data_access import data_access_levels
 
 
 def validate_s3_bucket(task, *args):
@@ -238,11 +239,12 @@ class Importer(object):
         if n==0:
             msg = gettext('It looks like there were no new records to import. ')
         elif n == 1:
-            msg = str(n) + " " + gettext('new task was imported successfully ')
+            msg = str(n) + " " + gettext('new task was imported successfully. ')
         else:
-            msg = str(n) + " " + gettext('new tasks were imported successfully ')
+            msg = str(n) + " " + gettext('new tasks were imported successfully. ')
         msg += str(validator)
-
+        if data_access_levels and 'data_access' in importer.headers():
+            msg += gettext('Task data_access column will not impact data classification. This is done at project level only.')
         return ImportReport(message=msg, metadata=metadata, total=n)
 
     def count_tasks_to_import(self, **form_data):

@@ -29,10 +29,8 @@ data_access_levels = {}
 if app_settings.config.get('ENABLE_ACCESS_CONTROL'):
     data_access_levels = dict(
         valid_access_levels=app_settings.config['VALID_ACCESS_LEVELS'],
-        valid_user_levels_for_project_task_level=app_settings.config['VALID_USER_LEVELS_FOR_PROJECT_TASK_LEVEL'],
-        valid_task_levels_for_user_level=app_settings.config['VALID_TASK_LEVELS_FOR_USER_LEVEL'],
-        valid_project_levels_for_task_level=app_settings.config['VALID_PROJECT_LEVELS_FOR_TASK_LEVEL'],
-        valid_task_levels_for_project_level=app_settings.config['VALID_TASK_LEVELS_FOR_PROJECT_LEVEL'],
+        valid_user_levels_for_project_level=app_settings.config['VALID_USER_LEVELS_FOR_PROJECT_LEVEL'],
+        valid_project_levels_for_user_level=app_settings.config['VALID_PROJECT_LEVELS_FOR_USER_LEVEL'],
         valid_access_levels_for_user_types = app_settings.config['VALID_ACCESS_LEVELS_FOR_USER_TYPES'],
         valid_user_access_levels=app_settings.config['VALID_USER_ACCESS_LEVELS']
     )
@@ -57,22 +55,6 @@ when_data_access = execute_if(data_access_levels)
 when_no_data_access = execute_if(not data_access_levels)
 
 
-def get_valid_project_levels_for_task(task):
-    task_levels = (task.info or {}).get('data_access', [])
-    return set([
-        level for l in task_levels
-        for level in data_access_levels['valid_project_levels_for_task_level'].get(l, [])
-    ])
-
-
-def get_valid_task_levels_for_project(project):
-    assigned_project_levels = (project.info or {}).get('data_access', [])
-    return set([
-        level for apl in assigned_project_levels
-        for level in data_access_levels['valid_task_levels_for_project_level'].get(apl, [])
-    ])
-
-
 def valid_access_levels(levels):
     """check if levels are valid levels"""
 
@@ -88,21 +70,21 @@ def valid_user_access_levels(levels):
 
 @when_data_access(otherwise_return=True)
 def can_assign_user(levels, user_levels):
-    """check if user be assigned to an object(project/task) based on
-    whether user_levels matches objects levels """
+    """check if user be assigned to a project based on
+    whether user_levels matches project levels """
     if not (valid_user_access_levels(levels) and valid_user_access_levels(user_levels)):
         return False
 
-    valid_user_levels_for_project_task_level = data_access_levels['valid_user_levels_for_project_task_level']
-    valid_task_levels_for_user_level = data_access_levels['valid_task_levels_for_user_level']
+    valid_user_levels_for_project_level = data_access_levels['valid_user_levels_for_project_level']
+    valid_project_levels_for_user_level = data_access_levels['valid_project_levels_for_user_level']
 
-    all_user_levels = get_all_access_levels(user_levels, valid_task_levels_for_user_level)
-    all_levels = get_all_access_levels(levels, valid_user_levels_for_project_task_level)
+    all_user_levels = get_all_access_levels(user_levels, valid_project_levels_for_user_level)
+    all_levels = get_all_access_levels(levels, valid_user_levels_for_project_level)
     return bool(all_levels.intersection(all_user_levels))
 
 
 def get_all_access_levels(levels, implicit_levels):
-    """based on access level for an object(project/task/user), obtain
+    """based on access level for an object(project/user), obtain
     all access levels considering default_levels for an objects"""
 
     all_levels = set(levels)
@@ -117,33 +99,14 @@ def get_user_data_access_db_clause(access_levels):
     if not valid_user_access_levels(access_levels):
         return
 
-    valid_user_levels_for_project_task_level = data_access_levels['valid_user_levels_for_project_task_level']
+    valid_user_levels_for_project_level = data_access_levels['valid_user_levels_for_project_level']
 
     levels = set([level for level in access_levels])
     for level in access_levels:
-        ilevels = valid_user_levels_for_project_task_level.get(level, [])
+        ilevels = valid_user_levels_for_project_level.get(level, [])
         levels.update(ilevels)
     sql_clauses = [' info->\'data_access\' @> \'["{}"]\''.format(level) for level in levels]
     return ' OR '.join(sql_clauses)
-
-
-@when_data_access(otherwise_return='')
-def get_data_access_db_clause_for_task_assignment(user_id):
-    from pybossa.cache.users import get_user_access_levels_by_id
-
-    user_levels = get_user_access_levels_by_id(user_id)
-    if not valid_user_access_levels(user_levels):
-        raise BadRequest('Invalid user access level')
-
-    valid_task_levels_for_user_level = data_access_levels['valid_task_levels_for_user_level']
-    levels = set([level for level in user_levels])
-    for level in user_levels:
-        ilevels = valid_task_levels_for_user_level.get(level, [])
-        levels.update(ilevels)
-
-    levels = ['\'\"{}\"\''.format(level) for level in levels]
-    sql_clause = ' AND task.info->\'data_access\' @> ANY(ARRAY[{}]::jsonb[]) '.format(', '.join(levels))
-    return sql_clause
 
 
 @when_data_access()
@@ -179,18 +142,6 @@ def ensure_annotation_config_from_form(obj, form):
 def ensure_amp_config_applied_to_project(project, amp_config):
     project.amp_store = amp_config.get('amp_store', False)
     project.amp_pvf = amp_config.get('amp_pvf', '')
-
-@when_data_access()
-def ensure_task_assignment_to_project(task, project):
-    task_levels = get_valid_project_levels_for_task(task)
-    if not task_levels:
-        raise BadRequest('Task is missing data access level.')
-    project_levels = get_valid_task_levels_for_project(project)
-    if not project_levels:
-        raise BadRequest('Project data access levels are not configured.')
-    if not bool(task_levels & project_levels):
-        raise BadRequest('Task and project data access levels mismatch.')
-
 
 @when_data_access()
 def ensure_valid_access_levels(access_levels):

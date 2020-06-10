@@ -32,7 +32,6 @@ from pybossa.cache.task_browse_helpers import get_task_filters
 import json
 from datetime import datetime, timedelta
 from flask import current_app
-from pybossa.data_access import ensure_task_assignment_to_project
 from sqlalchemy import or_
 
 
@@ -434,9 +433,6 @@ class TaskRepository(Repository):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
-        if isinstance(element, Task) and (action in [self.SAVE_ACTION, self.UPDATE_ACTION]):
-            project = project_repo.get(element.project_id)
-            ensure_task_assignment_to_project(element, project)
 
     def _delete(self, element):
         self._validate_can_be('deleted', element)

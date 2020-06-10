@@ -70,14 +70,10 @@ class TestWeb(web.Helper):
 
     patch_data_access_levels = dict(
         valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
-        valid_user_levels_for_project_task_level=dict(
+        valid_user_levels_for_project_level=dict(
             L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
-        valid_task_levels_for_user_level=dict(
+        valid_project_levels_for_user_level=dict(
             L1=["L2", "L3", "L4"], L2=["L3", "L4"], L3=["L4"], L4=[]),
-        valid_project_levels_for_task_level=dict(
-            L1=["L1"], L2=["L1", "L2"], L3=["L1", "L2", "L3"], L4=["L1", "L2", "L3", "L4"]),
-        valid_task_levels_for_project_level=dict(
-            L1=["L1", "L2", "L3", "L4"], L2=["L2", "L3", "L4"], L3=["L3", "L4"], L4=["L4"]),
         valid_user_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")]
     )
 
@@ -6344,10 +6340,8 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.csv.requests.get')
-    @patch('pybossa.repositories.task_repository.ensure_task_assignment_to_project')
-    def test_bulk_csv_import_error(self, ensure, Mock, mock):
-        """Test WEB bulk import works"""
-        ensure.side_effect = Exception('Task is missing data access level.')
+    def test_bulk_csv_import_error(self, Mock, mock):
+        """Test WEB bulk import works without data access"""
         csv_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3', status_code=200,
                                 headers={'content-type': 'text/plain'},
                                 encoding='utf-8')
@@ -6360,7 +6354,9 @@ class TestWeb(web.Helper):
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                     'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
-        assert "1 task import failed due to Task is missing data access level" in res.data
+        project = db.session.query(Project).first()
+        assert len(project.tasks) == 1, "There should be 1 task imported"
+
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
