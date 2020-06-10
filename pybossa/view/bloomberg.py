@@ -73,7 +73,7 @@ def handle_bloomberg_response():
         return redirect(url_for('home.home'))
     elif auth.is_authenticated:
         attributes = auth.get_attributes()
-        user = user_repo.get_by(email_addr=unicode(attributes['Email'][0]).lower())
+        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         if user:
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         else :
@@ -81,7 +81,7 @@ def handle_bloomberg_response():
             user_data = {}
             try:
                 user_data['fullname']   = attributes['FirstName'][0] + " " + attributes['LastName'][0]
-                user_data['email_addr'] = attributes['Email'][0]
+                user_data['email_addr'] = attributes['emailAddress'][0]
                 user_data['name']       = attributes['LoginID'][0]
                 user_data['password']   = generate_password()
                 create_account(user_data)
@@ -95,5 +95,6 @@ def handle_bloomberg_response():
                 'error')
                 return redirect(url_for('home.home'))
     else:
+        current_app.logger.exception('BSSO login error')
         flash(gettext('We were unable authenticate and log you into an account. Please contact a Gigwork administrator.'), 'error')
         return redirect(url_for('home.home'))
