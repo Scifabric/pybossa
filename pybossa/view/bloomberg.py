@@ -66,7 +66,6 @@ def handle_bloomberg_response():
     auth = OneLogin_Saml2_Auth(prepare_onelogin_request(), sso_settings)
     auth.process_response()
     errors = auth.get_errors()
-    print(auth.is_authenticated)
     if errors:
         error_reason = auth.get_last_error_reason()
         current_app.logger.error('BSSO auth error(s): %s %s', errors, error_reason)
@@ -74,8 +73,7 @@ def handle_bloomberg_response():
         return redirect(url_for('home.home'))
     elif auth.is_authenticated:
         attributes = auth.get_attributes()
-        print(attributes)
-        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
+        user = user_repo.get_by(email_addr=unicode(attributes['Email'][0]).lower())
         if user:
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         else :
@@ -83,13 +81,14 @@ def handle_bloomberg_response():
             user_data = {}
             try:
                 user_data['fullname']   = attributes['FirstName'][0] + " " + attributes['LastName'][0]
-                user_data['email_addr'] = attributes['emailAddress'][0]
+                user_data['email_addr'] = attributes['Email'][0]
                 user_data['name']       = attributes['LoginID'][0]
                 user_data['password']   = generate_password()
                 create_account(user_data)
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
                 return _sign_in_user(user, next_url=request.form.get('RelayState'))
             except Exception as error:
+                brand = current_app.config['BRAND']
                 current_app.logger.exception('Auto-account creation error: %s, for user attributes: %s', error, attributes)
                 flash(gettext('There was a problem signing you in. '
                       'Please contact your {} administrator.'.format(brand)),
