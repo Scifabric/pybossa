@@ -92,7 +92,7 @@ class TestBloomberg(Test):
         mock_auth = MagicMock()
         mock_auth.get_errors.return_value = False
         mock_auth.process_response.return_value = None
-        mock_auth.is_authenticated = False 
+        mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
         mock_auth.get_attributes.return_value = {'UUID': [u'1234567'], 'FirstName': [u'test'], 'LastName': [u'test'], 'PVFLevels': [u'PVF_GUTS_3'], 'emailAddress': [u'test@bloomberg.net'], 'LoginID': [u'test']}
         mock_create_account.return_value = None
