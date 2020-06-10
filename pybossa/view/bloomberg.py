@@ -72,11 +72,12 @@ def handle_bloomberg_response():
         flash(gettext('There was a problem during the sign in process.'), 'error')
         return redirect(url_for('home.home'))
     elif auth.is_authenticated:
+        print("AUTH")
         attributes = auth.get_attributes()
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
-        if user:
+        if user is not None:
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
-        else :
+        else:
             attributes = auth.get_attributes()
             user_data = {}
             try:
@@ -91,7 +92,7 @@ def handle_bloomberg_response():
                 brand = current_app.config['BRAND']
                 current_app.logger.exception('Auto-account creation error: %s, for user attributes: %s', error, attributes)
                 flash(gettext('There was a problem signing you in. '
-                      'Please contact your {} administrator.'.format(brand)),
+                        'Please contact your {} administrator.'.format(brand)),
                 'error')
                 return redirect(url_for('home.home'))
     else:

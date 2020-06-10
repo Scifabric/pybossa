@@ -97,3 +97,20 @@ class TestBloomberg(Test):
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_create_account.called
         assert res.status_code == 302, res.status_code
+
+    @with_context
+    @patch('pybossa.view.bloomberg.create_account', autospec=True)
+    @patch('pybossa.view.bloomberg._sign_in_user', autospec=True)    
+    @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
+    def test_login_create_account_error(self, mock_one_login, mock_sign_in, mock_create_account):
+        redirect_url = 'http://localhost'
+        mock_auth = MagicMock()
+        mock_auth.get_errors.return_value = False
+        mock_auth.process_response.return_value = None
+        mock_auth.is_authenticated = True
+        mock_one_login.return_value = mock_auth
+        mock_sign_in.side_effect = Exception()
+        mock_auth.get_attributes.return_value = {'UUID': [u'1234567'], 'FirstName': [u'test'], 'emailAddress': ['test@test.com'], 'LastName': [u'test'], 'PVFLevels': [u'PVF_GUTS_3'], 'LoginID': [u'test']}
+        res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
+        assert mock_create_account.called == True
+        assert res.status_code == 302, res.status_code
