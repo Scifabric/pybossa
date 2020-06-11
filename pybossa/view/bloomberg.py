@@ -71,15 +71,15 @@ def handle_bloomberg_response():
         current_app.logger.error('BSSO auth error(s): %s %s', errors, error_reason)
         flash(gettext('There was a problem during the sign in process.'), 'error')
         return redirect(url_for('home.home'))
-    # User is authenticated on BSSO, load user from GIGwork API.
     elif auth.is_authenticated:
+        # User is authenticated on BSSO, load user from GIGwork API.
         attributes = auth.get_attributes()
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
-        # User is authenticated on BSSO and already has a GIGwork account.
         if user is not None:
+            # User is authenticated on BSSO and already has a GIGwork account.
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
-        # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
         else:
+            # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             attributes = auth.get_attributes()
             user_data = {}
             try:
@@ -95,8 +95,8 @@ def handle_bloomberg_response():
                 current_app.logger.exception('Auto-account creation error: %s, for user attributes: %s', error, attributes)
                 flash(gettext('There was a problem signing you in. Please contact your {} administrator.'.format(brand)), 'error')
                 return redirect(url_for('home.home'))
-    # Failed to authenticate user on BSSO.
     else:
+        # Failed to authenticate user on BSSO.
         current_app.logger.exception('BSSO login error')
         flash(gettext('We were unable authenticate and log you into an account. Please contact a Gigwork administrator.'), 'error')
         return redirect(url_for('home.home'))
