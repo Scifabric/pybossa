@@ -90,9 +90,7 @@ def handle_bloomberg_response():
             except Exception as error:
                 brand = current_app.config['BRAND']
                 current_app.logger.exception('Auto-account creation error: %s, for user attributes: %s', error, attributes)
-                flash(gettext('There was a problem signing you in. '
-                        'Please contact your {} administrator.'.format(brand)),
-                'error')
+                flash(gettext('There was a problem signing you in. Please contact your {} administrator.'.format(brand)), 'error')
                 return redirect(url_for('home.home'))
     else:
         current_app.logger.exception('BSSO login error')
