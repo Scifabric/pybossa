@@ -72,7 +72,6 @@ def handle_bloomberg_response():
         flash(gettext('There was a problem during the sign in process.'), 'error')
         return redirect(url_for('home.home'))
     elif auth.is_authenticated:
-        print("AUTH")
         attributes = auth.get_attributes()
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         if user is not None:
