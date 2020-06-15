@@ -4575,8 +4575,8 @@ class TestWeb(web.Helper):
         res = mock.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for admin"
         print(res.data)
-        assert announcement.title.encode('utf-8') not in res.data, error_msg
-        assert announcement.body.encode('utf-8') not in res.data, error_msg
+        assert announcement.title.encode('utf-8') in res.data, error_msg
+        assert announcement.body.encode('utf-8') in res.data, error_msg
         self.signout()
 
         self.register(subadmin=True)
