@@ -4572,7 +4572,7 @@ class TestWeb(web.Helper):
         announcement = AnnouncementFactory.create(published=True, info={'level': 0})
         self.register(admin=True)
         self.signin()
-        res = mock.app.get("/", follow_redirects=True)
+        res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for admin"
         print(res.data)
         assert announcement.title.encode('utf-8') in res.data, error_msg
