@@ -1,0 +1,17 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = "all" %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block content %}
+<div class="container" style="min-height:400px;">
+    <div class="col-md-3">
+        {{helper.render_project_local_nav(project, 'stats', current_user, pro_features)}}
+    </div>
+    <div class="col-md-9">
+        {{helper.render_project_title(project, upload_method, subtitle='Statistics') }}
+        <span class="alert alert-warning"><strong>Ooops</strong> Sorry, the project does not have tasks to process and show some statistics</span>
+    </div>
+</div>
+{{ helper.broken_image() }}
+{% endblock %}

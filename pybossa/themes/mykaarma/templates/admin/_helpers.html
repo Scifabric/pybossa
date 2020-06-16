@@ -1,0 +1,62 @@
+
+{% import "account/_helpers.html" as helper %}
+
+{% macro render_admin_user(user, upload_method) %}
+<div class="row well well-small">
+    <div class="col-md-2">
+        {{ helper.render_user_thumbnail(user, upload_method, style="height:100px; width:100px;")}}
+    </div>
+    <div class="col-md-10">
+        <h2>{{user.fullname}} <small>({{ _('nick') }}: {{user.name}})</small></h2>
+        <h3>{{ _('Member since') }}: {{user.created[0:10]}}</h3>
+        {% if user.admin %}
+        <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
+            <i class="icon-remove"></i>
+            {{ _('Remove from admin group') }}</a>
+        {% else %}
+        <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
+            <i class="icon-plus"></i>
+            {{ _('Add to admin group') }}</a>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{%- macro render_project_card_user(user, upload_method, title, explanation, link, link_action_text, background=False, download=False, nofollow=False, link_class=None, id=None, icon=None, link_two=None, link_action_text_two=None) %}
+<div {%if id%}id="{{id}}"{% endif %} class="thumbnail card">
+    <div class="post-pic" style="background: rgb(0, 151, 167) {%- if background %}url({{helper.render_user_avatar_src(user, upload_method)}}){% endif -%} no-repeat center top; background-size: cover;">
+        {% if not background %}
+            {% if icon %}
+            <div class="row">
+                <div class="col-xs-8">
+                    <h3>{{user.fullname}}</h3>
+                </div>
+                <div class="col-xs-3">
+                    <i class="fa fa-{{icon}} fa-fw fa-4x"></i>
+                </div>
+            </div>
+            {% else %}
+                <h3>{{user.fullname}}</h3>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="caption">
+        {% if background %}
+        <h3>{{user.fullname}}</h3>
+        {% endif %}
+        <p>{{user.name}}</p>
+        {% if user.admin %}
+        <p class="readmore"><a href="{{url_for('admin.del_admin', user_id=user.id)}}">
+            {{ _('Remove from admin group') }}</a>
+        </p>
+        {% else %}
+        <p class="readmore">
+        <a href="{{url_for('admin.add_admin', user_id=user.id)}}">
+            {{ _('Add to admin group') }}</a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endmacro -%}
+
+

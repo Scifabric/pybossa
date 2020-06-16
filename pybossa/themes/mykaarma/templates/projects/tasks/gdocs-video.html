@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('Video Pattern Recognition'), explanation=_('Re-use the Vimeo tasks'), link=url_for(target, short_name=project.short_name, type='gdocs', template='video'), link_action_text=_('Use the Video tasks'), icon='film')}}

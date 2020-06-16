@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+{% from "admin/_helpers.html" import render_admin_user, render_project_card_user %}
+
+{% block rightbody %}
+<h1><strong>{{ _('Admin Site') }}:</strong> {{ _('Manage Admin Users') }}</h1>
+{% from "_formhelpers.html" import render_field %}
+
+<div class="row">
+    <form class="form-search" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="col-md-12">
+            <div class="input-group">
+                <input id="user" name="user" type="text" class="form-control" placeholder={{ _('Try with the full name or nick') }}>
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary "><i class="fa fa-search"></i> {{ _('Search') }}</button>
+                </span>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if found %}
+<h2>{{ _('Found Users') }}</h2>
+<div class="row">
+{% for user in found %}
+    <div class="col-sm-4 col-md-4">
+    {{ render_project_card_user(user, upload_method, background=True)}}
+    </div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% if users %}
+<h1>{{ _('Current Users with Admin privileges') }}</h1>
+<div class="row">
+    {% for user in users %}
+    <div class="col-sm-4 col-md-4">
+    {{ render_project_card_user(user, upload_method, background=True)}}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

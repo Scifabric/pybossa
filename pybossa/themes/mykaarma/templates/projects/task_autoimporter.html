@@ -1,0 +1,47 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+{{ helper.render_loading(loading_text) }}
+<div class="container">
+    <div class="col-md-3">
+        {{ helper.render_project_local_nav(project, 'tasks', current_user, pro_features)}}
+    </div>
+    <div class="col-md-9">
+        <h1><strong>{{project.name}}</strong>: {{_('Currently configured autoimport')}}</h1>
+        <h2>{{_('You currently have the following autoimporter configured')}}</h2>
+        {% if importer['type']=='epicollect' %}
+        <p><strong>Type: </strong>Epicollect</p>
+        <p><strong>Epicollect project: </strong>{{ importer['epicollect_project'] }}</p>
+        <p><strong>Epicollect form: </strong>{{ importer['epicollect_form'] }}</p>
+        {% elif importer['type']=='csv'%}
+        <p><strong>Type: </strong>CSV public file</p>
+        <p><a href="{{ importer['csv_url'] }}">Link to your CSV file</a></p>
+        {% elif importer['type']=='gdocs'%}
+        <p><strong>Type: </strong>Google Docs spreadsheet</p>
+        <p><a href="{{ importer['googledocs_url'] }}">Link to your spreadsheet</a></p>
+        {% elif importer['type']=='flickr'%}
+        <p><strong>Type: </strong>Flickr album importer</p>
+        <p><strong>Flickr album ID: </strong>{{ importer['album_id'] }}</p>
+        {% elif importer['type']=='twitter'%}
+        <p><strong>Type: </strong>Twitter importer</p>
+        <p><strong>From source: </strong>{{ importer['source'] }}</p>
+        <p><strong>Number of tweets to import at once: </strong>{{ importer['max_tweets'] }}</p>
+        <p><strong>Credentials: </strong>{{ "User" if importer['user_credentials'] else "Platform"}}</p>
+        {% endif %}
+
+      <form class="form-horizontal" method="post" action="{{ url_for('project.delete_autoimporter', short_name=project.short_name) }}">
+        <fieldset>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="form-actions">
+            <input id="submit" type="submit" value="{{_('Delete')}}" class="btn btn-primary" />
+            <a href="{{ url_for('project.tasks', short_name=project.short_name) }}" class="btn btn-default">{{_('Back')}}</a>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+</div>
+{% endblock %}

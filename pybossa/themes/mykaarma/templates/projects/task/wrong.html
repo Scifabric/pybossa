@@ -1,0 +1,12 @@
+{% extends "/base.html" %}
+{% set active_page = "projects"  %}
+{% set active_project = project.short_name %}
+
+{% block content %}
+
+<div class="alert alert-danger">
+    <strong>{{ _('Error!') }}</strong> {{ _('This task does not belong to') }} {{project.short_name}}.
+        <a class="btn btn-default small btn-primary" href={{url_for('project.presenter', short_name=project.short_name)}}> <i class="icon icon-random"></i> {{ _('Try with another one') }}</a>
+</div>
+
+{% endblock %}

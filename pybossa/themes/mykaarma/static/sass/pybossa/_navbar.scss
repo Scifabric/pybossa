@@ -1,0 +1,16 @@
+.navbar-toggle {
+    color: $white;
+    border: 0px;
+    background: none;
+    background-color: transparent;
+    border-color: none;
+    padding-top: 5px;
+    padding-bottom: 0px;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.navbar-toggle:focus {
+    background-color: transparent !important;
+}

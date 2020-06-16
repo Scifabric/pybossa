@@ -1,0 +1,31 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="container">
+    <div class="col-md-3">
+        {{ helper.render_project_local_nav(project, 'tasks', current_user, pro_features)}}
+    </div>
+    <div class="col-md-9">
+        {{ helper.render_project_title(project, subtitle=_('Setup task autoimporter'))}}
+        <div class="row">
+            <div class="col-md-12">
+                <p class="lead">{{_('Use one of the following available')}}
+                <strong>{{_('importers')}}</strong> {{_('to setup as the autoimporter')}}</p>
+            </div>
+        </div>
+        {% for row in available_importers|batch(2) %}
+        <div class="row">
+            {% for importer in row %}
+            <div class="col-md-6">
+                {% include importer %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+Why don't you help us?!
+{% endblock %}
+
+{% block subtitle %}
+Hi, {{user['fullname']}}!
+{% endblock %}
+
+{% block body %}
+<p>{We notice you signed up for {{config.BRAND}} some time ago, but never contributed. We would like to encourage you to visit our project again and start collaborating with us. We hope not to bother you with this email- we’re just trying to make you give us a hand!
+</p>
+<p>Regards,
+</p>
+<p>{{ config.BRAND }} Team
+</p>
+<hr>
+<p><a href="{{url_for('account.update_profile', name=user['name'], _external=True)}}">Update your notifications preferences</a></p>
+{% endblock %}

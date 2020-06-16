@@ -1,0 +1,35 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+Your personal data files
+{% endblock %}
+
+{% block subtitle %}
+Hi, {{ user['fullname']}}!
+{% endblock %}
+
+{% block body %}
+<p>You have recently requested to export all the data that we have from you in our server.</p>
+
+<p>In the following links, you will be able to download ZIP files that have your personal data, your projects (if you have) and your contributions -if you have- (the links will be only valid for {{config.TTL_ZIP_SEC_FILES}} days).</p>
+
+<ul>
+    <li>Personal Data: {{personal_data_link}}</li>
+    {% if personal_projects_link %}
+    <li>Your created projects: {{personal_projects_link}}</li>
+    {% endif %}
+    {% if personal_contributions_link %}
+    <li>Your contributions: {{personal_contributions_link}}</li>
+    {% endif %}
+</ul>
+
+<p>Within the ZIP files you will find your data in JSON format. You can open those files with any text editor, as this format is an open standard.</p>
+
+<p>If you want to get new updated versions of these files, just export your data again.</p>
+
+<p>For the projects' data (tasks, task runs and results) you can use the available exporters for your projects.</p>
+
+<p>All the best,</p>
+
+<p>{{ config.BRAND }} Team
+{% endblock %}

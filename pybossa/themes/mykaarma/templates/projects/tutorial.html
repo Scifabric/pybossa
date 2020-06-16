@@ -1,0 +1,26 @@
+{% extends "/base.html" %}
+{% set active_page = "projects"  %}
+{% set active_project = project.short_name %}
+
+{% block content %}
+
+{{ project.info.tutorial | safe}}
+
+<div class="row">
+    <div class="col-md-12" style="text-align:center;padding-top:20px;">
+        <a id="start" href={{url_for('project.presenter', short_name = project.short_name)}}
+           class="btn btn-primary btn-lg"> 
+           <i class="icon-thumbs-up"></i> 
+           {{_('Start contributing')}}!</a>
+    </div>
+</div>
+
+<div id='PYBOSSA_USER_LOCALE' hidden>
+{% if current_user.is_anonymous %}
+en
+{% else %}
+{{ current_user.locale }}
+{% endif %}
+</div>
+
+{% endblock %}

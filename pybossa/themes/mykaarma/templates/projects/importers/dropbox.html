@@ -1,0 +1,76 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<h3>{{_('From your Dropbox account')}}</h3>
+<div id="dropbox-chooser"></div>
+
+<br>
+{% if form %}
+
+<form method="post" action="{{ url_for(target, short_name=project.short_name) }}">
+    <fieldset>
+        {{ form.hidden_tag() }}
+        <span class="help-inline"> {{ _('For more information, please look at') }} <a href="http://docs.pybossa.com/user/overview/#importing-the-tasks-from-a-dropbox-account" target="_blank">{{ _('the documentation') }}.</a></span>
+        <p id="message" style="display: none;">{{ _('You are about to import') }} <span id="numFiles"></span> {{ _('files') }}.</p>
+        {{ form.files(style="display: none;") }}
+        <div>
+            <input id="submit" type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+        </div>
+    </fieldset>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="{{ config.get('DROPBOX_APP_KEY') }}"></script>
+
+<script>
+    $("#submit").off('click').on('click', function(){
+            var msg = "{{_('Importing data...')}}";
+            pybossaNotify(msg, true, "loading");
+            });
+</script>
+
+<script type="text/javascript">
+(function() {
+ var options = {
+ // Required. Called when a user selects an item in the Chooser.
+success: function(files) {
+list = document.getElementById("files");
+files.forEach(function(file, index){
+    var element = document.createElement("li");
+    var content = document.createTextNode(file.name);
+    var input = document.createElement('input');
+    input.id = "files-" + index;
+    input.type = "hidden";
+    input.value = JSON.stringify(file);
+    input.name = "files-" + index;
+    element.appendChild(input);
+    element.appendChild(content);
+    list.appendChild(element);
+    });
+totalFilesToImport = list.childElementCount;
+document.getElementById('numFiles').textContent = totalFilesToImport;
+document.getElementById('message').style.display = "";
+},
+
+    // Optional. A value of false (default) limits selection to a single file, while
+    // true enables multiple file selection.
+multiselect: true,
+
+    // Optional. This is a list of file extensions. If specified, the user will
+    // only be able to select files with these extensions. You may also specify
+    // file types, such as "video" or "images" in the list. For more information,
+    // see File types below. By default, all extensions are allowed.
+    // extensions: ['.pdf', '.doc', '.docx'],
+    };
+var button = Dropbox.createChooseButton(options);
+document.getElementById("dropbox-chooser").appendChild(button);
+})();
+</script>
+{% endblock %}

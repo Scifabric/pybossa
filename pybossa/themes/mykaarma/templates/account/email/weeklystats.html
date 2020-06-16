@@ -1,0 +1,39 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+<a href="{{url_for('project.details', short_name=project.short_name, _external=True)}}">Weekly update of your project: {{project.name}}</a>
+{% endblock %}
+
+{% block subtitle %}
+Hello {{ project.owner.fullname }},
+{% endblock %}
+{% block body %}
+<p>Here you have some insights about how your project has been running over the last week.</p>
+
+<h3>Number of completed tasks: {{n_completed_tasks | humanize_intword }}</h3>
+<h3>Most active day of the week: {{active_day[0]}} with {{active_day[1]}} answers submitted</h3>
+
+{% set text = [project.name, ' needs your help! Can you help us?']%}
+
+<p><em>{{text | join }}| truncate(100) }}</em></p>
+
+<p><a href="https://twitter.com/intent/tweet?text={{text | join | truncate(100) | urlencode}}&url={{url_for('project.details', short_name=project.short_name, _external=True)|urlencode}}&hashtags=crowdsourcing&via=PyBossa">Tweet it!</a></p>
+
+<h3>Top 5 registered crafters</h3>
+<ol>
+{% for u in users_stats.auth.top5 %}
+    <li><a href="{{url_for('account.profile', name=u.name, _external=True)}}">{{u.fullname}}</a></li>
+{% endfor %}
+</ol>
+{% if users_stats['anon']['top5'] %}
+<h3>Top 5 anonymous crafters locations</h3>
+<ol>
+    {% for u in users_stats['anon']['top5'] %}
+    <li>{{u.loc.country_name}}, {{u.loc.city}}</li>
+    {% endfor %}
+</ol>
+{% endif %}
+<p>All the best,</p>
+
+<p>{{config.BRAND}} Team</p>
+{% endblock %}

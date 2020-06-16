@@ -1,0 +1,21 @@
+{% extends "/base.html" %}
+{% block content %}
+
+<section class="account newsletter">
+    <div class="container">
+        <div class="row">
+            <div id="newsletter" class="col-md-offset-2 col-md-8">
+                <h1>{{ _('Newsletter') }}</h1>
+                <p>{{_('If you want to be updated with our new features, projects, and
+                scientific projects, subscribe to our newsletter.')}}</p>
+                <a id="signmeup" class="btn btn-primary"
+                    href="{{url_for('account.newsletter_subscribe', subscribe=True,
+                    next=next)}}">{{_('Sign me up!')}}</a>
+                <a id="notinterested" class="btn btn-default" 
+                    href="{{url_for('account.newsletter_subscribe', subscribe=False,
+                    next=next)}}">{{_('Not interested')}}</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

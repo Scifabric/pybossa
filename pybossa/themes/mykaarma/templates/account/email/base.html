@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block title %}{% endblock %}</title>
+    </head>
+
+     <body style="font-family:Helvetica;">
+
+        <div style="margin-top:2%;">
+            <div>
+                <div>
+                    <h1 style="line-height:75px; padding-left:100px;">{% block subject %}{% endblock %}</h1>
+                </div>
+            </div>
+            <div>
+                <div><h2>{% block subtitle %}{% endblock %}</h2></div>
+            </div>
+            <div>
+                <div>
+                    {% block body %}{% endblock %}
+                </div>
+            </div>
+
+        </div>
+        <footer>
+            <div style="text-align:center;">
+                <p>Powered by <a href="http://pybossa.com">PyBossa</a></p>
+                <p>Follow us: <a href="http://twitter.com/pybossa">Twitter</a>, <a
+                    href="https://plus.google.com/115359083217638640334/posts">Google+</a></p>
+            </div>
+        </footer>
+    </body>
+</html>

@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block rightbody%}
+<h1><strong>{{ _('Admin Site') }}:</strong> {{title}}</h1>
+<form method="POST" action="{{url_for('admin.update_category', id=category.id)}}">
+    {{form.hidden_tag()}}
+    <fieldset>
+        {{form.id}}
+        {{ render_field(form.name, placeholder= _('Category name')) }}
+        {{ render_field(form.description, placeholder= _('Category description')) }}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{_('Update Category')}}</button>
+        </div>
+    </fieldset>
+</form>
+{% endblock %}

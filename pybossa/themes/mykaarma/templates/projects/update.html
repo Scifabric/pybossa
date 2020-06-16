@@ -1,0 +1,115 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link = "settings" %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block projectcontent %}
+{% from "_formhelpers.html" import render_field, render_checkbox_field %}
+<h2>{{_('Update the avatar')}}</h2>
+<form method="post" action="{{ url_for('project.update', short_name=project.short_name) }}" enctype="multipart/form-data">
+    <fieldset>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div>
+            <img id="uploadPreview" style="max-width: 100%">
+        </div>
+        {{ render_field(upload_form.avatar, onchange="previewImage()") }}
+        {{ upload_form.x1 }}
+        {{ upload_form.y1 }}
+        {{ upload_form.x2 }}
+        {{ upload_form.y2 }}
+        <div class="form-actions">
+            <button type="submit" name='btn' value="Upload" class="btn btn-primary">{{ _('Upload') }}</button>
+        </div>
+    </fieldset>
+</form>
+
+<!-- Update form for project data-->
+<h2>{{_('Update project details')}}</h2>
+<form method="post" action="{{ url_for('project.update', short_name = project.short_name) }}">
+    <fieldset>
+        {{ form.hidden_tag() }}
+        {{ render_field(form.name, class_="input-xlarge", placeholder=_('The name of the project')) }}
+        {{ render_field(form.short_name, class_="input-xlarge", placeholder=_('Short name or slug for the project'), label_text=_('Project slug:')) }}
+        {{ render_field(form.description, class_="input-xlarge", placeholder=_('Give some details about the project')) }}
+        {{ render_field(form.long_description, class_="input-xlarge", placeholder=_('Explain the project (use Markdown!)')) }}
+        {{ render_field(form.category_id) }}
+        {{ render_checkbox_field(form.allow_anonymous_contributors, class_="", tooltip=_('Check if you want to allow anonymous users contribute to your project')) }}
+        {{ render_checkbox_field(form.zip_download, class_="", tooltip=_("Check if you want to disable anonymous users to download project's data")) }}
+        {{ render_checkbox_field(form.protect, id='protect') }}
+        <div id='password'>{{ render_field(form.password) }}</div>
+        {{ render_field(form.webhook) }}
+        <div class="form-actions">
+            <button type="submit" name='btn' value="Save the changes" class="btn btn-primary">{{_('Save the changes')}}</button>
+        </div>
+    </fieldset>
+</form>
+<h3>{{_('Project secret key')}}</h3>
+<div class="input-group">
+    <input type="password" name="secret-key" class="form-control" id="project-secret-key" style="width:100%;" readonly value="{{project.secret_key}}">
+    <span class="input-group-btn"><buton id="password-toggle" class="btn btn-primary"><i class="fa fa-eye password-toggle"></i><i class="fa fa-eye-slash password-toggle" style="display:none"></i></buton></span>
+</div>
+<p style="margin-top: 15px;">
+<form method="post" action="{{ url_for('project.reset_secret_key', short_name=project.short_name)}}">
+    <div class="form-actions">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-primary" value="Reset">{{_('Reset secret key')}}</button>
+    </div>
+</form>
+<h3>{{_('Webpush notifications')}}</h3>
+<p><span class="label label-info"><i class="fa fa-bullhorn"></i> {{_('Warning')}}</span> {{_('Once you enable the notifications, you cannot disable them.')}}</p>
+{% if project.info.get('onesignal') == None %}
+<button id="webpush" class="btn btn-primary" value="webpush">{{_('Activate')}}</button>
+{% else %}
+<button class="btn btn-primary disabled" value="webpush">{{_('Enabled')}}</button>
+{% endif %}
+
+<h3>{{_('Transfer project ownership')}}</h3>
+<a href="{{url_for('project.transfer_ownership', short_name=project.short_name)}}" class="btn btn-primary">Change owner</a>
+</p>
+{% endblock %}
+{% block extrajs %}
+<script>
+    var pybossaAvatarAspectRatio = 4/3;
+</script>
+<script>
+    $("#webpush").off('click').on('click', function(){
+        var url = window.location.href.split("update")[0] + "webpush";
+        $.get(url, function(data){
+            console.log(data);
+            if (data['id'] !== undefined) {
+                pybossaNotify('Webpush notifications enabled', true, 'success');
+            }
+        });
+    })
+</script>
+<script src="{{url_for('static', filename='js/vendor/cropper.min.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='css/cropper.min.css')}}" type="text/css" />
+<script src="{{url_for('static', filename='js/image_crop.js')}}" type="text/javascript"></script>
+<script type="text/javascript">
+$(function() {
+        var passProtected = document.getElementById('protect').checked;
+        if (!passProtected) {
+        $('#password').hide();
+        }
+        $('#protect').on('change', function() {
+            $('#password').toggle();
+            });
+        });
+
+        //Show/hide secret key
+        $(window).load(function(){
+            $(".fa-eye-slash").hide();
+            $("#password-toggle").click(function(evt){
+                evt.preventDefault();
+                $(".password-toggle").toggle();
+                if ( $("#project-secret-key").attr("type") == 'password') {
+                    $("#project-secret-key").attr("type", 'text');
+                }
+                else {
+                    $("#project-secret-key").attr("type", 'password');
+                }
+            });
+        });
+</script>
+{% endblock %}
+

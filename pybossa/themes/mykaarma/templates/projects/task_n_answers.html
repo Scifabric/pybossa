@@ -1,0 +1,18 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link  = "tasks" %}
+{% set section = _('Task Redundancy') %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<form id="task_redundancy" method="post" action="{{ url_for('project.task_n_answers', short_name=project.short_name) }}">
+    {{ form.hidden_tag() }}
+    <fieldset>
+        {{ render_field(form.n_answers, placeholder= _('The number of answers per tasks that you want for the project')) }}
+        <div class="form-actions">
+            <input type="submit" value={{_('Set redundancy')}} class="btn btn-primary" />
+            <a href="{{url_for('project.tasks', short_name=project.short_name)}}" class="btn btn-default">{{_('Cancel')}}</a>
+        </div>
+    </fieldset>
+</form>
+{% endblock %}

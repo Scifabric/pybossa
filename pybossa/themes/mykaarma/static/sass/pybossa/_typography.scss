@@ -1,0 +1,87 @@
+// This is a partial.
+// It lies in <source>/_sass, just waiting to be imported.
+// It does not contain the YAML front matter and has no corresponding output file in the built site.
+
+@import "mixins";
+
+body {
+    font-family: 'Source Sans Pro', sans-serif;
+    @include vendor-prefix('font-smoothing', 'antialiased');
+    text-shadow:0 0 1px transparent;
+    text-rendering:optimizeLegibility;
+    color: $grey;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.42857143;
+}
+
+h1 {
+    color: $grey;
+    font-size: 46px;
+    font-weight: 700;
+}
+
+h2  {
+    color: $grey;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+h3 {
+    color: $bright-grey;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+p {
+    color: $grey;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+p.dark {
+    color: $dark-grey;
+}
+
+p.lead {
+    color: $bright-grey;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+p.lead.dark {
+    color: $grey;
+    font-weight: 400;
+    font-size: 20px;
+}
+
+footer p {
+    color: $semi-white;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.uppercase {
+    text-transform: uppercase;
+}
+
+.bright-grey {
+    color: $bright-grey;
+}
+
+
+@media (max-width: 768px) {
+    .jumbotron .h1,
+    .jumbotron h1{
+    font-size: 28px;
+    }
+
+    .jumbotron .h2,
+    .jumbotron h2{
+        font-size: 20px;
+    }
+}
+
+.text-sm {
+    font-size: 11px;
+}

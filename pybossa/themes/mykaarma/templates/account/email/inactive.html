@@ -1,0 +1,22 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+We miss you!
+{% endblock %}
+
+{% block subtitle %}
+Hi, {{ user['fullname']}}!
+{% endblock %}
+
+{% block body %}
+<p>We notice you haven’t been around {{config.BRAND}} for more than three months. We would like to encourage you to visit us again and continue collaborating with us. We hope not to bother you with this email- we’re just trying to make you not forget about us.
+</p>
+<p>In any case, thank you for your contribution so far.
+</p>
+<p>Regards,
+</p>
+<p>{{ config.BRAND }} Team
+</p>
+<hr>
+<p><a href="{{url_for('account.update_profile', name=user['name'], _external=True)}}">Update your notifications preferences</a></p>
+{% endblock %}

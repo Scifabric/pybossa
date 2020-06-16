@@ -1,0 +1,30 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+{{ _('Validate your account') }}
+{% endblock %}
+
+{% block subtitle %}
+{{ _('Hello') }} {{ user['fullname'] }},
+{% endblock %}
+
+{% block body %}
+<p>
+{{ _('You have updated your email's account in') }} {{ config.BRAND }}.
+</p>
+<p>
+{{ _('To verify that you are the owner of this e-mail address, please visit the URL below') }}:
+</p>
+<p>
+{{ _('Click here to validate your new e-mail address') }}:
+</p>
+<p>
+    <a href="{{confirm_url}}">{{ confirm_url }}</a>
+</p>
+<p>
+{{ _('Regards') }},
+</p>
+<p>
+{{ config.BRAND }} {{ _('Team') }}
+</p>
+{% endblock %}

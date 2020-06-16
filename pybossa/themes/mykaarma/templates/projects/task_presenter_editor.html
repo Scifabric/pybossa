@@ -1,0 +1,178 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link = "tasks" %}
+{% set active_link = _('Task Presenter Editor') %}
+
+{% block projectcontent %}
+{% from "_formhelpers.html" import render_field %}
+<link rel="stylesheet" href="{{url_for('static', filename='vendor/codemirror/codemirror.css')}}"/>
+<link rel="stylesheet" href="{{url_for('static', filename='vendor/codemirror/addons/display/fullscreen.css')}}"/>
+<link rel="stylesheet" href="{{url_for('static', filename='vendor/codemirror/addons/dialog/dialog.css')}}"/>
+<style>
+    iframe {
+        height:400px;
+        width: 100%;
+    }
+    .CodeMirror {
+        width: 100%;
+    }
+    .modal-body {
+        padding: 0px;
+    }
+    .cm-trailingspace {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==);
+        background-position: bottom left;
+        background-repeat: repeat-x;
+    }
+</style>
+<!-- Task Presenter Editor -->
+<div class="row">
+    <div class="col-md-12 text-center">
+        <a class="btn btn-info" href="http://docs.pybossa.com/user/overview/#creating-the-task-presenter_1"><i class="fa fa-book"></i> {{ _('Help') }}</a></h1>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <form class="col-md-12" method="post" action="{{ url_for('project.task_presenter_editor', short_name=project.short_name) }}">
+            {{ form.hidden_tag() }}
+            <fieldset>
+                {{ render_field(form.editor)}}
+                <div class="form-actions">
+                    <input type="submit" value={{ _('Update the project task presenter') }} class="btn btn-primary" />
+                    <a href="#" class="btn btn-default btn-preview" value="preview">{{ _('Preview the task presenter') }}</a>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+
+
+<div id="modal-preview" class="modal fade" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title"><strong>{{project.name}}</strong>: {{ _('Task Presenter Preview') }}</h4>
+      </div>
+      <div class="modal-body">
+            <section id="output">
+                <iframe frameBorder="0"></iframe>
+            </section>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+{% endblock %}
+
+{% block extrajs %}
+    {% assets filters="jsmin", output="js/gen/pybossa.taskpresentereditor.min.js",
+              'vendor/codemirror/codemirror.js',
+              'vendor/codemirror/mode/xml/xml.js',
+              'vendor/codemirror/mode/javascript/javascript.js',
+              'vendor/codemirror/mode/css/css.js',
+              'vendor/codemirror/mode/htmlmixed/htmlmixed.js',
+              'vendor/codemirror/addons/search/search.js',
+              'vendor/codemirror/addons/search/searchcursor.js',
+              'vendor/codemirror/addons/search/jump-to-line.js',
+              'vendor/codemirror/addons/edit/closebrackets.js',
+              'vendor/codemirror/addons/edit/closetag.js',
+              'vendor/codemirror/addons/edit/continuelist.js',
+              'vendor/codemirror/addons/edit/matchbrackets.js',
+              'vendor/codemirror/addons/edit/matchtags.js',
+              'vendor/codemirror/addons/edit/trailingspace.js',
+              'vendor/codemirror/addons/fold/xml-fold.js',
+              'vendor/codemirror/addons/display/fullscreen.js',
+              'vendor/codemirror/addons/dialog/dialog.js'
+              %}
+              <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+<script type="text/javascript">
+(function() {
+ var render = function(presenterSource) {
+ var source = prepareSource(presenterSource);
+
+ var iframe = document.querySelector('#output iframe'),
+ iframeDoc = iframe.contentDocument;
+
+ iframeDoc.open();
+ iframeDoc.location.hash='_';
+ iframeDoc.write(source);
+ iframeDoc.close();
+ };
+
+ function prepareSource(presenterSource) {
+
+ var bootstrapCSS = "{{url_for('static', filename='css/gen/pybossa.min.css')}}",
+ fontsCSS = "{{url_for('static', filename='css/fonts/stylesheet.css')}}",
+ stylesCSS = "{{url_for('static', filename='css/styles.css')}}",
+ jQuery = "{{url_for('static', filename='vendor/jquery.js')}}",
+ bootstrapJS = "{{url_for('static', filename='vendor/bootstrap/2.2.1/js/bootstrap.js')}}",
+ modernizr = "{{url_for('static', filename='js/vendor/modernizr.min.js')}}",
+ pybossa = "{{url_for('static', filename='js/pybossa/pybossa.js')}}",
+ defaultJs = "{{url_for('static', filename='js/gen/default.min.js')}}",
+
+ baseTemplate =
+     "<!doctype html>\n" +
+     "<html>\n\t" +
+     "<head>\n\t\t" +
+     "<meta charset=\"utf-8\">\n\t\t" +
+     "<title></title>\n\n\t\t\n\t" +
+    "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css\">" +
+     "<link href=\""+bootstrapCSS+"\" rel=\"stylesheet\" type=\"text/css\">" +
+     "<script type=\"text/javascript\" src=\""+jQuery+"\"></sc" + "ript>" +
+     "<script type=\"text/javascript\" src=\""+bootstrapJS+"\"></sc" + "ript>" +
+     "<script type=\"text/javascript\" src=\""+modernizr+"\"></sc" + "ript>" +
+     "</head>\n\t" +
+     "<body style=\"padding-top:0px;\">\n\t\n\t" +
+     "<script type=\"text/javascript\" src=\""+pybossa+"\"></sc" + "ript>" +
+     "<script type=\"text/javascript\" src=\""+defaultJs+"\"></sc" + "ript>" +
+     "<div class=\"container project col-md-12\">" +
+     "<div class=\"project-content row\">" +
+     presenterSource +
+     "</div>" +
+     "</div>" +
+     "<div id='PYBOSSA_USER_LOCALE' hidden>en</div>" +
+     "<script type=\"text/javascript\">pybossa.saveTask=function(id,answer){alert('Task '+id+' saved with answer data: '+answer+'. This is a sandbox environment and the answers will not be saved to the database!');var def=$.Deferred();def.resolve();return def;};</sc" + "ript>" +
+     "</body>\n" +
+     "</html>";
+
+return baseTemplate;
+ }
+
+var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+  mode:'text/html',
+  lineNumbers: true,
+  autofocus: true,
+  autoCloseBrackets: true,
+  autoCloseTags: true,
+  matchBrackets: true,
+  matchTags: true,
+  showTrailingSpace: true,
+  fullScreen: false,
+  extraKeys: {
+    "F11": function(cm) {
+      cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+    },
+    "Esc": function(cm) {
+      if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+    }
+  }
+});
+
+function showPreview() {
+    render(editor.getValue());
+    $("#modal-preview").modal('show');
+}
+$(".btn-preview").off('click').on('click', function(){
+        showPreview();
+        });
+
+})();
+</script>
+
+{% endblock %}
+

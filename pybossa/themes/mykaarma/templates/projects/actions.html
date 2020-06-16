@@ -1,0 +1,15 @@
+{% extends "projects/project.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = "all" %}
+
+{% block update %}
+  <div class="row" style="padding-top:20px">
+      <hr>
+          <div class="col-md-12 btn-group" style="text-align:center">
+              <a class="btn btn-default"   href="{{ url_for('project.update', short_name = project.short_name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the project details') }}</a>
+              <a class="btn btn-default"   href="{{ url_for('project.task_presenter_editor', short_name = project.short_name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the task presenter') }}</a>
+              <a class="btn btn-default"   href="{{ url_for('project.import_task', short_name = project.short_name) }}"><i class="icon-tasks icon-white"></i> {{ _('Import tasks') }}</a>
+              <a class="btn btn-default" href="{{ url_for('project.delete', short_name = project.short_name) }}"><i class="icon-trash icon-white"></i> {{ _('Delete the project') }}</a>
+          </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link  = "tasks" %}
+{% set section =  _('Task Scheduler')%}
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<p>{{_('You can choose from the following schedulers')}}:</p>
+<ul>
+    <li><strong>{{_('Default')}}</strong> {{_('or')}}
+    <strong>{{_('Depth First')}}</strong>: {{_('returns a task that
+    has not been completed (the value of number of answers has
+    not achieved) excluding the current user')}}.</li>
+    <li><strong>{{_('Breadth First')}}</strong>: {{_('returns a
+    task which has the least number of task runs (answers)
+    excluding the current user')}}.</li>
+    <li><strong>{{_('Depth First All')}}</strong>: {{_('returns a
+    task where the current user has not participated. It does not take into
+    account the task.state')}}.</li>
+</ul>
+
+<form id="task_scheduler" method="post" action="{{ url_for('project.task_scheduler', short_name=project.short_name) }}">
+    {{ form.hidden_tag() }}
+    <fieldset>
+        {{ render_field(form.sched, class_="span4", 
+        placeholder="Task scheduler for your project")}}
+        <div class="form-actions">
+            <input type="submit" value={{_('Set redundancy')}} class="btn btn-primary" />
+        </div>
+    </fieldset>
+</form>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link  = "settings" %}
+{% set section = _('Delete all Tasks and Task Runs') %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block projectcontent %}
+<div class="alert alert-danger">
+    <strong>{{_('Danger Zone!')}}</strong> {{_('If you delete all the
+    tasks and task runs they will be gone
+    forever!')}}<br/><strong>{{_('You cannot undo this action!')}}</strong>
+</div>
+{{ helper.render_project_summary(project, n_tasks, overall_progress, last_activity, current_user) }}
+<form class="form-horizontal" method="post" action="{{ url_for('project.delete_tasks', short_name = project.short_name) }}">
+    <h3><strong>{{_('Are you sure you want to delete ALL the project tasks and associated task runs?')}}</strong></h3>
+    <div class="form-actions">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" name='btn' class="btn btn-sm"
+            value="Yes">{{_('Yes')}}</button>
+        <a href="{{ url_for('project.settings', short_name = project.short_name) }}"
+            class="btn btn-lg btn-primary">{{_('No, do not delete
+            anything!')}}</a>
+    </div>
+</div>
+{% endblock %}

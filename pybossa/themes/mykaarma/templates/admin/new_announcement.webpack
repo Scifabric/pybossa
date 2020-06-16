@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% from "admin/_helpers.html" import render_admin_user%}
+
+
+{% block rightbody %}
+
+<div class="container">
+            <h1 id="announcementtitle">New announcement</h1>
+</div>
+
+<div id="editorpybossa">
+    <Announcementimagecrop/>
+</div>
+
+
+<% for(var i=0; i<htmlWebpackPlugin.files.js.length; i++) {%>
+   <script src="<%= htmlWebpackPlugin.files.js[i] %>"></script>
+<% } %>
+{% endblock %}

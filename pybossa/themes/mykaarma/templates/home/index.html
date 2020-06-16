@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import "projects/_helpers.html" as helper %}
+{% import "account/_helpers.html" as account_helper %}
+{% block content %}
+<section class="home featured">
+    <div class="jumbotron">
+        <div class="container text-center firstfold">
+            {% if featured | count > 0 %}
+            {% set featured_project = featured | random %}
+            <h1>{{ featured_project.name }}</h1>
+            <p>{{ featured_project.description }}</p>
+            <a class="btn btn-primary" href="{{ url_for('project.details', short_name=featured_project.short_name)}}">{{_('Contribute')}}</a>
+            {% else %}
+            <h1>{{_('Welcome to ')}} {{brand}}</h1>
+            <p>{{_("The ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.")}}</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% if historical_contributions %}
+{{ helper.render_grid_projects(historical_contributions, 'Historical Contributions', upload_method, current_user, section_class='home projects', title_size='2') }}
+{% endif %}
+{% if featured %}
+{{ helper.render_grid_projects(featured, 'Featured Projects', upload_method, current_user, section_class='home projects', readmore_text='Contribute', title_size='2') }}
+{% endif %}
+{% endblock %}

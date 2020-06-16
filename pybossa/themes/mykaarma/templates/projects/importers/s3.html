@@ -1,0 +1,90 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project = project.short_name %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<style type="text/css">
+    .selected {
+        background-color: #D4D4D4;
+    }
+</style>
+<h3>{{_('From an Amazon S3 bucket')}}</h3>
+<span class="help-inline">{{_('For more information, please look at')}} <a href="http://docs.pybossa.com/user/overview/#importing-the-tasks-from-an-amazon-s3-bucket" target="_blank">{{_('the documentation')}}.</a></span>
+<br>
+<div id="objects-container" class="row">
+    <ul id="objects"></ul>
+</div>
+{% if form %}
+<form class="form-group" method="post" action="{{ url_for(target, short_name=project.short_name) }}">
+    <fieldset>
+        {{ form.hidden_tag() }}
+        {{ form.files(style="display: none;") }}
+        {{ render_field(form.bucket, placeholder=_("Name of the S3 bucket")) }}
+    </fieldset>
+    <a id="get-bucket" class="btn btn-default">{{ _('Search in bucket') }}</a>
+    <input id="submit" type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $("#submit").off('click').on('click', function(){
+            var msg = "{{_('Importing data...')}}";
+            pybossaNotify(msg, true, "loading");
+            });
+</script>
+<script type="text/javascript">
+    $(function() {
+            $('#get-bucket').on('click', function() {
+                var files = [];
+                var bucketName = $('#bucket').val();
+                var filesInput = document.getElementById("files");
+                filesInput.innerHTML = null;
+                $('#objects').empty();
+                $.get('/amazon/bucket/'+bucketName).done(function(objects) {
+                    objects.forEach(function(object){
+                        var objectElement = $('<li class="object" role="button" style="cursor:pointer;">' + object + '</li>');
+                        $('#objects').append(objectElement);
+                        });
+                    $(".object").each(function(){
+                        var objectDomElement = $(this);
+                        var objectName = $(this).text();
+                        objectDomElement.off('click').on('click', function(evt){
+                            evt.preventDefault();
+                            objectDomElement.toggleClass('selected');
+                            if (objectDomElement.hasClass('selected')) {
+                            if (files.indexOf(objectName) === -1) {
+                            files.push(objectName);
+                            }
+                            }
+                            else {
+                            files.splice(files.indexOf(objectName), 1);
+                            }
+                            filesInput.innerHTML = null;
+                            files.forEach(function(file, index){
+                                var element = document.createElement("li");
+                                var content = document.createTextNode(file);
+                                var input = document.createElement('input');
+                                input.id = "files-" + index;
+                                input.type = "hidden";
+                                input.name = "files-" + index;
+                                input.value = file;
+                                element.appendChild(input);
+                                element.appendChild(content);
+                                filesInput.appendChild(element);
+                                });
+                        });
+                    });
+                }).fail(function(resp) {
+                    if (resp.status === 403) alert("{{ _('Oops... it seems that bucket is private.') }}")
+                    if (resp.status === 404) alert("{{ _('Oops... we could not find that bucket.') }}")
+                    });
+            });
+    });
+</script>
+{% endblock %}

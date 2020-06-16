@@ -1,0 +1,15 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+<a style="color: #52B290;" href="{{url_for('project.show_blogpost', short_name=blog.project.short_name, id=blog.id, _external=True)}}">Project Update: {{blog['project']['name']}}</a>
+{% endblock %}
+
+{% block subtitle %}
+{{blog['title']}} by {{blog['owner']['fullname']}}
+{% endblock %}
+
+{% block body %}
+{{blog['body'] | markdown }}
+<hr>
+<hr>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+
+{% from "_formhelpers.html" import render_form %}
+{% block projectcontent %}
+{{ helper.render_loading(loading_text) }}
+<h3>{{_('From a CSV file')}}</h3>
+{{ render_form(form, action_url=url_for(target, short_name=project.short_name), action_text=_('Import'), btn_class="btn btn-primary") }}
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $("#submit").off('click').on('click', function(){
+            var msg = "{{_('Importing data...')}}";
+            pybossaNotify(msg, true, "loading");
+            });
+</script>
+{% endblock %}

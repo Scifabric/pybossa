@@ -1,0 +1,29 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<h3>{{_('From a Google Docs Spreadsheet')}}</h3>
+<form method="post" action="{{ url_for(target, short_name=project.short_name) }}">
+    <fieldset>
+        {{ form.hidden_tag() }}
+        <span class="help-inline"> {{ _('Please provide a URL to a Google Drive Spreadsheet with data for') }} {{ active_project }}. <br/> {{ _('For more information, please look at') }} <a href="http://docs.pybossa.com/user/overview/#importing-the-tasks-via-the-built-in-csv-task-importer" target="_blank">{{ _('the documentation') }}.</a></span>
+        {{ render_field(form.googledocs_url, placeholder=_('The URL of the Google Docs Spreadsheet')) }}
+        <div class="form-actions">
+            <input id="submit" type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+        </div>
+    </fieldset>
+</form>
+{% endblock %}
+{% block extrajs %}
+<script>
+    $("#submit").off('click').on('click', function(){
+            var msg = "{{_('Importing data...')}}";
+            pybossaNotify(msg, true, "loading");
+            });
+</script>
+{% endblock %}

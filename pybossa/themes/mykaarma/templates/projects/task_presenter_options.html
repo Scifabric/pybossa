@@ -1,0 +1,15 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link = "tasks" %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block content %}
+<div class="container">
+    <div class="col-md-3">
+        {{ helper.render_project_local_nav(project, active_link, current_user, pro_features) }}
+    </div>
+    <div class="col-md-9">
+        {% include "projects/snippets/options.html" %}
+    </div>
+</div>
+{% endblock %}

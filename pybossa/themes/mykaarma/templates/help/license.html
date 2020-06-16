@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% set active_page = "help" %}
+
+{% block content %}
+<section class="help license">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                <section id="overview">
+                    <h1><strong>{{brand}}</strong>: Licenses</h1>
+                    <p>
+                    <strong>{{brand}}</strong> uses the free and open source framework
+                    <a href="http://dev.pybossa.com">PyBossa</a> which is released under the 
+                    <a href="http://www.gnu.org/licenses/agpl-3.0.html">GNU Affero general public license version 3.0</a>.
+                    </p>
+
+                    <p>
+                    The source code is hosted in <a href="http://github.com/PyBossa/pybossa">Github</a>.
+                    </p>
+                </section>
+                <hr>
+                <section id="projects">
+                    <h1>Projects</h1>
+                    <p>
+                    Most of the projects will have an open source license, like:
+                    <ul>
+                        <li><a href="http://github.com/PyBossa/app-flickrperson">Flickr Person Finder</a></li>
+                        <li><a href="https://github.com/PyBossa/app-geocoding">Urban Parks</a></li>
+                        <li><a href="https://github.com/PyBossa/pdftranscribe">PDF Transcribe</a>, or</li>
+                        <li><a href="https://github.com/PyBossa/app-soundcloud">Sound Cloud</a></li>
+                    </ul>
+                    </p>
+                    <p>
+                    Bear in mind that some projects will have a different open source license, 
+                    so check the project description page for more details about the license or
+                    contact the creators of the project.
+                    </p>
+                </section>
+                <hr>
+                <section id="data">
+                    <h1>Data</h1>
+                    <p>
+                    All the generated data by the volunteers are, unless otherwise stated,
+                    under the <a href="http://opendatacommons.org/licenses/odbl/">Open Data Commons License</a>. Check the description
+                    the project's page for further details about which license is going
+                    to be applied.
+                    </p>
+                </section>
+                <hr>
+                <section id="content">
+                    <h1>General Content</h1>
+                    <p>
+                    All the General Content of the page is under a <a href="http://creativecommons.org/licenses/by-sa/3.0/">Creative Commons License BY-SA 3.0 Unported</a>.
+                    </p>
+                </section>
+
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "projects" %}
+{% import "account/_helpers.html" as helper %}
+{% import "projects/_helpers.html" as project_helper %}
+
+{% block content %}
+<section class="account projects">
+    <div class="container">
+            <div class="col-sm-3 col-md-3">
+                {{ helper.render_account_local_nav(current_user, active_link) }}
+            </div>
+            <div class="col-sm-9 col-md-9" style="min-height:400px">
+                {% if projects_published or projects_draft %}
+                    {% if projects_published %}
+                    {{ project_helper.render_grid_projects(projects_published,  _('Published Projects'), upload_method, title_class="col-md-12", container=False)}}
+                    {% endif %}
+                    {% if projects_draft %}
+                    {{ project_helper.render_grid_projects(projects_draft,  _('Draft Projects'), upload_method, title_class="col-md-12", container=False)}}
+                    {% endif %}
+                 {% else %}
+                 <h1>{{_('You have not created a project')}}</h1>
+                 <a href="{{url_for('project.new')}}" class="btn btn-primary">{{ _('Let\'s do it!') }}</a>
+                 {% endif %}
+
+            </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link  = "tasks" %}
+{% set section = _('Task Settings') %}
+{% import "projects/_helpers.html" as helper %}
+{% from "projects/_helpers.html" import render_project_card_option %}
+
+
+{% block projectcontent %}
+<div class="row">
+    <div id="task_scheduler" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Task Scheduler'), explanation=_('Change how the tasks are delivered to volunteers'), link=url_for('project.task_scheduler', short_name=project.short_name), link_action_text=_('Scheduler'), icon='cog')}}
+    </div>
+    <div id="task_priority" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Task Priority'), explanation=_('Change the priority of the tasks'), link=url_for('project.task_priority', short_name=project.short_name), link_action_text=_('Scheduler'), icon='sort-numeric-asc')}}
+    </div>
+</div>
+<div class="row">
+    <div id="task_delete" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Delete Tasks'), explanation=_('Delete all the tasks and associated answers'), link=url_for('project.delete_tasks', short_name=project.short_name), link_action_text=_('Delete'), icon='trash')}}
+    </div>
+    <div id="task_redundancy" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Tasks Redundancy'), explanation=_('Change the redundancy level for the tasks'), link=url_for('project.task_n_answers', short_name=project.short_name), link_action_text=_('Redundancy'), icon='repeat')}}
+    </div>
+</div>
+{% endblock %}

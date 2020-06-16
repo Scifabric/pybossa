@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+
+{% block rightbody%}
+<h1><strong>{{ _('Admin Site') }}:</strong> {{title}}</h1>
+<div class="alert alert-danger">
+    <strong>{{ _('Danger Zone!') }}</strong> {{ _('Deleting the category will remove it from all the projects! This operation cannot be undone!') }}
+</div>
+<h2>{{_('Delete Category')}}: {{category.name}}?</h2>
+<form method="post" action="{{url_for('admin.del_category', id=category.id)}}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <input class="btn btn-sm" type="submit" value="Yes"></input>
+    <a class="btn btn-primary" href="{{url_for('admin.categories')}}">{{ _('No, do not delete it') }}</a>
+</form>
+{% endblock %}

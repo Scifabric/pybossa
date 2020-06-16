@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('Local Drive CSV Spreadsheet'), explanation=_('Import a Local Drive CSV Spreadsheet'), link=url_for(target, short_name=project.short_name, type='localCSV'), link_action_text=_('Import data'), icon='table')}}

@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "admin" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block rightbody %}
+<div id="categories" class="col-md-9">
+    <h1><strong>{{ _('Admin Site') }}:</strong> {{ _('Manage Categories') }}</h1>
+    <div class="row">
+        <div id="add" class="col-md-12">
+            <form method="POST" action="{{url_for('admin.categories')}}">
+                {{form.hidden_tag()}}
+                <fieldset>
+                    {{ render_field(form.name, placeholder= _('Category name')) }}
+                    {{ render_field(form.description, placeholder= _('Category description')) }}
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">{{_('Add Category')}}</button>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+    {% if categories %}
+    <h1>{{_('List of Available Categories')}}</h1>
+    <hr>
+    {% for c in categories %}
+    <div class="row">
+        <div class="col-md-5">
+            <h2>{{c.name}} <small>({{n_projects_per_category[c.short_name]}} projects)</small></h2>
+        </div>
+        <div class="col-md-6">
+            <div class="btn-group btn-group-sm btn-admin-categories">
+                <a href="{{url_for('admin.update_category', id=c.id)}}" class="btn btn-primary"><i class="icon-edit"></i> {{_('Edit Category Name')}}</a>
+                {% if n_projects_per_category[c.short_name] == 0 and (categories | count > 1) %}
+                <a href="{{url_for('admin.del_category', id=c.id)}}" class="btn btn-danger"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
+                {% else %}
+                <a href="#" class="btn btn-danger disabled"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if not loop.last %}
+    <hr>
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('Geo-coding'), explanation=_('Analayze web maps with this template'), link=url_for('project.task_presenter_editor', short_name=project.short_name, template='map'), icon='globe', link_action_text=_('Go'))}}

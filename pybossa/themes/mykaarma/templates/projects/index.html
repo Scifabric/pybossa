@@ -1,0 +1,48 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+
+{% import "projects/_helpers.html" as helper %}
+{% import "account/_helpers.html" as helper_account %}
+
+{% block content %}
+<section class="project categories selector">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1 hidden-xs hidden-sm">
+                <ul class="nav nav-pills nav-justified categories">
+                    {% for c in categories %}
+                    <li {% if active_cat.short_name==c.short_name%}class="active"{% endif %}><a href="{{url_for('project.project_cat_index', category=c.short_name)}}" rel="nofollow"><i class="icon-chevron-right"></i> {{ c.name }}</a></li>
+                    {% endfor %}
+                    {% if current_user.is_authenticated and current_user.admin %}
+                    <li {% if active_cat.short_name=="draft"%}class="active"{% endif %}><a href="{{url_for('project.draft')}}" rel="nofollow"><i class="icon-chevron-right"></i> {{ _('Draft') }}</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% if projects %}
+            {% if active_cat.short_name=="featured"%} 
+                {% set title = _('Featured Projects') %}
+                {% set subheading =_('A special selection of the most interesting projects') %}
+            {% elif active_cat.short_name=='draft' %}
+                {% set title = _('Draft Projects') %}
+                {% set subheading = _('Work in progress projects') %}
+            {% else %}
+                {% set title = active_cat.name + ' ' + _('Projects') %}
+                {% set subheading = active_cat.description %}
+            {% endif %}
+            <div class="row">
+                <div class="col-md-offset-1 col-md-10">
+                    {{ helper.render_grid_projects(projects, title, upload_method, title_class="col-md-12", container=False, active_cat = active_cat.short_name, subheading=subheading)}}
+                </div>
+            </div>
+            {% if pagination.pages > 1 %}
+            <div class="col-md-offset-2 col-md-8 text-center">
+                {{ helper_account.render_pagination(pagination) }}
+            </div>
+            {% endif %}
+        {% else %}
+            <h3>{{_('Sorry, there are no published projects for this category yet')}}</h3>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

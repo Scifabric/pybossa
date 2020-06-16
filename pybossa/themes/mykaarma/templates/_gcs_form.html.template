@@ -1,0 +1,9 @@
+<form class="navbar-form form-search pull-right" action="/search">
+      <input type="hidden" name="cx" value="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:YYYYYYYYYYY"/>
+      <input type="hidden" name="cof" value="FORID:10" />
+      <input type="hidden" name="ie" value="ISO-8859-1" />
+      <div class="input-append">
+      <input type="text" name="q" class="span2 search-query" placeholder="{{_('Search')}}"  />
+      <button class="btn" type="submit"><i class="icon-search"></i></button>
+      </div>
+</form>

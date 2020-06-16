@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('EpiCollect Plus Project'), explanation=_('Use an EpiCollect Plus project'), link=url_for(target, short_name=project.short_name, type='epicollect'), link_action_text=_('Import data'), icon='mobile')}}

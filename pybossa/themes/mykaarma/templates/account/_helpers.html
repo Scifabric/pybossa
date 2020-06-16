@@ -1,0 +1,144 @@
+{% macro render_account_local_nav(current_user, active_link) -%}
+<ul class="list-group" style="margin-top: 21px;">
+    {{ render_user_thumbnail(current_user, upload_method, class="img-thumbnail") }}
+</ul>
+<ul class="list-group" style="margin-top: 21px;">
+    <li class="list-group-item {% if active_link=="profile"%}active{% endif %}"><a href="{{url_for('account.profile', name=current_user.name)}}">{{ _('My Account') }}</a><i class="fa fa-chevron-right pull-right"></i></li>
+    <li class="list-group-item {% if active_link=="projects"%}active{% endif %}"><a href="{{url_for('account.projects', name=current_user.name)}}">{{ _('My Projects') }}</a><i class="fa fa-chevron-right pull-right"></i></li>
+    {% if current_user.admin %}
+    <li class="list-group-item {% if active_link=="admin"%}active{% endif %}"><a href="{{url_for('admin.index')}}">{{ _('Admin Site') }}</a><i class="fa fa-chevron-right pull-right"></i></li>
+    {% endif %}
+    <li class="list-group-item {% if active_link=="settings"%}active{% endif %}"><a href="{{url_for('account.update_profile', name=current_user.name)}}"> {{ _('My Settings') }}</a><i class="fa fa-chevron-right pull-right"></i></li>
+</ul>
+{% endmacro %}
+
+{% macro render_twitter_btn(project) %}
+<a href="https://twitter.com/share" class="twitter-share-button"
+    data-text="{{ _('I\'ve done') }} {{project.c}} {{ _('tasks for the @PyBossa project:') }} {{project.name}}. {{ _('Do you want to help?') }} {{url_for('project.details',short_name=project.short_name,_external=True)}}"
+    data-count="none">{{ _('Tweet') }}</a>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+{% endmacro %}
+
+{% macro render_googlePlus_btn(project) %}
+<!-- Place this tag in your head or just before your close body tag. -->
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js">
+  {parsetags: 'explicit'}
+</script>
+
+<!-- Place this tag where you want the +1 button to render. -->
+<div class="g-plusone" data-size="medium" data-annotation="none" data-href="{{url_for('project.details',short_name=project.short_name,_external=True)}}"></div>
+
+<!-- Place this render call where appropriate. -->
+<script type="text/javascript">gapi.plusone.go();</script>
+{% endmacro %}
+
+
+{% macro render_user_profile(user, upload_method, settings, private=True) %}
+<p><strong><i class="fa fa-user"></i> {{ _('Nick')}}:</strong> {{ user.name }}</p>
+{% if private %}
+<p><strong><i class="fa fa-envelope"></i> {{_('E-mail')}}:</strong> {{user.email_addr }} 
+    {% if (user.valid_email == False) %}
+      {% if (user.confirmation_email_sent == False) %}
+      <a href="{{ url_for('account.confirm_email')}}" class="btn btn-warning btn-xs">Validate email</a>
+      {% else %}
+      <a href="#" class="btn btn-sm disabled">Email sent for
+          validation</a>
+      {% endif %}
+    {% endif %}
+</p>
+{% endif %}
+{% if user.rank %}
+<p><strong><i class="fa fa-trophy"></i> {{ _('Rank')}}: </strong>
+    {% if private %}
+        <a href="{{url_for('leaderboard.index')}}">
+        {% endif %}
+        {% if not settings %}
+        {{ user.rank }} {{_('of')}} {{user.total}} {{ _('with a Score of')}} {{user.score}} {{ _('contributed tasks')}}
+        {% else %}
+        {{ user.rank }}
+        {% endif %}
+        {% if private %}</a>{% endif %}
+    {% else %}
+    <p><strong><i class="fa fa-trophy"></i> {{ _('Rank') }}: </strong>{{ _('The user has not contributed to any tasks yet') }}</p>
+    {% endif %}
+
+{% if not private %}
+<p><strong><i class="fa fa-time"></i> {{ _('Joined') }}: </strong>{{ user.created[0:10]}}</p
+{% endif %}
+
+{% if settings %}
+<p><strong><i class="fa fa-key"></i> {{ _('API key') }}: </strong>{{ user.api_key }}</p>
+{% endif %}
+
+{% if private and not settings%}
+<a href="{{ url_for('account.update_profile', name=user.name) }}" class="btn btn-primary"><i class="icon fa fa-user"></i> {{ _('Edit your profile') }}</a>
+{% endif %}
+{% endmacro %}
+
+{%- macro render_user_avatar_src(user, upload_method) %}
+    {%- if user.info.avatar %}
+        {%- if upload_method == 'rackspace'%}
+        {{ url_for('rackspace', filename=user.info.avatar, container=user.info.container)}} 
+        {%- else %}
+        {{url_for('uploads.uploaded_file', filename=(user.info.container + '/' + user.info.avatar))}}
+        {% endif -%}
+    {%- else %}
+        {{ url_for('static', filename='img/placeholder.user.png')}}
+    {% endif -%}
+{% endmacro -%}
+
+
+{% macro render_user_thumbnail(user, upload_method, id, class, style) %}
+    {% if user.info.avatar %}
+        {% if upload_method == 'rackspace'%}
+        <img id="{{id}}" class="{{class}}" style="{{style}}" src="{{ url_for('rackspace', filename=user.info.avatar, container=user.info.container)}}" onError="this.onerror=null;this.src='{{url_for('static', filename='img/placeholder.user.png')}}';">
+        {% else %}
+        <img id="{{id}}" class="{{class}}" style="{{style}}" src="{{ url_for('uploads.uploaded_file', filename=(user.info.container + '/' + user.info.avatar))}}" onError="this.onerror=null;this.src='{{url_for('static', filename='img/placeholder.user.png')}}';">
+        {% endif %}
+    {% else %}
+        <img id="{{id}}" class="{{class}}" style="{{style}}" src="{{ url_for('static', filename='img/placeholder.user.png')}}">
+    {% endif %}
+{% endmacro %}
+
+{% macro render_pagination(pagination) %}
+<ul class="pagination pagination-sm">
+  {% if pagination.has_prev %}
+  <li><a href="{{ url_for_other_page(pagination.page - 1)}}" rel="nofollow">&laquo; {{_('Prev')}}</a></li>
+  {% else %}
+  <li class="disabled"><a href="#">&laquo; {{_('Prev')}}</a></li>
+  {% endif %}
+
+  {%- for page in pagination.iter_pages() %}
+    {% if page %}
+      {% if page != pagination.page %}
+      <li>
+        <a href="{{ url_for_other_page(page) }}" rel="nofollow">{{ page }}</a>
+       </li>
+      {% else %}
+      <li class="active">
+          <a href="#">{{ page }}</a>
+      </li>  
+      {% endif %}
+    {% endif %}
+  {%- endfor %}
+  {% if pagination.has_next %}
+    <li>
+    <a href="{{ url_for_other_page(pagination.page + 1)
+      }}" rel="nofollow">{{_('Next')}} &raquo;</a>
+    </li>
+  {% endif %}
+</ul>
+{% endmacro %}
+
+
+{% macro render_avatar(user, upload_method, class, width) %}
+{% if user.info.avatar %}
+    {% if upload_method == 'rackspace'%}
+    <img class="{{class}}" width="{{width}}" src="{{ url_for('rackspace', filename=user.info.avatar, container=user.info.container)}}" onError="this.onerror=null;this.src='{{url_for('static', filename='img/placeholder.user.png')}}';">
+    {% else %}
+    <img class="{{class}}" width="{{width}}" src="{{ url_for('uploads.uploaded_file', filename=(user.info.container + '/' + user.info.avatar))}}" onError="this.onerror=null;this.src='{{url_for('static', filename='img/placeholder.user.png')}}';">
+    {% endif %}
+{% else %}
+<img class="{{class}}" width="{{width}}" src="{{url_for('static', filename='img/placeholder.user.png')}}">
+{% endif %}
+{% endmacro %}

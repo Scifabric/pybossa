@@ -1,0 +1,33 @@
+#pybossa-notification {
+  position: fixed;
+  top:0;
+  z-index: 100;
+  width: 100%;
+  text-align: center;
+  padding: 15px;
+  color: white;
+  text-transform: uppercase;
+  transform: translateY(-150px);
+  span {
+      display: inline-block;
+      padding-top: 5px;
+  }
+}
+
+.show-notification {
+    animation: slideDown 0.5s 0.0s 1 ease forwards;
+}
+
+.hide-notification {
+    animation: slideUp 1s 0.0s 1 ease forwards;
+}
+
+@keyframes slideDown {
+    0% {transform: translateY(-150px);}
+    100% { transform: translateY(60px); }
+}
+
+@keyframes slideUp {
+    0% {transform: translateY(60px);}
+    100% { transform: translateY(-150px); }
+}

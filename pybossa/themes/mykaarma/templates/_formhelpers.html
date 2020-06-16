@@ -1,0 +1,52 @@
+{% macro render_field(field, label_visible=true) -%}
+     <div class="form-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+        {% if field.type != 'HiddenField' and field.type != 'CSRFTokenField' and label_visible and field.name != 'id' and field.name != 'form_name' %}
+            <label for="{{ field.id }}" class="control-label">{{ field.label }}</label>
+        {% endif %}
+        {{ field(class_='form-control', **kwargs) }}
+        {% if field.errors %}
+            {% for e in field.errors %}
+                <p class="help-block">{{ e }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{% macro render_checkbox_field(field) -%}
+    <div class="checkbox">
+        <label>
+            {{ field(type='checkbox', **kwargs) }} {{ field.label }}
+        </label>
+    </div>
+{%- endmacro %}
+
+{% macro render_radio_field(field) -%}
+    {% for value, label, _ in field.iter_choices() %}
+        <div class="radio">
+            <label>
+                <input type="radio" name="{{ field.id }}" id="{{ field.id }}" value="{{ value }}">{{ label }}
+            </label>
+        </div>
+    {% endfor %}
+{%- endmacro %}
+
+{% macro render_form(form, form_id="", action_url='', action_text='Submit', class_='', btn_class='btn btn-default', btn_name=None, btn_value=None) -%}
+ 
+    <form id="{{form_id}}" method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}">
+        {{ form.hidden_tag() if form.hidden_tag }}
+        {% if caller %}
+            {{ caller() }}
+        {% else %}
+            {% for f in form %}
+                {% if f.type == 'BooleanField' %}
+                    {{ render_checkbox_field(f) }}
+                {% elif f.type == 'RadioField' %}
+                    {{ render_radio_field(f) }}
+                {% else %}
+                    {{ render_field(f) }}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        <button type="submit" name="{{btn_name}}" value="{{btn_value}}" class="{{ btn_class }}">{{ action_text }} </button>
+    </form>
+{%- endmacro %}

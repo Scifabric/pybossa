@@ -1,0 +1,39 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project = project.short_name %}
+{% import "projects/_helpers.html" as helper %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<style type="text/css">
+.selected {
+    background-color: #D4D4D4;
+}
+</style>
+<h3>{{_('From Youtube')}}</h3>
+<br>
+<span class="help-inline"> {{ _('Please provide a URL to a Youtube playlist with videos for') }} {{ active_project }}.
+</span>
+<br>
+<div id="objects-container" class="row">
+    <ul id="objects"></ul>
+</div>
+<form class="form-group" method="post" action="{{ url_for(target, short_name=project.short_name) }}">
+    <fieldset>
+        {{ form.hidden_tag() }}
+        {{ render_field(form.playlist_url, placeholder=_("URL of a Youtube Playlist")) }}
+    </fieldset>
+    <input id="submit" type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+</form>
+{% endblock %}
+{% block extrajs %}
+<script>
+    $("#submit").off('click').on('click', function(){
+            var msg = "{{_('Importing data...')}}";
+            pybossaNotify(msg, true, "loading");
+            });
+</script>
+{% endblock %}

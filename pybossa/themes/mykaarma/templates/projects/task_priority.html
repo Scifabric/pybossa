@@ -1,0 +1,27 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link  = "tasks" %}
+{% set section = _('Task Priority') %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<p>{{_('You can change the')}}
+<strong>{{_('priority')}}</strong> {{_('of one or more tasks,
+providing a list of task IDs separated by commas. The lowest
+priority is')}} <span class="badge badge-warning">0.0</span>
+{{_('and the highest priority is')}} <span class="badge badge-info">1.0</span>.</p>
+<p><span class="label label-info">
+    {{_('Important')}}</span> {{_('The priority value is only
+respected by the')}} <strong>{{_('default scheduler')}}</strong>.</p>
+<form id="task_priority" method="post" action="{{ url_for('project.task_priority', short_name=project.short_name) }}">
+    {{ form.hidden_tag() }}
+    <fieldset>
+        {{ render_field(form.task_ids, class_="span4",
+        placeholder=_('Comma separated Task.IDs i.e.: 3, 532, 100'))}}
+        {{ render_field(form.priority_0, class_="span4", placeholder=_('Priority value between 0.0 and 1.0'))}}
+        <div class="form-actions">
+            <input type="submit" value={{_('Change Priority')}} class="btn btn-primary" />
+        </div>
+    </fieldset>
+</form>
+{% endblock %}

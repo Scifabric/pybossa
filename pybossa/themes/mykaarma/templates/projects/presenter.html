@@ -1,0 +1,52 @@
+{% extends "/base.html" %}
+{% set active_page = "projects"  %}
+{% set active_project = project.short_name %}
+{% set jstop = True %}
+
+{% block content %}
+{% assets filters="jsmin", output="js/gen/full.min.js",
+          "js/vendor/jquery-2.2.3.js", "js/vendor/bootstrap.js", 
+          "js/vendor/modernizr.min.js", "js/flashmessages.js", 
+          "js/vendor/cookieconsent.min.js",
+          "js/pybossa/pybossa.js",
+          "js/pybossa-player/dist/pybossa-player.min.js"
+          %}
+          <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+{% endassets %}
+<script>
+    Modernizr.load({
+        test: window.JSON,
+        nope: '{{url_for('static', filename='js/vendor/json2.min.js')}}'
+});
+</script>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1><a href="{{url_for('project.details', short_name=project.short_name)}}">{{ project.name }}</a>: {{ _('Contribute') }}</h1>
+        </div>
+    </div>
+    {% if invite_new_volunteers %}
+    <div class="row">
+        <div class="col-md-12">
+            <p>
+            {{ _("Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!") }}
+            </p>
+        </div>
+    </div>
+    {% endif %}
+    {{ project.info.task_presenter|safe }}
+
+    <div id='PYBOSSA_USER_LOCALE' hidden>
+        {% if current_user.is_anonymous %}
+        en
+        {% else %}
+        {{ current_user.locale }}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block extrajs %}
+{% include "_flash_messages.html" %}
+{% endblock %}
+

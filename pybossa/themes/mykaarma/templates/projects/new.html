@@ -1,0 +1,42 @@
+{% extends "/base.html" %}
+{% set active_page = "create" %}
+{% set active_link  = "projects" %}
+{% import "account/_helpers.html" as helper %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+ 
+<section class="account profile">
+<div id="app-form" class="container">
+    <div class=" col-sm-3 col-md-3 ">
+        {{ helper.render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="col-sm-9 col-md-9">
+        <h2><strong>{{ _('Project') }}</strong>: {{ _('Create a new project') }}</h2>
+        <form class="" method="post" action="{{ url_for('project.new')}}" enctype="multipart/form-data"}}>
+        {{ form.hidden_tag() }}
+        <fieldset>
+            {{ render_field(form.name, class_="span4", placeholder=_('The name of the project')) }}
+            {{ render_field(form.short_name, class_="span4", placeholder=_('Short name or slug for the project'), label_text=_('Project slug:')) }}
+            {{ render_field(form.long_description, class_="span4", rows="13", placeholder=_('Explain your project
+· Why? Why you are creating this project, what you want to achieve with it
+· How? Explain how your project works
+· How you can help: Explain to the volunteers how they can help and contribute to the goal of your project
+· Will you help make a difference? Explain to the volunteers why their contribution is essential and how the result of your project can help change things!
+
+(you can use Markdown to give format to your description!)')) }}
+            <div class="form-actions">
+                <input type="submit" value={{_('Create the project')}} class="btn btn-primary" />
+                <a href="{{url_for('account.profile', name=current_user.name)}}" class="btn btn-default">{{_('Cancel')}}</a>
+            </div>
+        </fieldset>
+    </form>
+    </div>
+</div>
+</section>
+<script>
+    $("span[rel='tooltip']").tooltip();
+    $("i[rel='tooltip']").tooltip();
+</script>
+<script src="{{url_for('static', filename='js/forms.js')}}" type="text/javascript"></script>
+{% endblock %}

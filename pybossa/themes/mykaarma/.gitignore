@@ -1,0 +1,14 @@
+*.un~
+*.swp
+templates/custom_footer.html
+templates/home/_other_projects.html
+templates/home/custom_text.html
+templates/custom/*
+_ga.html
+_gcs.html
+_gcs_form.html
+static/.webassets-cache/*
+static/css/gen/*
+static/js/gen/*
+*.sublime-*
+static/src/node_modules/*

@@ -1,0 +1,51 @@
+{% extends "admin/base.html" %}
+{% from "admin/_helpers.html" import render_admin_user, render_announcement%}
+
+{% block rightbody %}
+<div class="container">
+    <div class="col-sm-8 col-md-8">
+        <h1>Announcements</h1>
+        <div style="margin-bottom: 15px;">
+        <a class="btn btn-warning" href="{{url_for('admin.new_announcement')}}">Create a new Announcement</a>
+        </div>
+
+        {% if announcements %}
+        <div class="row">
+            {% for announcement in announcements | sort(attribute='updated', reverse=True) %}
+            <div class="col-sm-9">
+                <div id="{{announcement.id}}" class="thumbnail card">
+
+                    {% if announcement.media_url %}
+                    <div class="post-pic" style="background: rgb(0, 151, 167) url({{announcement.media_url}}) no-repeat center top; background-size: cover;">
+                    </div>
+                    {% endif %}
+                    <div class="caption">
+                        <h3>{{announcement.title}}</h3>
+                        {% if announcement.published == False %}
+                        <span class="label label-info">DRAFT</span>
+                        {% endif %}
+                        <p>{{announcement.body | markdown | truncate(200)}}</p>
+                        <div class="row">
+                            <div class="col-xs-12">
+                            <a class="btn btn-primary pull-left" rel="nofollow" href="{{url_for('admin.update_announcement', id=announcement.id)}}">Edit</a>
+                            <form class="form-horizontal" method="post" action="{{ url_for('admin.delete_announcement', id=announcement.id) }}" onsubmit="return confirm('Do you really want to delete this announcement?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <div class="form-actions">
+                                        <input type="submit" value={{_('Delete')}} class="btn btn-danger pull-right" />
+                                    </div>
+                            </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+            <h1>{{ _('Sorry! No posts so far.') }}</h1>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

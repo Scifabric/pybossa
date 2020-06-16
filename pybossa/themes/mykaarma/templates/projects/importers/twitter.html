@@ -1,0 +1,54 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<h3>{{_('From a Twitter hashtag or account')}}</h3>
+{% if not current_user.info.get('twitter_token') %}
+<div class="alert">
+    <p>
+    {{ _('You can provide your own Twitter credentials and make API requests in behalf of them, or use the credentials provided by us. (The later only allows to import the number of tweets returned by a single Twitter API call, which is 100 for searches and 200 for user timelines.)') }}
+    </p>
+</div>
+<a href="{{ url_for('twitter.login', next=url_for(target, short_name=project.short_name, type='twitter'), no_login=1) }}" class="btn btn-default choice">{{ _("I'll use my credentials") }}</a>
+<a class="btn btn-default choice">{{ _("I'll use credentials provided by the platform") }}</a>
+<form method="post" action="{{ url_for(target, short_name=project.short_name) }}" style="display:none;">
+    {% else %}
+    <form method="post" action="{{ url_for(target, short_name=project.short_name) }}">
+        {% endif %}
+        <fieldset>
+            {{ form.hidden_tag() }}
+            <span class="help-inline">
+                {{_('Please provide the source of your tweets. It can be a "#hashtag", a regular "word" for search or a "@user_account" from where to import them')}}.
+                <br />
+                {{ _('For more information, please look at') }}
+                <a href="http://docs.pybossa.com/user/overview/#importing-the-tasks-from-a-twitter-account-or-search-result" target="_blank">{{ _('the documentation') }}.</a>
+            </span>
+            {{ render_field(form.source, placeholder=_('#hashtag or @user or something else')) }}
+            {{ render_field(form.max_tweets) }}
+            {% if current_user.info.get('twitter_token') %}
+            {{ form.user_credentials(value=current_user.info.get('twitter_token') | tojson, type='hidden') }}
+            {% endif %}
+            <div class="form-actions">
+                <input id="submit" type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+            </div>
+        </fieldset>
+    </form>
+{% endblock %}
+{% block extrajs %}
+<script>
+$("#submit").off('click').on('click', function(){
+        var msg = "{{_('Importing data...')}}";
+        pybossaNotify(msg, true, "loading");
+        });
+$('.choice').on('click', function(evt){
+        var $btn = $(this);
+        $('.choice').hide();
+        $('form').show();
+        })
+</script>
+{% endblock %}

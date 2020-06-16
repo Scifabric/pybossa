@@ -1,0 +1,47 @@
+{% extends "/base.html" %}
+{% set active_page = "leaderboard" %}
+{% set active_project  = "all" %}
+{% import "privacy/locked.html" as privacy %}
+
+
+{% block content %}
+<section class="stats leaderboard">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                {% if enforce_privacy and (current_user.is_anonymous or (current_user.is_authenticated and not current_user.admin)) %}
+                {{ privacy.render_lock_page() }}
+                {% else %}
+                <h1><i class="icon-trophy"></i> <strong>{{_('Community Leaderboard')}}</strong></h1>
+                <table class="table table-striped table-hover table-condensed">
+                    <thead>
+                        <tr>
+                            <th>{{ _('Rank') }}</th>
+                            <th>{{ _('Name') }}</th>
+                            <th>{{ _('Score') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in top_users %}
+                        {% if user.fullname == current_user.fullname %}
+                        <tr class="info">
+                            <td><strong>{{user.rank}}</strong></td>
+                            <td><strong><a style="color:white" href="{{url_for('account.profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
+                            <td><strong>{{user.score}}</strong></td>
+                        </tr> 
+                        {% else %}
+                        <tr>
+                            <td>{{user.rank}}</td>
+                            <td><strong><a href="{{url_for('account.profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
+                            <td>{{user.score}}</td>
+                        </tr> 
+                        {%endif%}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

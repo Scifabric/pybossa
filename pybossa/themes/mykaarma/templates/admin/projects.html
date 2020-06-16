@@ -1,0 +1,25 @@
+{% extends "admin/base.html" %}
+{% from "projects/_helpers.html" import render_grid_projects %}
+
+{% block rightbody%}
+<h1><strong>{{ _('Admin Site') }} :</strong> {{ _('Manage featured projects') }}</h1>
+<ul class="nav nav-pills nav-justified">
+    {% for c in categories %}
+    <li {% if loop.first %}class="active"{% endif %}>
+    <a href="#{{c.short_name}}" data-toggle="tab">{{c.name}}</a>
+    </li>
+    {% endfor %}
+</ul>
+<div class="tab-content">
+    {% for c in categories %}
+    <div {% if loop.first %}class="tab-pane active" {% else %} class="tab-pane" {% endif %} id="{{c.short_name}}">
+        {{ render_grid_projects(projects[c.short_name], "", upload_method, featured=True,title_class="col-md-12", container=False)}}
+    </div>
+    {% endfor %}
+</div>
+    </div>
+</div>
+{% endblock %}
+{% block extrajs %}
+{% include "admin/js/featured_projects.js" %}
+{% endblock %}

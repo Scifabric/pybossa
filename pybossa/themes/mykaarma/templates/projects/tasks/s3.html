@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('Amazon S3'), explanation=_('Use files from an Amazon S3 bucket'), link=url_for(target, short_name=project.short_name, type='s3'), link_action_text=_('Import data'), icon='amazon')}}

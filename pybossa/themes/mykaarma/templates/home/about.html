@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% set active_page = "about" %}
+
+{% block content %}
+    {% include ['custom/_about.html', 'home/_about.html'] ignore missing %}
+{% endblock %}

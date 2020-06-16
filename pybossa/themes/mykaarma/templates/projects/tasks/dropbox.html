@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('Dropbox'), explanation=_('Use files from your Dropbox account'), link=url_for(target, short_name=project.short_name, type='dropbox'), link_action_text=_('Import data'), icon='dropbox')}}

@@ -1,0 +1,2 @@
+{% from "projects/_helpers.html" import render_project_card_option %}
+{{ render_project_card_option(project, upload_method, title=_('Sound Pattern Recognition'), explanation=_('Re-use the sound template'), link=url_for('project.task_presenter_editor', short_name=project.short_name, template='sound'), link_action_text=_('Go'), icon='music')}}

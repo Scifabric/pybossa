@@ -1,0 +1,14 @@
+ul#albums {
+    padding: 0px;
+}
+ul#albums>li {
+    list-style: none;
+    padding-left: 0px;
+    margin-bottom: 25px;
+}
+
+ul#albums>li>p{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

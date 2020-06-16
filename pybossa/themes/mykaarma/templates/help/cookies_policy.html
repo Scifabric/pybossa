@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% set active_page = "help" %}
+
+{% block content %}
+{% include ['custom/_cookies_policy.html', 'help/_cookies_policy.html'] ignore missing %}
+{% endblock %}

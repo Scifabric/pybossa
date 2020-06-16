@@ -1,0 +1,33 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = "all" %}
+{% set active_link = "blog" %}
+{% block projectcontent %}
+<article>
+    <header>
+        {% if blogpost.media_url %}
+        <img class="img-responsive" src="{{blogpost.media_url}}"></img>
+        {% endif %}
+        <h2>{{ blogpost.title }}</h2>
+        <p>
+        <em>{{ _('Author: ') }} {{ blogpost.owner.name }}</em>
+        </br>
+        <em>{{ _('Written: ') }} {{ blogpost.created[0:10] }}</em>
+        </p>
+        <p>
+        <a href="{{url_for('project.show_blogposts', short_name=project.short_name)}}">{{_('Back')}}</a></p>
+    </header>
+    <body>
+        <p>{{ blogpost.body | e | markdown }}</p>
+    </body>
+</article>
+{% if current_user.is_authenticated and current_user.id in project.owners_ids or current_user.admin %}
+<form class="form-horizontal" method="post" action="{{ url_for('project.delete_blogpost', short_name=project.short_name, id=blogpost.id) }}" onsubmit="return confirm('Do you really want to delete the blog post?');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="form-actions">
+        <input type="submit" value={{_('Delete')}} class="btn btn-danger" />
+        <a href="{{url_for('project.update_blogpost', short_name=project.short_name, id=blogpost.id)}}" class="btn btn-default">{{_('Edit')}}</a>
+    </div>
+</form>
+{% endif %}
+{% endblock %}

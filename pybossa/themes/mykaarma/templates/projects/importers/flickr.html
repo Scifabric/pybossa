@@ -1,0 +1,69 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% import "projects/_helpers.html" as helper %}
+{% set active_link = 'tasks' %}
+{% set section = _('Import tasks') %}
+
+{% from "_formhelpers.html" import render_field %}
+
+{% block projectcontent %}
+<div class="row">
+    <div class="col-sm-12">
+        <h3>{{_('From a Flickr Album')}}</h3>
+        <a id="revoke" href="{{ url_for('flickr.logout', next=url_for(target, short_name=project.short_name, type='flickr')) }}" class="btn btn-warning pull-right" style="display:none;">{{ _('Revoke access') }}</a>
+        <br>
+        <div id="grant">
+            <p> {{ _('Grant access to your Flickr albums to select one...') }}</p>
+            <a href="{{ url_for('flickr.login', next=url_for(target, short_name=project.short_name, type='flickr')) }}" class="btn btn-default">{{ _('Log in Flickr') }}</a>
+        </div>
+        <div id="albums-container">
+            <ul id="albums"></ul>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <form method="post" action="{{ url_for(target, short_name=project.short_name) }}">
+            <fieldset>
+                {{ form.hidden_tag() }}
+                <span class="help-inline"> {{ _('Or manually provide the ID of a Flickr set with images for') }} {{ active_project }}. <br/> {{ _('For more information, please look at') }} <a href="http://docs.pybossa.com/user/overview/#importing-the-tasks-from-a-flickr-photo-set" target="_blank">{{ _('the documentation') }}.</a></span>
+                {{ render_field(form.album_id, placeholder="The ID of the Flickr set") }}
+                <div class="form-actions">
+                    <input id="submit" type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+    $("#submit").off('click').on('click', function(){
+            var msg = "{{_('Importing data...')}}";
+            pybossaNotify(msg, true, "loading");
+            });
+</script>
+<script type="text/javascript">
+    $(function() {
+            $.get('/flickr/albums').done(function(albums) {
+                if (albums.hasOwnProperty('length') && albums.length > 0) {
+                $('#revoke').show();
+                $('#grant').hide();
+                $('#albums-container').prepend('<p>'+"{{ _('Select one of your albums:') }}"+'</p>');
+                albums.forEach(function(album){
+                    var albumElement = $('<li class="col-md-2 col-sm-6 col-xs-12"><p>'+album.title+'</p><img class="img-responsive" src="'+album.thumbnail_url+'"><p class="small">'+album.photos+' {{ _('photos') }}</p><button id="'+album.id+'" class="btn btn-info btn-xs btn-album">{{ _('Select') }}</button></li>');
+                    $('#albums').append(albumElement);
+                    });
+                }
+                $(".btn-album").each(function(){
+                    $(this).off('click').on('click', function(evt){
+                        evt.preventDefault();
+                        document.getElementById('album_id').value = $(this).attr('id');
+                        });
+                    });
+                });
+            });
+</script>
+{% endblock %}

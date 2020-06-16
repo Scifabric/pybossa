@@ -1,0 +1,35 @@
+{% extends "projects/base.html" %}
+{% set active_link = "settings" %}
+{% set subtitle = _('Project Settings')%}
+{% from "projects/_helpers.html" import render_project_card_option %}
+
+{% block projectcontent %}
+<div class="row">
+    <div id="import_tasks" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Project details'), explanation=_('Edit the name, description, etc.'), link=url_for('project.update', short_name=project.short_name), link_action_text=_('Edit'), icon='info-circle')}}
+    </div>
+    <div id="export_tasks" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Task Settings'), explanation=_('Change the task settings: redundancy, priority, etc.'), link=url_for('project.task_settings', short_name=project.short_name), link_action_text=_('Settings'), icon='cog')}}
+    </div>
+</div>
+
+<div class="row">
+    <div id="import_tasks" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Delete the project'), explanation=_('Delete the project, tasks, task runs and answers.'), link=url_for('project.delete', short_name=project.short_name), link_action_text=_('Delete'), icon='trash')}}
+    </div>
+    <div id="export_tasks" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Blog'), explanation=_('Write a blog post about your project.'), link=url_for('project.new_blogpost', short_name=project.short_name), link_action_text=_('Write'), icon='pencil')}}
+    </div>
+</div>
+
+{% if current_user.admin or current_user.id in project.owners_ids %}
+<div class="row">
+    <div id="import_tasks" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Manage Co-owners'), explanation=_('Add/Remove Co-owners.'), link=url_for('project.coowners', short_name=project.short_name), link_action_text=_('Co-owners'), icon='user')}}
+    </div>
+    <div id="export_project" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Export Project Report'), explanation=_('Export project report'), link=url_for('project.export_project_report', short_name=project.short_name, type='project', format='csv'), link_action_text=_('CSV'), icon='cloud-download')}}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

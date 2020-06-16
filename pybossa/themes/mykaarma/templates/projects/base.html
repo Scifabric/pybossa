@@ -1,0 +1,43 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = "all" %}
+{% import "projects/_helpers.html" as helper %}
+{% from "account/_helpers.html" import render_pagination %}
+
+{% block content %}
+<div class="container">
+    {% if project %}
+    <div class="col-sm-3 col-md-3">
+        {{ helper.render_project_local_nav(project, active_link, current_user, pro_features) }}
+    </div>
+    <!-- Project -->
+    <div class="col-sm-9 col-md-9" style="min-height:400px">
+        <div class="row">
+            <div class="col-sm-8 col-md-8">
+                <h1>{{project.name}}</h1>
+                {% if section %}
+                <h2>{{section}}</h2>
+                {% endif %}
+            </div>
+            <div class="col-sm-4 col-md-4">
+                {{helper.render_contribute_button(project)}}
+            </div>
+        </div>
+        {% if active_link == 'info' %}
+        <p><em>{{ overall_progress | round | int }}% {{_('completed')}}</em></p>
+        {% endif %}
+        {% block projectcontent %}{% endblock %}
+        <div id="ckan" style="display:none">
+        <h2>Data repository: {{ ckan_name | default('CKAN server') }}</h2>
+        <p><i class="icon-bar-chart" style="font-size:16px;"></i> <a href="{{ckan_url}}/dataset/{{project.short_name}}">Preview the data</a>
+        </p>
+        <p id="ckan_license" style="display:none"><strong>Data License</strong>: <span id="ckan_license_value"></span></p>
+        </div>
+    </div>
+    {% else %}
+    <div class="page-header">
+        <h1>{{ _('Sorry! This project does not exist.') }}</h1>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

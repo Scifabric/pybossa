@@ -1,0 +1,36 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% set active_link = "tasks" %}
+{% set section = _("Import Tasks") %}
+
+{% block projectcontent %}
+<p>{{_('Use one of the following available')}}
+<strong>{{_('importers')}}</strong> {{_('to import tasks...')}}</p>
+{% for row in available_importers|batch(2) %}
+<div class="row">
+    {% for importer in row %}
+    <div class="col-md-6">
+        {% include importer %}
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+<div class="row">
+    <div class="col-md-12">
+        <p>{{_('... or import a set of') }} <strong>{{_('template tasks')}}</strong> {{ ('for any of the template projects.')}}</p>
+    </div>
+</div>
+{% for row in task_tmpls|batch(2) %}
+<div class="row">
+    {% for task_tmpl in row %}
+    <div class="col-md-6">
+        {% include task_tmpl %}
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="account validation">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                <h1>{{ _('Just one more step, please') }}</h1>
+                <p>{{ _("In order to confirm your identity, we've sent an email to the address you just provided. Please, check it out and click on the link you'll find to create your account at") }} {{ config.BRAND }}.</p>
+                <p>{{ _("If you are not receiving the email, please check the junk folder. If it's not there please drop us an email to") }} <a href="mailto:{{contact_email}}">{{ contact_email }}</a>.</p>
+                <p>{{ _("In the meantime, you can check some of the amazing") }} <a href="{{url_for('project.index')}}">{{ _('projects') }}</a> {{ _('and contribute to them as anonymous') }}.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

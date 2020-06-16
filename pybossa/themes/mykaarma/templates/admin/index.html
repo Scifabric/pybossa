@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% from "projects/_helpers.html" import render_project_card_option %}
+
+{% block rightbody %}
+<h2>{{ _('Admin Site') }}</h2>
+<div class="row">
+    <div id="dashboard" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Dashboard'), explanation=_('Internal statistics'), link=url_for('admin.dashboard'), link_action_text=_('Go'), icon='info')}}
+    </div>
+    <div id="backgroundjobs" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Background Jobs'), explanation=_('Monitor background jobs'), link=url_for('rq_dashboard.overview'), link_action_text=_('Monitor'), icon='search')}}
+    </div>
+</div>
+<div class="row">
+    <div id="featured-apps" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Featured Projects'), explanation=_('Show projects on the front page'), link=url_for('admin.featured'), link_action_text=_('Manage'), icon='star')}}
+    </div>
+    <div id="categories" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Categories'), explanation=_('Manage project categories'), link=url_for('admin.categories'), link_action_text=_('Manage'), icon='check')}}
+    </div>
+</div>
+<div class="row">
+    <div id="users" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Administrators'), explanation=_('Manage administrators'), link=url_for('admin.users'), link_action_text=_('Manage'), icon='user')}}
+    </div>
+    <div id="users-list" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Users'), explanation=_('Export a list of users'), link=url_for('admin.export_users', format='csv'), link_action_text=_('CSV'), link_two=url_for('admin.export_users', format='json'), link_action_text_two=_('JSON'), icon='user')}}
+    </div>
+</div>
+<div class="row">
+    <div id="users" class="col-md-6">
+        {{ render_project_card_option(project, upload_method, title=_('Announcement'), explanation=_('Write new announcement'), link=url_for('admin.announcement'), link_action_text=_('Manage'), icon='user')}}
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <h4>{{_('Latest news from PyBossa')}}</h4>
+        <ul class="news">
+            {% for new in news %}
+            <li><strong>{{new.updated[0:10]}}</strong> {% if 'github' in new.links[0].href %} <span class="label label-info">{{_('New PyBossa version')}}</span> {% else %} <span class="label label-default">{{_('New SciFabric Blog Post')}}</span> {% endif %}<a target="_blank" href="{{new.links[0].href}}">{{new.title}}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

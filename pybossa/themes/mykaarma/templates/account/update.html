@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "settings" %}
+{% import "account/_helpers.html" as helper %}
+{% from "projects/_helpers.html" import broken_image %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field, render_form %}
+<section class="account update">
+    <div class="container">
+        <div class="col-sm-3 col-md-3">
+            {{ helper.render_account_local_nav(current_user, active_link) }}
+        </div>
+        <div class="col-sm-9 col-md-9">
+            <section class="account update profile">
+                <h1>{{ _('Update your profile') }}</h1>
+
+                {{ render_form(form, action_url=url_for('account.update_profile', name=current_user.name), action_text=_('Save the changes'), btn_class='btn btn-primary', btn_name='btn', btn_value='Profile')}}
+
+            </section>
+            <section class="account update avatar">
+                <h2>{{_('Update your avatar')}}</h2>
+                <div>
+                    <img id="uploadPreview" style="max-width: 100%">
+                </div>
+                <form method="post" action="{{ url_for('account.update_profile', name=current_user.name) }}" enctype="multipart/form-data">
+                    <fieldset>
+                        <div class="col-md-2 img-thumbnail">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        </div>
+                        {{ render_field(upload_form.avatar, onchange="previewImage()", label_visible=False) }}
+                        {{ upload_form.x1 }}
+                        {{ upload_form.y1 }}
+                        {{ upload_form.x2 }}
+                        {{ upload_form.y2 }}
+                        <div class="form-actions">
+                            <button type="submit" name='btn' value="Upload" class="btn btn-primary"/>{{ _('Upload') }}</button>
+                        </div>
+                    </fieldset>
+                </form>
+            </section>
+            {% if show_passwd_form %}
+            <section class="account update password">
+                <h2 {% if password_form.errors %} name="password" {%endif%}>{{ _('Change your Password') }}</h2>
+
+                {{ render_form(password_form, action_url=url_for('account.update_profile', name=current_user.name), action_text=_('Save the changes'), btn_class='btn btn-primary', btn_name='btn', btn_value='Password')}}
+            </section>
+            {% endif %}
+
+            <section class="account update external-services">
+                <h2>External Services</h2>
+                <form method="post" action="{{ url_for('account.update_profile', name=current_user.name) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    {{ render_field(form.ckan_api) }}
+                    <div class="form-actions">
+                        <button type="submit" name='btn' value="External" class="btn btn-primary" />{{ _('Save the changes') }}</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="account update apikey">
+                <h2>{{ _('Do you want to reset your personal API Key?') }}</h2>
+                <form method="post" action="{{ url_for('account.reset_api_key', name=current_user.name)}}">
+                    <div class="form-actions">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <button type="submit" class="btn btn-primary" value="Reset">{{_('Yes')}}</button>
+                    </div>
+                </form>
+            </section>
+            <section class="account delete">
+                <h2>{{_('Export your data')}}</h2>
+                <p>
+                    {{ _('We will get an email when the data is available to download. You will get access to your personal data, your contributions and the projects you have created') }}
+                </p>
+                <div class="form-group">
+                    <a class="btn btn-primary" style="margin-top:10px;" href="{{url_for('account.start_export', name=current_user.name)}}">{{_('Export your data')}}</a>
+                </div>
+            </section>
+            <section class="account delete">
+                <h2>{{_('Delete your account')}}</h2>
+                <div class="alert alert-danger">
+                    <strong>{{ _('Danger Zone!') }}</strong> {{ _('By deleting your account, all your personal data will be removed from the server and third party services. Your contributions will be anonymized. This operation cannot be undone!') }}
+                </div>
+                <div class="form-group">
+                    <input onkeyup="checkEmail(this.value)" class="form-control" id="delete" placeholder="Type your email to confirm that you want to delete it.">
+                    <a id="deleteTrue"  class="btn btn-primary" style="margin-top:10px; display:none;" href="{{url_for('account.delete', name=current_user.name)}}">{{_('Delete')}}</a>
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+<script>
+    var pybossaAvatarAspectRatio = 1 / 1;
+function checkEmail (txt) {
+    if (txt === '{{ current_user.email_addr}}') {
+        document.getElementById('deleteTrue').style.display='block';
+    } else {
+        document.getElementById('deleteTrue').style.display='none';
+    }
+}
+
+</script>
+<script src="{{url_for('static', filename='js/vendor/cropper.min.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='css/cropper.min.css')}}" type="text/css" />
+<script src="{{url_for('static', filename='js/image_crop.js')}}" type="text/javascript"></script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "/base.html" %}
+{% set active_page = "projects" %}
+{% import "projects/_helpers.html" as helper %}
+
+{% block content %}
+{% if project %}
+  <div class="container">
+      <div class="col-md-3">
+          {{ helper.render_project_local_nav(project, 'settings', current_user, pro_features) }}
+      </div>
+    <div class="col-md-9">
+        <h1><strong>{{project.name}}</strong>: {{ _('Publish the project') }}</h1>
+        <div class="alert alert-danger">
+            <strong>{{ _('Please read carefully!') }}</strong>
+            <p>{{ _('You are about to publish your project. This CANNOT be undone! Once your project has been published, people will be able to contribute to it. All the taskruns (answers) that may have been created during the test phase will be flushed and your project will start fresh.') }}</p>
+            <p>{{ _('That means that your project should be working properly, so please make sure it does. Otherwise you can work on it and publish it once it works fine.') }}</p>
+        </div>
+        <form class="form-horizontal" method="post" action="{{ url_for('project.publish', short_name = project.short_name) }}">
+        <fieldset>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <h3><strong>{{ _('Are you sure you want to publish this project?') }}</strong></h3>
+            <div class="form-actions">
+              <input type="submit" class="btn btn-sm" value="{{ _('Yes, publish it') }}"/>
+              <a href="{{ url_for('project.settings', short_name = project.short_name) }}" class="btn btn-lg btn-primary">{{ _('No, do not publish it!') }}</a>
+            </div>
+    </div>
+  </div>
+{% else %}
+  <div class="page-header">
+    <h1>{{ _('Sorry! This project does not exist.') }}</h1>
+  </div>
+{% endif %}
+{{ helper.broken_image() }}
+{% endblock %}

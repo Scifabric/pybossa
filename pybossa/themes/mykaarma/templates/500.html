@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set active_page = "support" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Ooops, Something's wrong</h1>
+            <p class="lead">It looks as though we have broken something on our system, sorry</p>
+            <p class="lead">We will try to fix it as soon as we can!</p>
+
+            <a id="btnHome" href="{{url_for('home.home')}}" class="btn btn-lg" style="display:none;"> 
+                <i class="icon-home"></i>
+                Go Home
+            </a>
+            <a id="btnBack" href="#" class="btn btn-lg" onclick="history.back()" style="display:none;"> 
+                <i class="icon-arrow-left"></i>
+                Go Back</a>
+        </div>
+    </div>
+</div>
+<script>
+    console.log(history.length);
+    if (history.length > 1) {
+        $("#btnBack").show();
+    }
+    else {
+        $("#btnHome").show();
+    }
+
+</script>
+{% endblock %}

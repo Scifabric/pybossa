@@ -1,0 +1,47 @@
+{% from "_formhelpers.html" import render_form %}
+{% macro render_upref_mdata(user, form, can_update, input_form) %}
+<div class="user-metadata">
+    {% if form.data %}
+        {% if form.data.languages %}
+            <p><strong>Language(s):</strong> {{form.data.languages|join(', ') }}</p>
+        {% endif %}
+        {% if form.data.locations %}
+            <p><strong>Location(s):</strong> {{form.data.locations|join(', ') }}</p>
+        {% endif %}
+        {% if form.data.work_hours_from %}
+            <p><strong>Available:</strong> {{form.data.work_hours_from}} - {{form.data.work_hours_to}} {{form.data.timezone}}</p>
+        {% endif %}
+        {% if form.data.user_type %}
+            <p><strong>User Type:</strong> {{form.data.user_type}}</p>
+        {% endif %}
+        {% if form.data.review %}
+            <p><strong>Review:</strong> {{form.data.review}}</p>
+        {% endif %}
+        {% if form.data.admin %}
+            <h5><small>Submitted by: @{{form.data.admin}} {{form.data.time_stamp}}</small></h5>
+        {% endif %}
+    {% endif %}
+    {% if form.data and not form.data.languages and not form.data.locations and not form.data.work_hours_from and not form.data.work_hours_to and not form.data.user_type %}
+            <div class="text-center", id="no-info-text">
+                <h4><b>There is no user preference/metadata information to display</b></h4>
+            </div>
+    {% endif %}
+    {% if can_update %}
+    <div class="text-center">
+        <button id="edit-button" class="btn btn-info btn-large" >Edit</button>
+    </div>
+    <div class="col-md-offset-15 col-md-10">
+        <div class="text-center">
+            <div id="input-form" {% if not input_form %} class="hidden" {% endif %} >
+                <div class="help-tip">
+                    <p>Non Chrome users should input time in <u>military format</u> ex. 13:30</p>
+                </div>
+                {{ render_form(form, action_url=url_for('account.add_metadata',name=user.name), btn_class="btn btn-info btn-block") }}
+                &nbsp;
+                <a href="{{url_for('account.profile', name=user.name)}}" class="btn btn-default btn-block">{{ _('Cancel') }}</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

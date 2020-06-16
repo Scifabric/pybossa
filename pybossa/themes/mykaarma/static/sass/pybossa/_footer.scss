@@ -1,0 +1,130 @@
+footer {
+    background-color: $grey-bg;
+    color: white;
+    padding:100px 0 80px ;
+    margin:0;
+    margin-top: 25px;
+}
+
+footer .col-md-2 p:first-child
+{ margin-top: 12px;
+  padding-bottom: 30px;
+}
+
+footer p{
+    color: $semi-white;
+    margin-bottom: 2px;
+}
+
+footer p strong {
+    color: $white;
+}
+
+footer a,{
+    color: $semi-white;
+}
+
+footer a:hover{
+    color: $white;
+}
+
+footer .logo_horiz {
+    width: 40%;
+    margin-bottom: 15px;
+}
+
+footer .logo_sf {
+    margin-top: 10px;
+    width: 40%;
+    opacity: .7;
+}
+
+
+#go-to-top {
+    z-index:999;
+    position:fixed;
+    display:block;
+    background-color: white;
+    right:40px;
+    border-radius:4px 4px 0 0;
+    bottom:-90px;
+    -webkit-box-shadow: 0px -1px 1px 1px rgba(0, 0, 0, 0.1);
+    -moz-box-shadow:    0px -1px 1px 1px rgba(0, 0, 0, 0.1);
+    box-shadow:         0px -1px 1px 1px rgba(0, 0, 0, 0.1);
+    transition: bottom .2 ease;
+    -webkit-transition: bottom .3s ease;
+    -o-transition: bottom .3s ease;
+    transition: bottom .3s ease;
+}
+#go-to-top.none {
+    bottom:0;
+}
+#go-to-top a {
+    display:inline-block !important;
+    padding:13px 15px 10px 15px;
+}
+#go-to-top a:hover {
+    padding:13px 15px 22px 15px;
+}
+#go-to-top a:hover,
+#go-to-top a:focus,
+#go-to-top a:active {
+    text-decoration:none;
+}
+
+.credits-handler,
+.credits {
+    margin-top: 20px;
+    font-size: 12px;
+}
+
+.credits {
+    max-height: 0px;
+    overflow: hidden;
+}
+
+.show-credits {
+    max-height: 500px;
+    transition: max-height 450ms cubic-bezier(0.55, 0.085, 0.68, 0.53) 0s;
+}
+
+.show-credits .col-md-6 {
+    height: 150px;
+}
+
+.credits h6 {
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 0px;
+}
+
+
+.credits a {
+    font-size: 12px;
+}
+
+.dev-and-host{
+    margin-top: 7px;
+}
+
+@media(max-width:360px) {
+    footer {
+        .credits h6 {
+            margin-top: 16px;
+        }
+    }
+}
+
+@media(max-width:768px) {
+    footer .col-sm-4 {
+        margin-top: 50px;
+    
+    }
+    footer{
+        text-align: center;
+    }
+
+    footer .col-sm-4 p:first-child {
+    padding-bottom: 15px;
+    }
+}

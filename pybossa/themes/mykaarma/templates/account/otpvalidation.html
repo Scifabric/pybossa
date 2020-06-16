@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="account otp">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-offset-4 col-md-4" style="margin-top:10px;">
+        <h1>Welcome, {{ user.fullname }}</h1>
+        {% from "_formhelpers.html" import render_field %}
+        <form id="otpvalidation" method="post" class="form-horizontal" action="{{url_for('account.otpvalidation', token=token, next=next)}}">
+          {{form.hidden_tag()}}
+          <p>Please enter the One Time Password(OTP) sent to your email: {{user.email_addr}}</p>
+          {{ render_field(form.otp, placeholder="") }}
+          <div class="form-actions">
+            <input type="submit" value="{{ _('Verify OTP') }}" class="btn btn-primary btn-large" />
+            <input type="reset" value="{{ _('Cancel') }}" class="btn" />
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

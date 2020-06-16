@@ -1,0 +1,16 @@
+<div class="row">
+    <div class="col-md-12">
+        <h1><strong>{{project.name}}</strong>: {{_('Task Presenter Editor')}}</h1>
+        <p class="lead">{{_('Use one of the following available')}}
+        <strong>{{_('templates')}}</strong> {{_('for your project')}}
+    </div>
+</div>
+{% for column in presenters | batch(2)%}
+<div class="row">
+    {% for presenter_tmpl in column %}
+    <div class="col-md-6">
+      {% include presenter_tmpl %}
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}

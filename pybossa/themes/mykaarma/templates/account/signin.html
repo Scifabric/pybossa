@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="account signin">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-4 col-md-4" style="margin-top:10px;">
+                <h1>{{_('Sign in')}}</h1>
+                {% from "_formhelpers.html" import render_field, render_form %}
+                {{ render_form(form, form_id="signin", action_text=_('Sign in'), btn_class="btn btn-primary btn-block")}}
+                <p class="text-sm text-center" style="margin-top: 5px;">
+                <a href="{{ url_for('account.forgot_password') }}">{{ _('Forgot Password') }}</a>
+                </p>
+                <p class="text-center">{{_('Not registered?')}} <a href="{{ url_for('account.register') }}">{{_('Sign up for free now')}}</a></p>
+
+                <div id="ssnn" style="display: none;">
+                    {% if next is not none %}
+                    {% if auth.twitter %}
+                    <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info btn-ssnn"><i class="fa-twitter"></i> {{ _('Twitter') }}</a>
+                    {% endif %}
+                    {% if auth.facebook %}
+                    <a href="{{ url_for('facebook.login') }}" class="btn btn-primary btn-ssnn"><i class="fa fa-facebook"></i> {{ _('Facebook') }}</a>
+                    {% endif %}
+                    {% if auth.google %}
+                    <a href="{{ url_for('google.login') }}" class="btn btn-warning btn-ssnn"><i class="fa fa-google-plus"></i> {{ _('Google') }}</a>
+                    {% endif %}
+                    {% else %}
+                    {% if auth.twitter %}
+                    <a href="{{ url_for('twitter.login') }}" class="btn btn-info btn-ssnn"><i class="fa fa-twitter"></i> {{ _('Twitter') }}</a>
+                    {% endif %}
+                    {% if auth.facebook %}
+                    <a href="{{ url_for('facebook.login') }}" class="btn btn-primary btn-ssnn"><i class="fa fa-facebook"></i> {{ _('Facebook') }}</a>
+                    {% endif %}
+                    {% if auth.google %}
+                    <a href="{{ url_for('google.login') }}" class="btn btn-warning btn-ssnn"><i class="fa fa-google-plus"></i> {{ _('Google') }}</a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <p>
+
+                <span class="label label-warning"><i class="fa fa-bullhorn"></i> {{ _('Note') }}</span>
+                {{ _('By click the') }} <strong>{{ _('Sign in button') }}</strong> {{ _('below you are agreeing to
+                the') }} <a href={{url_for('help.tos')}}>{{ _('terms of use') }}</a> {{ _('and') }}
+                <a href={{data_use | safe}}>{{ _('data') }}</a>.
+
+                </p>
+        </div>
+    </section>
+<script>
+    if (localStorage.getItem('ageCheck')) {
+        document.getElementById('ssnn').style.display = 'block';
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% set active_page = "account" %}
+{% import "account/_helpers.html" as helper %}
+{% from "projects/_helpers.html" import render_grid_projects, broken_image %}
+{% import "privacy/locked.html" as privacy %}
+{% import "account/user_pref_metadata.html" as user_pref_metadata %}
+
+{% block content %}
+<section class="account public-profile">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8" style="margin-top:30px;">
+                {% if enforce_privacy and (current_user.is_anonymous or (current_user.is_authenticated and not current_user.admin)) %}
+                {{ privacy.render_lock_page() }}
+                {% else %}
+                <div class="text-center">
+                    {{helper.render_user_thumbnail(user, upload_method, class='col-xs-4 img-circle')}}
+                </div>
+                <div class="text-center">
+                    <h1 id="user-data">{{user.fullname}}</h1>
+                    {% if user.rank %}
+                    <h2><i class="fa fa-trophy"></i> {{ _('Rank')}}: {{user.rank}}</h2>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if config.upref_mdata %}
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                <div class="col-md-offset-15 col-md-10">
+                    {{ user_pref_metadata.render_upref_mdata(user, form, can_update, input_form) }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% if projects_created %}
+{{render_grid_projects(projects_created, "Created Projects", upload_method, id="created-projects")}}
+{% endif %}
+{% if projects %}
+{{render_grid_projects(projects, "Contributions", upload_method, id="contributed-projects")}}
+{% endif %}
+{% endif %}
+{{ broken_image() }}
+{% endblock %}
+{% block extrajs %}
+{% include "account/js/metadata.js" %}
+{% endblock %}

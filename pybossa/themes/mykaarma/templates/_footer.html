@@ -1,0 +1,41 @@
+<footer>
+    <div class="container-fluid scifabric">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-offset-4 col-sm-4 col-md-offset-0 col-md-4 "> 
+                    <p>Powered by</p>
+                    <a href="http://pybossa.com/?utm_source=PYBOSSA%20new%20server&utm_medium=server&utm_campaign=PYBOSSA%20new%20server"><img alt="SciFabric Logo" class="logo_horiz" src="{{ url_for('static', filename='img/pybossa.svg')}}"></a>
+                </div>
+                <div class="col-sm-offset-2 col-sm-4 col-md-offset-0 col-md-2 col-lg-2">
+
+                    <p><strong>{{ _('Resources') }}</strong></p>
+                    <p><a href="http://docs.pybossa.com">{{ _('Docs') }}</a></p>
+                    <p><a href="{{url_for('help.api')}}">API</a></p>
+                    <p><a href="{{url_for('help.tos')}}">{{ _('Terms of Use') }}</a></p>
+                    <p><a href="{{url_for('help.cookies_policy')}}">{{ _('Cookies Policy') }}</a></p>
+                    <p><a href="{{url_for('help.privacy')}}">{{ _('Privacy Policy') }}</a></p>
+                    <p><a href="{{ url_for('account.index')}}">{{ _('Community') }}</a></p>
+                    <p><a href="{{url_for('stats.index')}}">{{ _('Stats') }}</a></p>
+
+                </div>
+
+                <div class="col-sm-4 col-md-2 col-lg-2">
+
+                    <p><strong>{{_('Licenses')}}</strong></p>
+                    <p><a href="{{url_for('help.license')}}">{{ _('Overview') }}</a></p>
+                    <p><a href="{{url_for('help.license', _anchor='projects')}}">{{ _('Projects') }}</a></p>
+                    <p><a href="{{url_for('help.license', _anchor='data')}}">{{ _('Data') }}</a></p>
+                    <p><a href="{{url_for('help.license', _anchor='content')}}">{{ _('Content') }}</a></p>
+
+                </div>
+
+                <div class="col-sm-offset-2 col-sm-4 col-md-offset-0 col-md-2 col-lg-2">
+                    <p><strong>{{_('Social')}}</strong></p>
+                    <p><a href="https://www.facebook.com/PyBossa/">Facebook</a></p>
+                    <p><a href="http://twitter.com/PyBossa/">Twitter</a></p>
+                </div>
+            </div>
+        </div>
+    </div> 
+</footer>
+

@@ -1,0 +1,253 @@
+<style type="text/css">
+    #the-canvas {
+        cursor: move;
+    }
+</style>
+
+<div class="row skeleton">
+    <div id="question" class="col-md-12">
+      <h1>Question</h1>
+      <span class="label label-info"><i class="fa fa fa fa-bullhorn"></i> Important</span> <strong>This is just a demo project. You can re-use the code to create your own project.</strong>
+      <hr>
+    </div>
+</div>
+
+<div class="row skeleton">
+    <!-- Answer buttons -->
+    <div id="answer" class="col-md-12 col-lg-8" style="text-align:center;">
+        <div class="btn-group btn-group-sm" style="padding-bottom:5px;">
+            <button id="prevBtn" class="btn btn-navigate disabled" value="prev"><i class="fa fa-arrow-left"></i></button>
+            <button class="btn btn-zoom" value=0>1:1</button>
+            <button class="btn btn-zoom" value=1><i class="fa fa-white fa-search-plus"></i></button>
+            <button class="btn btn-zoom" value=-1><i class="fa fa-white fa-search-minus"></i></button>
+            <button id="nextBtn" class="btn btn-navigate" value="next"><i class="fa fa-arrow-right"></i></button>
+        </div>
+        <div id="pages" style="margin-top:2%;">
+          <p>Page <span id="currentPage">#</span> of <span id="totalPages">#</span></p>
+        </div>
+     </div>
+    <div class="col-md-12 col-lg-4">
+            <h5>Write here the transcription</h5>
+            <form class="form-inline">
+                <textarea id="text" rows="10" style="width:100%;"></textarea>
+            </form>
+            <button class="btn btn-submit btn-primary btn-sm">Submit transcription!</button>
+        <p>You are working now on task: <span id="task-id" class="label label-warning">#</span></p>
+        <p>You have completed: <span id="done" class="label label-info"></span> tasks from
+        <span id="total" class="label label-inverse"></span></p>
+        <div class="progress progress-striped">
+            <div id="progress" rel="tooltip" title="#" class="progress-bar" style="width: 0%;"></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+<script src="{{url_for('static', filename='js/pdf/scrollsync.js')}}"></script>
+<script src="{{url_for('static', filename='js/pdf/dragscrollable.js')}}"></script>
+<script src="{{url_for('static', filename='js/pdf/pdf.js')}}" type="text/javascript" ></script>
+<script src="{{url_for('static', filename='js/pdf/pdf.worker.js')}}" type="text/javascript" ></script>
+
+<script type="text/javascript">
+(function() {
+//
+// Disable workers to avoid yet another cross-origin issue (workers need the URL of
+// the script to be loaded, and currently do not allow cross-origin scripts)
+//
+PDFJS.disableWorker = true;
+
+//
+// Get page info from document, resize canvas accordingly, and render page
+//
+function renderPage(task) {
+  // Using promise to fetch the page
+  $("#currentPage").text(task.pageNum);
+  task.pdfDoc.getPage(task.pageNum).then(function(page) {
+    var viewport = page.getViewport(task.scale);
+    task.canvas.height = viewport.height;
+    task.canvas.width = viewport.width;
+
+    // Render PDF page into canvas context
+    var renderContext = {
+      canvasContext: task.ctx,
+      viewport: viewport
+    };
+    page.render(renderContext);
+  });
+}
+
+function zoom(task, v) {
+    task.pdfDoc.getPage(task.pageNum).then(function(page){
+        if (v === 1) {
+            task.scale = task.scale + 0.1;
+            if (task.scale >= 2) {
+                task.scale = 2;
+            }
+        }
+        if (v === -1) {
+            task.scale = task.scale - 0.1;
+            if (task.scale <= 0) {
+                task.scale = 0.1;
+            }
+        }
+        if (v === 0) {
+            task.scale = 0.8;
+        }
+        var viewport = page.getViewport(task.scale + 0.1);
+        task.canvas.height = viewport.height;
+        task.canvas.width = viewport.width;
+
+        // Render PDF page into canvas context
+        var renderContext = {
+          canvasContext: task.ctx,
+          viewport: viewport
+        };
+        page.render(renderContext);
+    });
+
+}
+
+function enableDisabledNavButtons(task){
+    if (task.pageNum === 1) {
+        $("#nextBtn").removeClass("disabled");
+        $("#prevBtn").addClass("disabled");
+    }
+    else if (task.pageNum === task.pdfDoc.numPages) {
+        $("#prevBtn").removeClass("disabled");
+        $("#nextBtn").addClass("disabled");
+    }
+    else {
+        $("#nextBtn").removeClass("disabled");
+        $("#prevBtn").removeClass("disabled");
+    }
+}
+
+function goPreviousPage(task) {
+    if (task.pageNum <= 1)
+        return;
+    task.pageNum--;
+    renderPage(task);
+    $("#currentPage").text(task.pageNum);
+    $("#totalPages").text(task.pdfDoc.numPages);
+    enableDisabledNavButtons(task);
+}
+
+function goNextPage(task) {
+    if (task.pageNum >= task.pdfDoc.numPages)
+        return;
+    task.pageNum++;
+    renderPage(task);
+    $("#currentPage").text(task.pageNum);
+    $("#totalPages").text(task.pdfDoc.numPages);
+    enableDisabledNavButtons(task);
+}
+
+function loadUserProgress() {
+    pybossa.userProgress('{{project.short_name}}').done(function(data){
+        var pct = Math.round((data.done*100)/data.total);
+        $("#progress").css("width", pct.toString() +"%");
+        $("#progress").attr("title", pct.toString() + "% completed!");
+        $("#progress").tooltip({'placement': 'left'}); 
+        $("#total").text(data.total);
+        $("#done").text(data.done);
+    });
+}
+
+function showPaginationOptions(task) {
+    if (task.pagination) {
+        $("#currentPage").text(task.pageNum);
+        $("#totalPages").text(task.pdfDoc.numPages);
+        $(".btn-navigate").show();
+        $("#pages").show();
+    }
+    else {
+        $(".btn-navigate").hide();
+        $("#pages").hide();
+    }
+}
+
+pybossa.taskLoaded(function(task, deferred){
+    if ( !$.isEmptyObject(task) ) {
+    console.log(task.info.page);
+    console.log(task.id);
+        if (task.state=='completed') {
+            $('#answer').hide();
+            $('#taskcompleted').show();
+        }
+        // NOTE: 
+        // Modifying the URL below to another server will likely *NOT* work. Because of browser
+        // security restrictions, we have to use a file server with special headers
+        // (CORS) - most servers don't support cross-origin browser requests.
+        // Asynchronously download PDF as an ArrayBuffer
+        var canvas = $("<canvas/>", {"id": "canvas_" + task.id});
+        // canvas.css("border", "1px solid black");
+        var viewport = $("<div/>", {"id": "viewport_" + task.id});
+        //viewport.css("width",  "620px");
+        //viewport.css("height", "755px");
+        viewport.css("overflow", "auto");
+        viewport.css("display", "none");
+        viewport.append(canvas);
+        $("#answer").append(viewport);
+        
+        $('#viewport_' + task.id).dragscrollable({dragSelector:'#canvas_' + task.id});
+        task.canvas = document.getElementById('canvas_' + task.id);
+        task.ctx = document.getElementById("canvas_" + task.id).getContext('2d');
+        task.scale = 0.9;
+        task.pagination = (task.info.page === undefined);
+        task.pageNum = task.info.page || 1;
+
+        PDFJS.getDocument(task.info.pdf_url).then(function getPdfHelloWorld(_pdfDoc) {
+            task.pdfDoc = _pdfDoc;
+            $("#totalPages").text(task.pdfDoc.numPages);
+            deferred.resolve(task);
+        });
+    }
+    else {
+        deferred.resolve(task);
+    }
+
+});
+
+pybossa.presentTask(function(task, deferred){
+    if ( !$.isEmptyObject(task) ) {
+        loadUserProgress();
+        $("textarea#text").val('');
+        $("#viewport_" + task.id).show();
+        // showPaginationOptions(task);
+        renderPage(task);
+        $("#question h1").text(task.info.question);
+        $("#task-id").text(task.id);
+        $("#loading").hide();
+        enableDisabledNavButtons(task);
+        $(".btn-zoom").off('click').on('click', function(evt){
+            zoom(task, parseInt($(this).attr("value")));
+        });
+        $(".btn-navigate").off('click').on('click', function(evt){
+            if ($(this).attr("value") === "next") {
+                goNextPage(task);
+                return;
+            }
+            if ($(this).attr("value") === "prev") {
+                goPreviousPage(task);
+                return;
+            }
+        });
+        $(".btn-submit").off('click').on('click', function(){
+            var answer = $("textarea#text").val();
+            $("#viewport_" + task.id).hide();
+            pybossa.saveTask(task.id, answer).done(function(data){
+                deferred.resolve();
+                $("#success").fadeIn();
+                setTimeout(function() { $("#success").fadeOut() }, 2000);
+            })
+        });
+    }
+    else {
+        $(".skeleton").hide();
+        $("#finish").fadeIn();
+    }
+});
+
+pybossa.run('{{project.short_name}}');
+})();
+</script>

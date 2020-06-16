@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_form %}
+<section class="account register">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                <h1>{{ _('Create an account') }}</h1>
+
+                <div id="ageCheck" class="form-inline">
+                    <div class="form-group">
+                        <p>{{_('To create an account you must be 16+ years old. Please enter your date of birth')}}</p>
+                        <input class="form-control" id="day" placeholder="DD">
+                        <input class="form-control" id="month" placeholder="MM">
+                        <input class="form-control" id="year" placeholder="YYYY">
+                    </div>
+                    <button onclick="checkAge()" style="margin-top:15px;" class="btn btn-primary">Check age</button>
+                </div>
+
+                {{ render_form(form, form_id="register", action_url=url_for('account.register'), btn_class="btn btn-primary btn-block" )}}
+
+                <p class="text-center text-sm" style="margin-top:5px;">
+                <span class="label label-warning"><i class="fa fa-bullhorn"></i> {{ _('Note') }}</span> 
+                {{ _('By click the') }} 
+                <strong>{{ _('Create account button') }}
+                </strong>{{ _('below you are agreeing to the') }}
+                <a target="blank" href={{terms_of_use | safe}}>{{ _('terms of use') }} </a>{{ _('and') }} 
+                <a href={{data_use | safe}}>{{ _('data') }}</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="{{url_for('static', filename='js/forms.js')}}" type="text/javascript"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.1/moment.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.13.2/tingle.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tingle/0.13.2/tingle.min.js"></script>
+<script>
+var modal = new tingle.modal({
+    footer: true,
+    stickyFooter: false,
+    closeMethods: ['overlay', 'button', 'escape'],
+    closeLabel: "Close",
+    cssClass: ['custom-class-1', 'custom-class-2'],
+    onOpen: function() {
+        console.log('modal open');
+    },
+    onClose: function() {
+        console.log('modal closed');
+        window.location.href = '/';
+    },
+    beforeClose: function() {
+        // here's goes some logic
+        // e.g. save content before closing the modal
+        return true; // close the modal
+        return false; // nothing happens
+    }
+});
+
+// set content
+modal.setContent("<h1>You must be 16+ years old to create an account</h1><p>You cannot create an account in this server unless you are 16+ years old. However, you can still participate as an anonymous user as you don't need an account for doing so.</p>");
+
+// add a button
+modal.addFooterBtn('OK', 'tingle-btn tingle-btn--primary', function() {
+    // here goes some logic
+    modal.close();
+});
+
+// add another button
+// modal.addFooterBtn('Dangerous action !', 'tingle-btn tingle-btn--danger', function() {
+//     // here goes some logic
+//     modal.close();
+// });
+
+function checkAge () {
+    var day = document.getElementById('day').value;
+    var month = document.getElementById('month').value;
+    var year = document.getElementById('year').value;
+    var birthday = moment(new Date(year, month, day));
+    var yearsOld = moment().diff(birthday, 'year');
+    console.log(yearsOld)
+    if (yearsOld >= 16) {
+        document.getElementById('register').style.display='block';
+        document.getElementById('ageCheck').style.display='none';
+        localStorage.setItem('ageCheck', true);
+    } else {
+        modal.open();
+    }
+}
+</script>
+<style>
+#register {
+    display: none;
+}
+</style>
+{% endblock %}

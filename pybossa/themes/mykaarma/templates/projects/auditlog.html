@@ -1,0 +1,36 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link = "auditlog" %}
+{% set section = _("Audit Logs") %}
+
+{% block projectcontent %}
+{% if logs %}
+<table id="webhooks-table" class="table table-bordered table-condensed table-hover table-responsive">
+    <tr>
+        <td>{{ _('When') }}</td>
+        <td>{{ _('Who') }}</td>
+        <td>{{ _('Source') }}</td>
+        <td>{{ _('Action') }}</td>
+        <td>{{ _('Attribute') }}</td>
+        <td>{{ _('Old Value') }}</td>
+        <td>{{ _('New Value') }}</td>
+    </tr>
+{% for log in logs | sort(reverse=True, attribute='created') %}
+    <tr>
+        <td>{{log.created}}</td>
+        <td>{% if current_user.name == log.user_name%}{{ _('You') }}{%else%}{{log.user_name}}{%endif%}</td>
+        <td>{{log.caller}}</td>
+        <td>{{log.action}}</td>
+        <td>{{log.attribute}}</td>
+        <td>{{(log.old_value or "Nothing")|truncate(30)}}</td>
+        <td>{{(log.new_value or "Nothing")|truncate(30)}}</td>
+    </tr>
+
+{% endfor %}
+</table>
+{% else %}
+    <p>{{ _('Sorry! No logs so far.') }}</p>
+{% endif %}
+<script>
+</script>
+{% endblock %}

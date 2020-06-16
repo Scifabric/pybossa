@@ -1,0 +1,20 @@
+{% extends "account/email/base.html" %}
+
+{% block subject %}
+Your project has been inactive
+{% endblock %}
+
+{% block subtitle %}
+Dear {{ project.owner.fullname }},
+{% endblock %}
+
+{% block body %}
+<p>Your project {{ project.name }} has been inactive for the last 3 months and we have unpublished it. We would like to inform you that if you need help with it, just contact us answering to this email.
+</p>
+<p>You can publish the project whenever you want, just access it on the server and click the publish button.
+</p>
+<p>All the best,
+</p>
+<p>{{ BRAND }} Team
+</p>
+{% endblock %}

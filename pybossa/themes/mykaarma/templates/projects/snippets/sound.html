@@ -1,0 +1,124 @@
+<!--
+    Task DOM for loading the Sound Cloud iframe 
+    It uses the class="skeleton" to identify the elements that belong to the
+    task.
+-->
+<div class="row skeleton"> <!-- Start Skeleton Row-->
+    <div class="col-md-12"><!-- Start of Question and Submission DIV (column) -->
+        <h1 id="question">Question</h1> <!-- The question will be loaded here -->
+        <div id="sound-clip"></div>
+
+        <div id="answer"> <!-- Start DIV for the submission buttons -->
+            <!-- If the user clicks this button, the saved answer will be value="yes"-->
+            <button class="btn btn-success btn-answer" value='Yes'>Yes</button>
+            <!-- If the user clicks this button, the saved answer will be value="no"-->
+            <button class="btn btn-danger btn-answer" value='No'>No</button>
+            <!-- If the user clicks this button, the saved answer will be value="NotKnown"-->
+            <button class="btn btn-answer" value='NotKnown'>I don't know</button>
+        </div><!-- End of DIV for the submission buttons -->
+        <!-- Feedback items for the user -->
+        <p>You are working now on task: <span id="task-id" class="label label-warning">#</span></p>
+        <p>You have completed: <span id="done" class="label label-info"></span> tasks from
+        <!-- Progress progress-bar for the user -->
+        <span id="total" class="label label-inverse"></span></p>
+        <div class="progress progress-striped">
+            <div id="progress" rel="tooltip" title="#" class="progress-bar" style="width: 0%;"></div>
+        </div>
+        <!-- 
+            This project uses Disqus to allow users to provide some feedback.
+            The next section includes a button that when a user clicks on it will
+            load the comments, if any, for the given task
+        -->
+        <div id="disqus_show_btn" style="margin-top:5px;">
+            <button class="btn btn-default btn-disqus" onclick="loadDisqus()"><i class="icon-comments"></i> Show comments</button>
+            <button class="btn btn-disqus" onclick="loadDisqus()" style="display:none"><i class="icon-comments"></i> Hide comments</button>
+        </div><!-- End of Disqus Button section -->
+        <!-- Disqus thread for the given task -->
+        <div id="disqus_thread" style="margin-top:5px;display:none"></div>
+    </div><!-- End of Question and Submission DIV (column) -->
+</div><!-- End of Skeleton Row -->
+
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    function loadDisqus() {
+    $("#disqus_thread").toggle();
+    $(".btn-disqus").toggle();
+    var disqus_shortname = 'pybossa'; // required: replace example with your forum shortname
+    //var disqus_identifier = taskId;
+    var disqus_developer = 1;
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+    }
+
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+<script type="text/javascript" src="/static/js/pybossa-player/dist/pybossa-player.min.js"></script>
+<script type="text/javascript">
+(function() {
+function loadUserProgress() {
+    pybossa.userProgress('{{project.short_name}}').done(function(data){
+        var pct = Math.round((data.done*100)/data.total);
+        $("#progress").css("width", pct.toString() +"%");
+        $("#progress").attr("title", pct.toString() + "% completed!");
+        $("#progress").tooltip({'placement': 'left'}); 
+        $("#total").text(data.total);
+        $("#done").text(data.done);
+    });
+}
+
+pybossa.taskLoaded(function(task, deferred) {
+    if ( !$.isEmptyObject(task) ) {
+        // keep this  if block for backwards compatibility...
+        if (task.info.song) {
+            task.info.audio_url = task.info.song;
+        }
+        deferred.resolve(task);
+    }
+    else {
+        deferred.resolve(task);
+    }
+});
+
+pybossa.presentTask(function(task, deferred) {
+    if ( !$.isEmptyObject(task) ) {
+        pybossaNotify("Loading audio...", true, "loading");
+        loadUserProgress();
+        var player = PybossaPlayer(task.info.audio_url, 'sound-clip', true);
+        $('#question').html(task.info.question);
+        $('#task-id').html(task.id);
+
+        $('.btn-answer').off('click').on('click', function(evt) {
+            var answer = {'answer': $(this).attr("value")};
+            if (typeof answer != 'undefined') {
+                pybossa.saveTask(task.id, answer).done(function() {
+                    player.destroy();
+                    deferred.resolve();
+                });
+                if ($("#disqus_thread").is(":visible")) {
+                    $('#disqus_thread').toggle();
+                    $('.btn-disqus').toggle();
+                }
+            }
+            else {
+                pybossaNotify("Ooops! Something went wrong!", true, "error");
+            }
+        });
+        pybossaNotify("Loading audio...", false, "loading");
+    }
+    else {
+        $(".skeleton").hide();
+        pybossaNotify("Loading audio...", false, "loading");
+        pybossaNotify("Thanks! You have participated in all available tasks. Enjoy some of your time!", true, "info");
+    }
+});
+
+pybossa.run('{{project.short_name}}');
+})();
+</script>

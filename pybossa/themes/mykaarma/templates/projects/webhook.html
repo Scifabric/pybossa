@@ -1,0 +1,73 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_link = "webhook" %}
+{% set section= _("Webhooks") %}
+
+{% block projectcontent %}
+        <div style="text-align:center; padding-bottom:15px;">
+            <a id="webhooks-refresh" href="#" class="btn btn-info" style="display:none;" onclick="document.location.reload(true);"> Refresh</a>
+        </div>
+        {% if responses %}
+        <div style="margin-bottom:5px;">
+            <a id="webhooksall" class="btn btn-primary btn-sm" href="{{url_for('project.webhook_handler', short_name=project.short_name, all=True)}}">Run all webhooks again</a>
+            <a id="webhooksall" class="btn btn-primary btn-sm" href="{{url_for('project.webhook_handler', short_name=project.short_name, failed=True)}}">Run failed webhooks again</a>
+        </div>
+        {% endif %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-condensed table-hover table-responsive">
+                <tr>
+                    <td><strong>{{_('Created')}}</strong></td>
+                    <td><strong>{{_('Updated')}}</strong></td>
+                    <td><strong>{{_('Payload')}}</strong></td>
+                    <td><strong>{{_('Response')}}</strong></td>
+                    <td><strong>{{_('Response Status Code')}}</strong></td>
+                    <td><strong>{{_('Repeat')}}</strong></td>
+                </tr>
+
+                {% for response in responses | sort(reverse=True, attribute='updated') %}
+                <tr id="webhook_tr_{{response.id}}">
+                    <td>
+                        {{ response.created }}
+                    </td>
+                    <td id="response_updated_{{response.id}}">{{ response.updated }}</td>
+                    <td>{{response.payload}}</td>
+                    <td id="response_{{response.id}}">{{response.response}}</td>
+                    <td id="response_status_code_{{response.id}}">{{response.response_status_code}}</td>
+                    <td>
+                        <button class="btn btn-info" onclick="run('{{project.short_name}}', {{response.id}})"><i class="fa fa-refresh"></i></button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+    <script>
+        var url = "../{{project.short_name}}/privatestream"; 
+        var source = new EventSource(url);
+        source.onmessage = function (event) {
+            if (alert.data != 1) {
+                var msg = JSON.parse(event.data);
+                if (msg.type == 'webhook') {
+                    var wh = msg.data;
+                    console.log(wh.updated);
+                    $("#response_updated_" + wh.id).text(wh.updated);
+                    $("#response_" + wh.id).text(wh.response);
+                    $("#response_status_code_" + wh.id).text(wh.response_status_code);
+                    if (wh.response_status_code == 200) {
+                        $("#webhook_tr_" + wh.id).addClass('success');
+                        $("#webhook_tr_" + wh.id).removeClass('error');
+                    }
+                    else {
+                        $("#webhook_tr_" + wh.id).removeClass('success');
+                        $("#webhook_tr_" + wh.id).addClass('error');
+                    }
+                    console.log(wh);
+                };
+            }
+        };
+    </script>
+{% endblock %}
+{% block extrajs %}
+{% include "projects/js/webhook.js" %}
+{% endblock %}

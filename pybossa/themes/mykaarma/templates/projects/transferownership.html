@@ -1,0 +1,15 @@
+{% extends "projects/base.html" %}
+{% set active_page = "projects" %}
+{% set active_project  = project.short_name %}
+{% set active_link = 'settings' %}
+{% set section = _('settings') %}
+
+{% from "_formhelpers.html" import render_form %}
+{% block projectcontent %}
+{{ helper.render_loading(loading_text) }}
+<h3>{{_('Transfer project ownership')}}</h3>
+<div class="alert alert-danger">
+    <strong>{{ _('Danger Zone!') }}</strong> {{ _('If you change the ownership of the project you will not be able to modify it anymore. This cannot be undone!') }}
+</div>
+{{ render_form(form, action_url=url_for(target, short_name=project.short_name), action_text=_('Trasfer ownership'), btn_class="btn btn-primary") }}
+{% endblock %}

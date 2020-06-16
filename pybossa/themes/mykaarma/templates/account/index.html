@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set active_page = "community"  %}
+{% import "privacy/locked.html" as privacy %}
+{% import "account/_helpers.html" as helper %}
+{% from "projects/_helpers.html" import broken_image %}
+
+{% block content %}
+<section class="account community">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-2 col-md-8">
+                {% if enforce_privacy and (current_user.is_anonymous or (current_user.is_authenticated and not current_user.admin)) %}
+                {{ privacy.render_lock_page() }}
+                {% else %}
+                <h1>{{ _('Community') }} <small>{{total}} {{ _('registered users') }}</small><a class="pull-right btn btn-sm btn-info" href="{{url_for('leaderboard.index')}}"><i class="fa fa-trophy" style="color:white"></i> {{ _('Leaderboard') }}</a></h1>
+                    {% if accounts %}
+                        {% for account in accounts %}
+                        <div class="col-xs-6 col-sm-4 col-md-2 text-center" style="padding-bottom: 30px;">
+                            {{helper.render_user_thumbnail(account, upload_method, class='img-responsive img-circle')}}
+                            <a href="{{url_for('account.profile', name=account.name)}}">{{account.name}}</a>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% if pagination.pages > 1 %}
+            <div class="col-md-offset-2 col-md-8 text-center">
+                {{ helper.render_pagination(pagination) }}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+<script>
+$("a[rel=popover]").popover({
+        html: true,
+        animate: true,
+        trigger: 'hover',
+        placement: 'bottom'
+                });
+
+</script>
+{{ broken_image() }}
+{% endblock %}
