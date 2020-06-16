@@ -1,2 +1,0 @@
-{% from "projects/_helpers.html" import render_project_card_option %}
-{{ render_project_card_option(project, upload_method, title=_('CSV'), explanation=_('Provide a public link to your own CSV file'), link=url_for(target, short_name=project.short_name, type='csv'), link_action_text=_('Import data'), icon='table')}}
