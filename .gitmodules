@@ -1,7 +1,4 @@
 [submodule "pybossa/themes/default"]
 	path = pybossa/themes/default
 	url = https://github.com/mykaarma/pybossa-default-theme.git
-[submodule "pybossa-default-theme"]
-	path = pybossa-default-theme
-	url = https://github.com/mykaarma/pybossa-default-theme.git
 	branch = master
