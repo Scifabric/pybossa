@@ -81,7 +81,6 @@ def handle_bloomberg_response():
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             attributes = auth.get_attributes()
-            print(attributes)
             user_data = {}
             try:
                 user_data['fullname']   = attributes['firstName'][0] + " " + attributes['lastName'][0]
