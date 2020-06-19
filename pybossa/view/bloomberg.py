@@ -67,6 +67,7 @@ def handle_bloomberg_response():
     auth.process_response()
     errors = auth.get_errors()
     if errors:
+        # BSSO was unable to authenticate the user
         error_reason = auth.get_last_error_reason()
         current_app.logger.error('BSSO auth error(s): %s %s', errors, error_reason)
         flash(gettext('There was a problem during the sign in process.'), 'error')
