@@ -84,9 +84,9 @@ def handle_bloomberg_response():
             attributes = auth.get_attributes()
             user_data = {}
             try:
-                user_data['fullname']   = attributes['FirstName'][0] + " " + attributes['LastName'][0]
+                user_data['fullname']   = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr'] = attributes['emailAddress'][0]
-                user_data['name']       = attributes['LoginID'][0]
+                user_data['name']       = attributes['username'][0]
                 user_data['password']   = generate_password()
                 create_account(user_data)
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
