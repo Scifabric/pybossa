@@ -46,16 +46,16 @@ def leaderboard(info=None):
             #                 SELECT "user".*, COALESCE(CAST("user".info->>'{}' AS INTEGER), 0) AS score
             #                 FROM "user" where "user".restrict=false ORDER BY score DESC) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
             #       '''.format(materialized_view, info)
-            terms = info.split(':')
+            terms = info.split('_')
             sql = '''
                    CREATE MATERIALIZED VIEW "{0}" AS WITH scores AS (
                         SELECT "user".*, COUNT(task_run.user_id) AS score
                         FROM "user" LEFT JOIN task_run
                         ON task_run.user_id="user".id where
-                        "user".info -> 'container' ->> {1} = {2} AND
+                        "user".info -> 'container' ->> '{1}' = '{2}' AND
                         "user".restrict=false GROUP BY "user".id
                     ) SELECT *, row_number() OVER (ORDER BY score DESC) as rank FROM scores;
-              '''.format(materialized_view,terms[1],terms[2])
+              '''.format(materialized_view,terms[0],terms[1])
         db.session.execute(sql)
         db.session.commit()
         sql = '''
