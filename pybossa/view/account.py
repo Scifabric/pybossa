@@ -130,10 +130,10 @@ def signin():
                                              token=url_token,
                                              next=next_url))
             else:
-            # Bypass two-factor authentication.
-            msg_1 = gettext('Welcome back') + ' ' + user.fullname
-            flash(msg_1, 'success')
-            return _sign_in_user(user)
+                # Bypass two-factor authentication.
+                msg_1 = gettext('Welcome back') + ' ' + user.fullname
+                flash(msg_1, 'success')
+                return _sign_in_user(user)
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
