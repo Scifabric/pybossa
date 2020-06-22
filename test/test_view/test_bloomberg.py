@@ -85,7 +85,7 @@ class TestBloomberg(Test):
     @with_context
     @patch('pybossa.view.bloomberg.create_account', autospec=True)
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
-    def test_login_create_account_success(self, mock_one_login, mock_create_accountt ):
+    def test_login_create_account_success(self, mock_one_login, mock_create_account):
         redirect_url = 'http://localhost'
         mock_auth = MagicMock()
         mock_auth.get_errors.return_value = False
