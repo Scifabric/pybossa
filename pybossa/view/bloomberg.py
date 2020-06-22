@@ -88,7 +88,7 @@ def handle_bloomberg_response():
                 user_data['email_addr'] = attributes['emailAddress'][0]
                 user_data['name']       = attributes['username'][0]
                 user_data['password']   = generate_password()
-                create_account(user_data)
+                create_account(user_data, autocreate=True)
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
                 return _sign_in_user(user, next_url=request.form.get('RelayState'))
             except Exception as error:

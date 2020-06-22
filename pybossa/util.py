@@ -809,6 +809,26 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
                                   is_qa=is_qa)
     return msg
 
+def generate_bsso_account_notification(user, admins_emails, access_type):
+
+    is_qa = current_app.config.get('IS_QA')
+    server_url = current_app.config.get('SERVER_URL')
+    brand = current_app.config.get('BRAND')
+
+    subject = 'Admin permissions have been granted on {}'.format(brand)
+    msg = dict(subject=subject,
+               recipients=admins_emails)
+    msg['body'] = render_template('/account/email/adminbssonotification.md',
+                                  username=user.fullname,
+                                  access_type=access_type,
+                                  server_url=server_url,
+                                  is_qa=is_qa)
+    msg['html'] = render_template('/account/email/adminbssonotification.html',
+                                  username=user.fullname,
+                                  access_type=access_type,
+                                  server_url=server_url,
+                                  is_qa=is_qa)
+    return msg
 
 def generate_manage_user_email(user, operation):
     assert user

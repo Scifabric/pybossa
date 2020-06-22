@@ -43,6 +43,7 @@ from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
+from pybossa.util import generate_bsso_account_notification
 from pybossa.util import redirect_content_type, is_own_url_or_else
 from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info, url_for_app_type
@@ -464,7 +465,7 @@ def confirm_account():
     return redirect(url_for("home.home"))
 
 
-def create_account(user_data, project_slugs=None, ldap_disabled=True):
+def create_account(user_data, project_slugs=None, ldap_disabled=True, autocreate=False):
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
@@ -492,6 +493,9 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True):
                      password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
+    if autocreate is True:
+        admin_msg = generate_bsso_account_notification(user=user_info, admins_emails=['tbarrett@bloomberg.net','acianciara@bloomberg.net'], access_type="BSSO")
+        mail_queue.enqueue(send_mail, admin_msg) 
 
 
 def _update_user_with_valid_email(user, email_addr):
