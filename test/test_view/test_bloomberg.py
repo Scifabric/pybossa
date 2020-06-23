@@ -114,8 +114,13 @@ class TestBloomberg(Test):
         assert res.status_code == 302, res.status_code
 
     @with_context
-    def test_bsso_msg_generation(self):
+    @patch('pybossa.view.account.generate_bsso_account_notification', autospec=True)
+    def test_bsso_msg_generation(self, mock_bsso_alert):
         from pybossa.view.account import generate_bsso_account_notification
+        mock_alert = MagicMock() 
+        mock_alert.body = None
+        mock_alert.html = None
+        mock_bsso_alert = mock_alert
         user = { 'fullname': "test test", "email": "test@test.com"}
         assert generate_bsso_account_notification(user, "test_admin@test.com", "test") != None
     
