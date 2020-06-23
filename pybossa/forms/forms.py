@@ -96,7 +96,7 @@ class ProjectCommonForm(Form):
                                     "Short Name is already taken.")),
                             pb_validator.ReservedName('project', current_app)])
 
-    password = TextField(
+    password = PasswordField(
                     lazy_gettext('Password'),
                     [validators.Required(),
                         pb_validator.CheckPasswordStrength(
@@ -139,7 +139,7 @@ class ProjectUpdateForm(ProjectForm):
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
     email_notif = BooleanField(lazy_gettext('Email Notifications'))
-    password = TextField(
+    password = PasswordField(
                     lazy_gettext('Password'),
                     [validators.Optional(),
                         pb_validator.CheckPasswordStrength(
