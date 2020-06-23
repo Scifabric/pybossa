@@ -112,6 +112,12 @@ class TestBloomberg(Test):
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_bsso_alert.called
         assert res.status_code == 302, res.status_code
+
+    @with_context
+    def test_bsso_msg_generation(self):
+        from pybossa.view.account import generate_bsso_account_notification
+        user = { 'fullname': "test test", "email": "test@test.com"}
+        assert generate_bsso_account_notification(user, "test_admin@test.com", "test") != None
     
     @with_context
     @patch('pybossa.view.bloomberg.create_account', autospec=True)
