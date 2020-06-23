@@ -98,7 +98,7 @@ class TestBloomberg(Test):
         assert res.status_code == 302, res.status_code
         
     @with_context
-    @patch('pybossa.view.account.generate_bsso_account_notification', autospec=True)
+    @patch('pybossa.util.generate_bsso_account_notification', autospec=True)
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
     def test_bsso_auto_account_alert(self, mock_one_login, mock_bsso_alert):
         redirect_url = 'http://localhost'
@@ -112,7 +112,6 @@ class TestBloomberg(Test):
         assert mock_bsso_alert.called
         assert res.status_code == 302, res.status_code
     
-
     @with_context
     @patch('pybossa.view.bloomberg.create_account', autospec=True)
     @patch('pybossa.view.bloomberg._sign_in_user', autospec=True)    

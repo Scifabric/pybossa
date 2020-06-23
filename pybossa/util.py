@@ -810,7 +810,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
     return msg
 
 def generate_bsso_account_notification(user, admins_emails, access_type):
-
+    
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
     brand = current_app.config.get('BRAND')
