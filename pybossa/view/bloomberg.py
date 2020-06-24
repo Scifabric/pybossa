@@ -81,14 +81,14 @@ def handle_bloomberg_response():
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
-            attributes = auth.get_attributes()
             user_data = {}
             try:
                 user_data['fullname']   = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr'] = attributes['emailAddress'][0]
                 user_data['name']       = attributes['username'][0]
                 user_data['password']   = generate_password()
-                create_account(user_data)
+                create_account(user_data, auto_create=True)
+                flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
                 return _sign_in_user(user, next_url=request.form.get('RelayState'))
             except Exception as error:
