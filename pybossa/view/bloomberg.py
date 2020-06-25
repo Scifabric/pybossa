@@ -86,7 +86,7 @@ def handle_bloomberg_response():
                 user_data['fullname']   = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr'] = attributes['emailAddress'][0]
                 user_data['name']       = attributes['username'][0]
-                user_data['data_access']= "L2"
+                user_data['data_access']= ["L2"]
                 user_data['password']   = generate_password()
                 create_account(user_data, auto_create=True)
                 flash('A new account has been created for you using BSSO.')
