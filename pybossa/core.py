@@ -345,6 +345,8 @@ def setup_external_services(app):
     setup_twitter_login(app)
     setup_facebook_login(app)
     setup_google_login(app)
+    setup_mykaarma_login(app)
+    print("line setupmykaarma calling")
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
     setup_twitter_importer(app)
@@ -398,6 +400,24 @@ def setup_google_login(app):
         print(inst)
         print("Google signin disabled")
         log_message = 'Google signin disabled: %s' % str(inst)
+        app.logger.info(log_message)
+
+def setup_mykaarma_login(app):
+    try:  # pragma: no cover
+        print("in try")
+        if (app.config['MYKAARMA_LOGIN']
+                and app.config.get('LDAP_HOST') is None):
+            mkplay.init_app(app)
+            print("in if")
+            from pybossa.view.mkplay import blueprint as mkplay_bp
+            app.register_blueprint(mkplay_bp, url_prefix='/saml')
+    except Exception as inst:  # pragma: no cover
+        print(type(inst))
+        print("nin exception")
+        print(inst.args)
+        print(inst)
+        print("mykaarma signin disabled")
+        log_message = 'MyKaarma signin disabled: %s' % str(inst)
         app.logger.info(log_message)
 
 
