@@ -110,40 +110,43 @@ class TaskRunAPI(APIBase):
         request_headers = request.headers.get('Content-Type')
         if request_headers is None:
             request_headers = []
+        """ check for content type - file or text"""
         if ( (content_type_file in request_headers or content_type_text in request_headers)
             and cls_name in self.allowed_classes_upload):
             data = dict()
             for key in list(request.form.keys()):
                 #Adding user_id in data
-                if key in ['project_id', 'task_id','user_id']:
+                if key in ['project_id', 'task_id']:
                     data[key] = int(request.form[key])
                 elif key == 'info':
                     data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
             # inst = self._create_instance_from_request(data)
-            if "new_user" in list(request.form.keys()):
-                user = User(fullname=request.form['fullname'],
-                    name=request.form['name'],
-                    email_addr=request.form['email'],
-                    mykaarma_user_id=request.form['mkid'])
+            """Try to get user by uuid, if not present, add a new user"""
+            user = user_repo.get_by(mykaarma_user_id=data['uuid'])
+            if(user is None):
+                body = data['fullname']
+                name = data["fullname"] + "1234"
+                user = User(fullname=data['fullname'],
+                    name=name,
+                    email_addr=data['email'],
+                    mykaarma_user_id=data['uuid'])
                 user_repo.save(user)
-            #user = user_repo.get_by(mykaarma_user_id=request.form['mkid'])
-            #data['user_id'] = user.id
-            # del data['mkid']
-            # del data['fullname']
-            # del data['new_user']
-            # del data['name']
-            # del data['email']
+
+            """ add user id extracted from user repo"""
+            data['user_id'] = user.id
+            """ delete extra keys to suit Taskrun class format"""
+            del data['uuid']
+            del data['fullname']
+            del data['email']
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
             self._add_user_info(inst)
             is_authorized(current_user, 'create', inst)
             upload_method = current_app.config.get('UPLOAD_METHOD')
-            if current_user.is_authenticated:
-                container = "user_%s" % current_user.id
-            else:
-                container = "anonymous"
+            """Add user id to container"""
+            container = "user_%s" % data['user_id']
             if data.get('info') is None:
                 data['info'] = dict()
             data['info']['container'] = container
