@@ -407,10 +407,10 @@ def setup_mykaarma_login(app):
         print("in try")
         if (app.config['MYKAARMA_LOGIN']
                 and app.config.get('LDAP_HOST') is None):
-            mkplay.init_app(app)
+            mykaarma.init_app(app)
             print("in if")
-            from pybossa.view.mkplay import blueprint as mkplay_bp
-            app.register_blueprint(mkplay_bp, url_prefix='/saml')
+            from pybossa.view.mykaarma import blueprint as mykaarma_bp
+            app.register_blueprint(mykaarma_bp, url_prefix='/saml')
     except Exception as inst:  # pragma: no cover
         print(type(inst))
         print("nin exception")

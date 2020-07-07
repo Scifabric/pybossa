@@ -32,7 +32,7 @@ class ServiceProvider:
     session_auth_data_key = 'saml_auth_data'
 
     #: The name of the blueprint to generate.
-    blueprint_name = 'mkplay'
+    blueprint_name = 'mykaarma'
 
     def login_successful(
         self,
@@ -318,10 +318,10 @@ class ServiceProvider:
     def create_blueprint(self) -> Blueprint:
         """Create a Flask :class:`flask.Blueprint` for this Service Provider.
         """
-        idp_bp = Blueprint(self.blueprint_name, 'mkplay', template_folder='templates')
+        idp_bp = Blueprint(self.blueprint_name, 'mykaarma', template_folder='templates')
         print("IN CRETAE  BLUEPRINT")
         idp_bp.add_url_rule('/login/', view_func=Login.as_view(
-            'login_mkplay', sp=self))
+            'login_mykaarma', sp=self))
         idp_bp.add_url_rule('/login/idp/', view_func=LoginIdP.as_view(
             'login_idp', sp=self))
         idp_bp.add_url_rule('/logout/', view_func=Logout.as_view(

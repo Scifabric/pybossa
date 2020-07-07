@@ -19,7 +19,7 @@ from flask_saml2.sp import ServiceProvider
 
 from tests.sp.base import CERTIFICATE, PRIVATE_KEY
 from pybossa.extensions import csrf
-from pybossa.core import mkplay, user_repo, newsletter
+from pybossa.core import mykaarma, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method, username_from_full_name
 from pybossa.util import url_for_app_type
@@ -34,11 +34,11 @@ from flask_saml2.sp.views import (
 class ExampleServiceProvider(ServiceProvider):
     def get_logout_return_url(self):
         #return url_for('index', _external=True)
-        return url_for('mkplay.login', _external=True)
+        return url_for('mykaarma.login', _external=True)
         #return "http://localhost:5000/"
 
     def get_default_login_return_url(self):
-        return url_for('mkplay.login', _external=True)
+        return url_for('mykaarma.login', _external=True)
         #return "http://localhost:5000/"
 
 
@@ -83,7 +83,7 @@ def login():  # pragma: no cover
             print("in else user logged in")
             message = '<p>You are logged out.</p>'
 
-            login_url = url_for('mkplay.login_mkplay')
+            login_url = url_for('mykaarma.login_mykaarma')
             print("LOGIN URL IT IS GETTING",login_url)
             link = f'<p><a href="{login_url}">Log in to continue</a></p>'
             return message + link
@@ -102,7 +102,7 @@ def manage_user(user_data):
     """Manage the user after signin"""
     # We have to store the oauth_token in the session to get the USER fields
 
-    user = user_repo.get_by(mkplay_user_id=user_data['id'])
+    user = user_repo.get_by(mykaarma_user_id=user_data['id'])
     #
     # user =None
 
@@ -132,7 +132,7 @@ def manage_user(user_data):
             user = User(fullname=user_data['name'],
                         name=name,
                         email_addr=user_data['email'],
-                        mkplay_user_id=user_data['id'])
+                        mykaarma_user_id=user_data['id'])
             user_repo.save(user)
             if newsletter.is_initialized():
                 newsletter.subscribe_user(user)
@@ -143,7 +143,7 @@ def manage_user(user_data):
             if (userByEmail.name == username_from_full_name(user_data['name']).decode('utf-8')):
                 body = user_data['name']
                 userByEmail.name = b"mkplay-" +  base64.b64encode(hashlib.sha256(body.encode('utf-8')).digest())
-            userByEmail.mkplay_user_id=user_data['id']
+            userByEmail.mykaarma_user_id=user_data['id']
             user_repo.save(userByEmail)
             return userByEmail
     else:

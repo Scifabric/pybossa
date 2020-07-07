@@ -86,7 +86,7 @@ class Google(object):
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
 
-class Mkplay(object):
+class Mykaarma(object):
 
     """Class Google to enable Google signin."""
 

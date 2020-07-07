@@ -38,6 +38,9 @@ from pybossa.auth import jwt_authorize_project
 from pybossa.auth import ensure_authorized_to, is_authorized
 from pybossa.sched import can_post
 
+##Adding user repos for saving user to database
+from pybossa.model.user import User
+from pybossa.core import user_repo
 
 class TaskRunAPI(APIBase):
 
@@ -56,7 +59,6 @@ class TaskRunAPI(APIBase):
                             taskrun.task_id, get_user_id_or_ip())
         task = task_repo.get_task(taskrun.task_id)
         guard = ContributionsGuard(sentinel.master)
-
         self._validate_project_and_task(taskrun, task)
         self._ensure_task_was_requested(task, guard)
         self._add_user_info(taskrun)
@@ -102,47 +104,62 @@ class TaskRunAPI(APIBase):
         """Method that must be overriden by the class to allow file uploads for
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
-        content_type = 'multipart/form-data'
+        """Accepting both content types - text or with file"""
+        content_type_file = 'multipart/form-data'
+        content_type_text =  'application/x-www-form-urlencoded'
         request_headers = request.headers.get('Content-Type')
         if request_headers is None:
             request_headers = []
-        if (content_type in request_headers and
-                cls_name in self.allowed_classes_upload):
+        if ( (content_type_file in request_headers or content_type_text in request_headers)
+            and cls_name in self.allowed_classes_upload):
             data = dict()
             for key in list(request.form.keys()):
-                if key in ['project_id', 'task_id']:
+                #Adding user_id in data
+                if key in ['project_id', 'task_id','user_id']:
                     data[key] = int(request.form[key])
                 elif key == 'info':
                     data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
             # inst = self._create_instance_from_request(data)
+            if "new_user" in list(request.form.keys()):
+                user = User(fullname=request.form['fullname'],
+                    name=request.form['name'],
+                    email_addr=request.form['email'],
+                    mykaarma_user_id=request.form['mkid'])
+                user_repo.save(user)
+            #user = user_repo.get_by(mykaarma_user_id=request.form['mkid'])
+            #data['user_id'] = user.id
+            # del data['mkid']
+            # del data['fullname']
+            # del data['new_user']
+            # del data['name']
+            # del data['email']
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
             self._add_user_info(inst)
             is_authorized(current_user, 'create', inst)
             upload_method = current_app.config.get('UPLOAD_METHOD')
-            if request.files.get('file') is None:
-                raise AttributeError
-            _file = request.files['file']
             if current_user.is_authenticated:
                 container = "user_%s" % current_user.id
             else:
                 container = "anonymous"
-            if _file.filename == 'blob' or _file.filename is None:
-                _file.filename = "%s.png" % time.time()
-            uploader.upload_file(_file,
-                                 container=container)
-            avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')
-            file_url = get_avatar_url(upload_method,
-                                      _file.filename,
-                                      container,
-                                      avatar_absolute)
-            data['media_url'] = file_url
             if data.get('info') is None:
                 data['info'] = dict()
             data['info']['container'] = container
-            data['info']['file_name'] = _file.filename
+            if(request.files.get('file') is not None):
+                _file = request.files['file']
+                if _file.filename == 'blob' or _file.filename is None:
+                   _file.filename = "%s.png" % time.time()
+                uploader.upload_file(_file,
+                                    container=container)
+                avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')
+                file_url = get_avatar_url(upload_method,
+                                         _file.filename,
+                                         container,
+                                         avatar_absolute)
+                data['media_url'] = file_url
+                data['info']['file_name'] = _file.filename
             return data
         else:
             return None
