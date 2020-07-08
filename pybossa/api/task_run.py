@@ -41,6 +41,7 @@ from pybossa.sched import can_post
 ##Adding user repos for saving user to database
 from pybossa.model.user import User
 from pybossa.core import user_repo
+from pybossa.model.task import Task
 
 class TaskRunAPI(APIBase):
 
@@ -116,28 +117,42 @@ class TaskRunAPI(APIBase):
             data = dict()
             for key in list(request.form.keys()):
                 #Adding user_id in data
-                if key in ['project_id', 'task_id']:
+                if key in ['project_id']:
                     data[key] = int(request.form[key])
                 elif key == 'info':
                     data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
             # inst = self._create_instance_from_request(data)
+
+            #Check if task exists
+            tasks = task_repo.getTasks(data['info']['uuid'],data['project_id'])
+            try:
+                #if it exists, add as task id
+                task = [row[0] for row in tasks]
+                data['task_id'] = task[0]
+            except:
+                #if does not exist, add new task
+                info = data['info']
+                task = Task(project_id=data['project_id'], info=info,n_answers=10)
+                task_repo.save(task)
+                data['task_id'] = task.id
+            
             """Try to get user by uuid, if not present, add a new user"""
-            user = user_repo.get_by(mykaarma_user_id=data['uuid'])
+            user = user_repo.get_by(mykaarma_user_id=data['useruuid'])
             if(user is None):
                 body = data['fullname']
                 name = data["fullname"] + "1234"
                 user = User(fullname=data['fullname'],
                     name=name,
                     email_addr=data['email'],
-                    mykaarma_user_id=data['uuid'])
+                    mykaarma_user_id=data['useruuid'])
                 user_repo.save(user)
 
             """ add user id extracted from user repo"""
             data['user_id'] = user.id
             """ delete extra keys to suit Taskrun class format"""
-            del data['uuid']
+            del data['useruuid']
             del data['fullname']
             del data['email']
             data = self.hateoas.remove_links(data)
