@@ -77,16 +77,10 @@ class SingleLogout(SAML2View):
 
 
 class AssertionConsumer(SAML2View):
-    #print("in acs VIEW STEP 2")
     def dispatch_request(self):
         if request.method == 'POST':
-            #print(request)
-            print("IN ASSERTION CONSUMER CLASS")
             saml_request = request.form['SAMLResponse']
-            print("GOT SAML REQUEST")
-            #relay_state = request.form['RelayState']
-            relay_state = "http://localhost:5000/saml/"
-            print("got relay state")
+            relay_state = "https://play.mykaarma.dev/saml/"
 
             for handler in self.sp.get_idp_handlers():
                 try:

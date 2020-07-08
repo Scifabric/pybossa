@@ -23,14 +23,12 @@ class AuthData:
     nameid_format: str
     attributes: Mapping[str, str]
     session_id: str = None
-    print("HERE IN STEP 1")
 
     def to_dict(self) -> dict:
         """
         Return a dict of all attributes. You can store this dict in a session
         store, and recreate this instance using :meth:`from_dict`.
         """
-        print("IN TO DICT")
         data = attr.asdict(self, filter=lambda a, v: a.name != 'handler')
         return {
             'data': data,
@@ -39,7 +37,6 @@ class AuthData:
 
     @classmethod
     def from_dict(cls, sp, data: dict):
-        print("IN FROM DICT")
         """
         Construct an :class:`AuthData` instance from a dict such as
         :meth:`to_dict` produces.
@@ -107,7 +104,6 @@ class IdPHandler:
 
         self.sp = sp
         self.entity_id = entity_id
-        print("in idp handler classss")
         if display_name is not None:
             self.display_name = display_name
         if sso_url is not None:
@@ -118,17 +114,14 @@ class IdPHandler:
             self.certificate = certificate
 
     def get_idp_sso_url(self):
-        print("in sso url")
         """Get the Single Sign On URL for this IdP."""
         return self.sso_url
 
     def get_idp_slo_url(self):
-        print("in slo url")
         """Get the Single Log Out URL for this IdP."""
         return self.slo_url
 
     def get_sp_acs_url(self):
-        print("in acs url")
         """
         Get the Attribute Consumer Service URL on the current SP this IdP
         should send responses to.
@@ -143,7 +136,6 @@ class IdPHandler:
         """
         Make a AuthnRequest to send to this IdP.
         """
-        print("in get auth request")
         return template({
             'REQUEST_ID': get_random_id(),
             'ISSUE_INSTANT': self.format_datetime(utcnow()),
@@ -159,7 +151,6 @@ class IdPHandler:
         template: XmlTemplate = LogoutRequest,
         **parameters,
     ):
-        print("in get logout requets")
         """
         Make a LogoutRequest for the authenticated user to send to this IdP.
         """
@@ -180,7 +171,6 @@ class IdPHandler:
         """Make a LoginRequest url and query string for this IdP."""
         authn_request = self.get_authn_request()
         saml_request = self.encode_saml_string(authn_request.get_xml_string())
-        print("in make login request")
         parameters = [('SAMLRequest', saml_request)]
         if relay_state is not None:
             parameters.append(('RelayState', relay_state))
@@ -192,7 +182,6 @@ class IdPHandler:
         auth_data: AuthData,
         relay_state: Optional[str] = None,
     ) -> str:
-        print("in make logout request")
         logout_request = self.get_logout_request(auth_data)
         saml_request = self.encode_saml_string(logout_request.get_xml_string())
 
@@ -203,7 +192,6 @@ class IdPHandler:
         return self._make_idp_request_url(self.get_idp_slo_url(), parameters)
 
     def _make_idp_request_url(self, url, parameters):
-        print("make idp requet")
         """
         Make a URL to the SAML IdP, signing the query parameters if required.
         """
@@ -215,12 +203,10 @@ class IdPHandler:
         return f'{url}?{query}'
 
     def decode_saml_string(self, saml_string: str) -> bytes:
-        print("decode saml response")
         """Decode an incoming SAMLResponse into an XML string."""
         return codex.decode_saml_xml(saml_string)
 
     def encode_saml_string(self, saml_string: str) -> str:
-        print("encode saml request")
         """Encoding an XML string into a SAMLRequest."""
         return codex.deflate_and_base64_encode(saml_string)
 
@@ -229,7 +215,6 @@ class IdPHandler:
         Make a :class:`~.parser.ResponseParser` instance to handle this
         response.
         """
-        print("response parser")
         return ResponseParser(
             self.decode_saml_string(saml_response),
             certificate=self.certificate)
@@ -239,9 +224,7 @@ class IdPHandler:
         Create an :class:`AuthData` instance from a SAML Response. The response
         is validated first.
         """
-        print("get auth data")
         self.validate_response(response)
-        print("validated resopse")
         return AuthData(
             handler=self,
             nameid=response.nameid,
@@ -250,7 +233,6 @@ class IdPHandler:
         )
 
     def validate_response(self, response: ResponseParser):
-        print("in validate repsnse")
         # Check it came from the right place
         if self.entity_id != response.issuer:
             raise CannotHandleAssertion(

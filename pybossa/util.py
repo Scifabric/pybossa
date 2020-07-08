@@ -373,7 +373,9 @@ def username_from_full_name(username):
     returns a single word username, no spaces, all lowercases."""
     username = username.replace(' ', '')
     username = username.lower()
-    return username.encode('ascii', 'ignore')
+    #return username.encode('ascii', 'ignore')
+    """encoding after adding the 4 digit passkey"""
+    return username
 
 
 def rank(projects, order_by=None, desc=False):

@@ -27,7 +27,6 @@ class ServiceProvider:
     but overriding :meth:`get_default_login_return_url`
     and :meth:`get_logout_return_url` is recommended.
     """
-    print("STEP 3 DEFINE SESS AUTH DATA KEY")
     #: What key to store authentication details under in the session.
     session_auth_data_key = 'saml_auth_data'
 
@@ -39,7 +38,6 @@ class ServiceProvider:
         auth_data: AuthData,
         relay_state: str,
     ) -> Response:
-        print("login successful")
         """ Called when a user is successfully logged on.
         Subclasses should override this if they want to do more
         with the returned user data.
@@ -252,10 +250,7 @@ class ServiceProvider:
 
         """Check if the user is currently logged in / authenticated with an IdP.
         """
-        print("in is user logged in")
         
-        if(self.session_auth_data_key in session):
-            print("sess auth data key",session[self.session_auth_data_key])
         return self.session_auth_data_key in session and \
             AuthData.is_valid(self, session[self.session_auth_data_key])
 
@@ -273,7 +268,6 @@ class ServiceProvider:
         return render_template(template, **context)
 
     def set_auth_data_in_session(self, auth_data: AuthData):
-        print("set suth data in sess")
         """Store authentication details from the :class:`IdPHandler`
         in the browser session.
         """
@@ -286,11 +280,9 @@ class ServiceProvider:
         session.pop(self.session_auth_data_key, None)
 
     def get_auth_data_in_session(self) -> AuthData:
-        print("in get auth data from ses")
         """Get an :class:`AuthData` instance from the session data stored
         for the currently logged in user.
         """
-        print("session[authdatakey]",session[self.session_auth_data_key])
         return AuthData.from_dict(self, session[self.session_auth_data_key])
 
     def make_absolute_url(self, url: str) -> str:
@@ -319,7 +311,6 @@ class ServiceProvider:
         """Create a Flask :class:`flask.Blueprint` for this Service Provider.
         """
         idp_bp = Blueprint(self.blueprint_name, 'mykaarma', template_folder='templates')
-        print("IN CRETAE  BLUEPRINT")
         idp_bp.add_url_rule('/login/', view_func=Login.as_view(
             'login_mykaarma', sp=self))
         idp_bp.add_url_rule('/login/idp/', view_func=LoginIdP.as_view(
