@@ -1,0 +1,12 @@
+{% extends "flask_saml2_sp/base.html" %}
+
+{% block content %}
+    <p>Select an identity provider to log in with:</p>
+    <ul>
+        {% for idp in handlers %}
+            <li>
+                <a href="{{ url_for('.login_idp', entity_id=idp.entity_id, next=login_next) }}">{{ idp }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock content %}

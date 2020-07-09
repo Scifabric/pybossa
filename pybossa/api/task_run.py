@@ -30,6 +30,7 @@ from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from .api_base import APIBase
+from pybossa.util import get_mykaarma_username_from_full_name
 from pybossa.util import get_user_id_or_ip, get_avatar_url
 from pybossa.core import task_repo, sentinel, anonymizer, project_repo
 from pybossa.core import uploader
@@ -38,6 +39,10 @@ from pybossa.auth import jwt_authorize_project
 from pybossa.auth import ensure_authorized_to, is_authorized
 from pybossa.sched import can_post
 
+##Adding user repos for saving user to database
+from pybossa.model.user import User
+from pybossa.core import user_repo
+from pybossa.model.task import Task
 
 class TaskRunAPI(APIBase):
 
@@ -56,7 +61,6 @@ class TaskRunAPI(APIBase):
                             taskrun.task_id, get_user_id_or_ip())
         task = task_repo.get_task(taskrun.task_id)
         guard = ContributionsGuard(sentinel.master)
-
         self._validate_project_and_task(taskrun, task)
         self._ensure_task_was_requested(task, guard)
         self._add_user_info(taskrun)
@@ -102,47 +106,81 @@ class TaskRunAPI(APIBase):
         """Method that must be overriden by the class to allow file uploads for
         only a few classes."""
         cls_name = self.__class__.__name__.lower()
-        content_type = 'multipart/form-data'
+        """Accepting both content types - text or with file"""
+        content_type_file = 'multipart/form-data'
+        content_type_text =  'application/x-www-form-urlencoded'
         request_headers = request.headers.get('Content-Type')
         if request_headers is None:
             request_headers = []
-        if (content_type in request_headers and
-                cls_name in self.allowed_classes_upload):
+        """ check for content type - file or text"""
+        if ( (content_type_file in request_headers or content_type_text in request_headers)
+            and cls_name in self.allowed_classes_upload):
             data = dict()
             for key in list(request.form.keys()):
-                if key in ['project_id', 'task_id']:
+                #Adding user_id in data
+                if key in ['project_id']:
                     data[key] = int(request.form[key])
                 elif key == 'info':
                     data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
-            # inst = self._create_instance_from_request(data)
+
+            #Check if task exists
+            tasks = task_repo.getTasks(data['info']['uuid'],data['project_id'])
+            try:
+                #if it exists, add as task id
+                task = [row[0] for row in tasks]
+                data['task_id'] = task[0]
+            except:
+                #if does not exist, add new task
+                info = data['info']
+                task = Task(project_id=data['project_id'], info=info,n_answers=10)
+                task_repo.save(task)
+                data['task_id'] = task.id
+            
+            """Try to get user by uuid, if not present, add a new user"""
+            user = user_repo.get_by(mykaarma_user_id=data['useruuid'])
+            if(user is None):
+                name = get_mykaarma_username_from_full_name(data["fullname"]) 
+                user = user_repo.get_by_name(name)
+                while(user is not None):
+                    name = get_mykaarma_username_from_full_name(data["fullname"])
+                    user = user_repo.get_by_name(name)
+                user = User(fullname=data['fullname'],
+                    name=name,
+                    email_addr=data['email'],
+                    mykaarma_user_id=data['useruuid'])
+                user_repo.save(user)
+
+            """ add user id extracted from user repo"""
+            data['user_id'] = user.id
+            """ delete extra keys to suit Taskrun class format"""
+            del data['useruuid']
+            del data['fullname']
+            del data['email']
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
             self._add_user_info(inst)
             is_authorized(current_user, 'create', inst)
             upload_method = current_app.config.get('UPLOAD_METHOD')
-            if request.files.get('file') is None:
-                raise AttributeError
-            _file = request.files['file']
-            if current_user.is_authenticated:
-                container = "user_%s" % current_user.id
-            else:
-                container = "anonymous"
-            if _file.filename == 'blob' or _file.filename is None:
-                _file.filename = "%s.png" % time.time()
-            uploader.upload_file(_file,
-                                 container=container)
-            avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')
-            file_url = get_avatar_url(upload_method,
-                                      _file.filename,
-                                      container,
-                                      avatar_absolute)
-            data['media_url'] = file_url
+            """Add user id to container"""
+            container = "user_%s" % data['user_id']
             if data.get('info') is None:
                 data['info'] = dict()
             data['info']['container'] = container
-            data['info']['file_name'] = _file.filename
+            if(request.files.get('file') is not None):
+                _file = request.files['file']
+                if _file.filename == 'blob' or _file.filename is None:
+                   _file.filename = "%s.png" % time.time()
+                uploader.upload_file(_file,
+                                    container=container)
+                avatar_absolute = current_app.config.get('AVATAR_ABSOLUTE')
+                file_url = get_avatar_url(upload_method,
+                                         _file.filename,
+                                         container,
+                                         avatar_absolute)
+                data['media_url'] = file_url
+                data['info']['file_name'] = _file.filename
             return data
         else:
             return None
@@ -157,3 +195,4 @@ class TaskRunAPI(APIBase):
                     ensure_authorized_to('delete', obj)
                     uploader.delete_file(obj.info['file_name'],
                                          obj.info['container'])
+                                         

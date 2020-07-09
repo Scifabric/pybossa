@@ -435,9 +435,10 @@ class APIBase(MethodView):
         for key in data:
             setattr(existing, key, data[key])
         if new_upload:
-            existing.media_url = new_upload['media_url']
             existing.info['container'] = new_upload['info']['container']
-            existing.info['file_name'] = new_upload['info']['file_name']
+            if(new_upload['media_url']):
+                existing.info['file_name'] = new_upload['info']['file_name']
+                existing.media_url = new_upload['media_url']
         self._update_attribute(existing, old)
         update_func = repos[self.__class__.__name__]['update']
         self._validate_instance(existing)

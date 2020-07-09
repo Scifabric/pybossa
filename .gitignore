@@ -45,6 +45,7 @@ htmlcov/*
 *.bak
 *.orig
 tags
+*.conf
 
 ## Virtual environments
 env/

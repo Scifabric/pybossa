@@ -18,6 +18,9 @@
 """Module with PYBOSSA utils."""
 import os
 
+import string
+import random
+
 from yacryptopan import CryptoPAn
 from datetime import timedelta, datetime
 from functools import update_wrapper
@@ -374,6 +377,15 @@ def username_from_full_name(username):
     username = username.replace(' ', '')
     username = username.lower()
     return username.encode('ascii', 'ignore')
+
+def get_mykaarma_username_from_full_name(username):
+    """Takes a username that may contain several words with capital letters and
+    returns a single word username, no spaces, all lowercases."""
+    username = username.replace(' ', '')
+    username = username.lower()
+    username = username + (''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(4)))
+    """encoding after adding the 4 digit passkey"""
+    return username
 
 
 def rank(projects, order_by=None, desc=False):

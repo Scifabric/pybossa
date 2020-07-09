@@ -26,6 +26,7 @@ from pybossa.exc import WrongObjectError, DBIntegrityError
 from pybossa.cache import projects as cached_projects
 from pybossa.core import uploader
 from sqlalchemy import text
+from pybossa.core import db
 
 
 class TaskRepository(Repository):
@@ -45,6 +46,21 @@ class TaskRepository(Repository):
 
         return self._filter_by(Task, limit, offset, yielded, last_id,
                               fulltextsearch, desc, **filters)
+    
+
+    """ Function to get task_id from Message_uuid """
+    def getTasks(self, uuid, project_id):
+        sql = '''
+                SELECT *
+                FROM task where  project_id = {} and info ->> 'uuid'= '{}';
+                '''.format(project_id,uuid)
+        try:
+            res = db.session.execute(sql)
+            return res
+        except SQLAlchemyError as e:
+            return None
+        else:
+            return None        
 
     def count_tasks_with(self, **filters):
         query_args, _, _, _  = self.generate_query_from_keywords(Task, **filters)

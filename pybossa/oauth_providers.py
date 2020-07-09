@@ -17,7 +17,6 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from flask_oauthlib.client import OAuth
 
-
 class Twitter(object):
 
     """Class Twitter to enable Twitter signin."""
@@ -85,6 +84,38 @@ class Google(object):
             access_token_method='POST',
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
+
+class Mykaarma(object):
+
+    """Class Google to enable Google signin."""
+
+    def __init__(self, app=None):
+        """Init method."""
+        self.app = app
+        if app is not None:  # pragma: no cover
+            self.init_app(app)
+
+    def init_app(self, app):
+        """Init app using factories pattern."""
+        app.config['SAML2_IDENTITY_PROVIDERS'] = [
+            {
+                'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
+                'OPTIONS': {
+                    'display_name': 'mkplaydevvm',
+                    'entity_id': app.config['ENTITY_ID'],
+                    'sso_url': app.config['SSO_URL'],
+                    'slo_url': app.config['SLO_URL'],
+                    'certificate':app.config['CERTIFICATE']
+                },
+            },
+        ]
+        
+        app.config['SAML2_SP'] = {
+            'certificate': 'abc',
+            'private_key': 'abc',
+        }
+        print("APP INITIALISED")
+        
 
 class Flickr(object):
 
