@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from flask_oauthlib.client import OAuth
-from tests.sp.base import CERTIFICATE, PRIVATE_KEY
 
 class Twitter(object):
 
@@ -98,37 +97,22 @@ class Mykaarma(object):
 
     def init_app(self, app):
         """Init app using factories pattern."""
-        # self.oauth = OAuth().remote_app(
-        #     'google',
-        #     base_url='https://www.googleapis.com/oauth2/v1/',
-        #     authorize_url='https://accounts.google.com/o/oauth2/auth',
-        #     request_token_url=None,
-        #     request_token_params={'scope': 'profile email'},
-        #     access_token_url='https://accounts.google.com/o/oauth2/token',
-        #     access_token_method='POST',
-        #     consumer_key=app.config['GOOGLE_CLIENT_ID'],
-        #     consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
         app.config['SAML2_IDENTITY_PROVIDERS'] = [
             {
                 'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
                 'OPTIONS': {
                     'display_name': 'mkplaydevvm',
-                    # 'entity_id': 'http://localhost:8000/saml/metadata.xml',
-                    # 'sso_url': 'http://localhost:8000/saml/login/',
-                    # 'slo_url': 'http://localhost:8000/saml/logout/',
-                    # 'certificate': IDP_CERTIFICATE,
-                    'entity_id': 'https://srishti117.mykaarma.dev/simplesaml/saml2/idp/metadata.php',
-                    'sso_url': 'https://srishti117.mykaarma.dev/simplesaml/saml2/idp/SSOService.php',
-                    'slo_url': 'https://srishti117.mykaarma.dev/simplesaml/saml2/idp/SingleLogoutService.php',
-                    # 'certificate': 'https://github.com/mykaarma/mk-login-saml/blob/master/samlconfig/devvm/cert/accounts.dev.mykaarma.com.crt',
-                    'certificate':'MIIErTCCA5WgAwIBAgIJALwyYqHztbdZMA0GCSqGSIb3DQEBBQUAMIGVMQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC0xvcyBBbmdlbGVzMREwDwYDVQQKEwhteUthYXJtYTESMBAGA1UECxMJS2FhcmEgTExDMREwDwYDVQQDEwhteUthYXJtYTEpMCcGCSqGSIb3DQEJARYabW91bGkua2F0aHVsYUBteWthYXJtYS5jb20wHhcNMTcwNjEwMjIxNTUxWhcNMjcwNjEwMjIxNTUxWjCBlTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtMb3MgQW5nZWxlczERMA8GA1UEChMIbXlLYWFybWExEjAQBgNVBAsTCUthYXJhIExMQzERMA8GA1UEAxMIbXlLYWFybWExKTAnBgkqhkiG9w0BCQEWGm1vdWxpLmthdGh1bGFAbXlrYWFybWEuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3x1HaYfdySj3vM6j/EwVD3lLkgqBrrIZEaRFI5ej7B3h7lTpklhd5KI48BQv0F0BCK3Cb3vYqQgxLYHh3UvTY1IoGhNVq3XHyKe60b56Q331b6CIeLiI3wEEbrbW0w9FvQkYFNmuwR7G0elIGYtC1QOL7A2JBs1a3Dw+D1LAHQzk8PFWYpXCdkKrsQnh3rk09Ol9BfyCl5urbe0v0Mv9MBxAIbJb5M7P9W3K2/9sNSEaRSwuFNOCsFCkoNBrd/fo6p6ar48d6Gr5GdHml7Nvljlx6Xx0aQ5JrHoLXGVbH+YDVKNOzUt5AOLHe0Fs4BoBDgjOoFJ7kT2gFTHzEECa1wIDAQABo4H9MIH6MB0GA1UdDgQWBBTjNfProDO5wx/FiRuWBKhWHbVTtjCBygYDVR0jBIHCMIG/gBTjNfProDO5wx/FiRuWBKhWHbVTtqGBm6SBmDCBlTELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtMb3MgQW5nZWxlczERMA8GA1UEChMIbXlLYWFybWExEjAQBgNVBAsTCUthYXJhIExMQzERMA8GA1UEAxMIbXlLYWFybWExKTAnBgkqhkiG9w0BCQEWGm1vdWxpLmthdGh1bGFAbXlrYWFybWEuY29tggkAvDJiofO1t1kwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOCAQEAc8bwbf97ccZoa3aaBS8WTEjbLrztA4iAKctj10LcSn63BA7gCgry2MLNDwzPIWt2B4BqfZRjfFGn3tuDcGhrW0O6LigxMlja0MYV9bbnxH+nTdfVLTJfCAJQtgR/NEnh2xel5/32YHYc1C/I8jx+jg5x5/9p//laFQPyCF6YwvaZwOjrFQTbLrA/vpcIQ/lxK876Q22LZsZWJfrqalE7mO8rLIeAt1QZOeBHv5Vge3vbqsaLKTCCU1fY0FKE++5jLlaYl6MPOpJAZ+6u7uKFJ094+IER48gAgCAiNj4vOPV024SFy2m3W/HKyGeelcuaO8Kel/FNBpC+vljcD5CvFg=='
+                    'entity_id': app.config['ENTITY_ID'],
+                    'sso_url': app.config['SSO_URL'],
+                    'slo_url': app.config['SLO_URL'],
+                    'certificate':app.config['CERTIFICATE']
                 },
             },
         ]
         
         app.config['SAML2_SP'] = {
-            'certificate': CERTIFICATE,
-            'private_key': PRIVATE_KEY,
+            'certificate': 'abc',
+            'private_key': 'abc',
         }
         print("APP INITIALISED")
         

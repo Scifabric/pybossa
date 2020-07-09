@@ -9,8 +9,6 @@ from flask import abort
 from flask_login import login_user, current_user
 from flask_oauthlib.client import OAuthException
 
-import string
-import random
 
 from flask import Flask
 from flask_saml2.exceptions import CannotHandleAssertion
@@ -21,7 +19,7 @@ from tests.sp.base import CERTIFICATE, PRIVATE_KEY
 from pybossa.extensions import csrf
 from pybossa.core import mykaarma, user_repo, newsletter
 from pybossa.model.user import User
-from pybossa.util import get_user_signup_method, username_from_full_name
+from pybossa.util import get_user_signup_method, get_mykaarma_username_from_full_name, username_from_full_name
 from pybossa.util import url_for_app_type
 
 import requests
@@ -51,13 +49,6 @@ def login():  # pragma: no cover
     if not current_app.config.get('LDAP_HOST', False):
         if sp.is_user_logged_in():
             auth_data = sp.get_auth_data_in_session()
-            message = f'''
-            <p>You are logged in as <strong>{auth_data.nameid}</strong>.
-            The IdP sent back the following attributes:<p>
-            '''
-            attrs = '<dl>{}</dl>'.format(''.join(
-                f'<dt>{attr}</dt><dd>{value}</dd>'
-                for attr, value in auth_data.attributes.items()))
 
             """Add received data from idp to a user data dictionary"""
             user_data = {}
@@ -95,18 +86,18 @@ def manage_user(user_data):
     user = user_repo.get_by(mykaarma_user_id=user_data['id'])
     # user never signed on
     if user is None:
-        userByEmail = user_repo.get_by(email_addr=user_data['email'])
+        user_by_email = user_repo.get_by(email_addr=user_data['email'])
 
-        if (userByEmail is None):
+        if (user_by_email is None):
 
             """Generate 4 digit alphanumeric string with digits and lowercase characters"""
-            name = username_from_full_name(user_data['name']) + (''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(4)))
+            name = get_mykaarma_username_from_full_name(user_data['name'])
 
 
             """check if already a user present with the same name, if yes, generate another random string"""
             user = user_repo.get_by_name(name)
             while(user is not None):
-                name = username_from_full_name(user_data['name']) + (''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(4)))
+                name = get_mykaarma_username_from_full_name(user_data['name']) 
                 user = user_repo.get_by_name(name)
 
             """add user"""
@@ -119,20 +110,22 @@ def manage_user(user_data):
                 newsletter.subscribe_user(user)
             return user
         else:
-            if (userByEmail.name == username_from_full_name(user_data['name'])):
-                name = username_from_full_name(user_data['name']) + (''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(4)))
-                user = user_repo.get_by_name(name)
-                while(user is not None):
-                    name = username_from_full_name(user_data['name']) + (''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(4)))
-                    user = user_repo.get_by_name(name)
-                userByEmail.name = name
-            userByEmail.mykaarma_user_id=user_data['id']
-            user_repo.save(userByEmail)
-            return userByEmail
+            return add_through_email(user_by_email,user_data)
     else:
-        #user_repo.save(user)
         return user
 
+
+def add_through_email(user_by_email,user_data):
+    if (user_by_email.name == username_from_full_name(user_data['name']).decode('utf-8')):
+        name = get_mykaarma_username_from_full_name(user_data['name']) 
+        user = user_repo.get_by_name(name)
+        while(user is not None):
+            name = get_mykaarma_username_from_full_name(user_data['name'])
+            user = user_repo.get_by_name(name)
+        user_by_email.name = name
+    user_by_email.mykaarma_user_id=user_data['id']
+    user_repo.save(user_by_email)
+    return user_by_email
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""

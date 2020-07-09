@@ -346,7 +346,6 @@ def setup_external_services(app):
     setup_facebook_login(app)
     setup_google_login(app)
     setup_mykaarma_login(app)
-    print("line setupmykaarma calling")
     setup_flickr_importer(app)
     setup_dropbox_importer(app)
     setup_twitter_importer(app)
@@ -404,16 +403,13 @@ def setup_google_login(app):
 
 def setup_mykaarma_login(app):
     try:  # pragma: no cover
-        print("in try")
         if (app.config['MYKAARMA_LOGIN']
                 and app.config.get('LDAP_HOST') is None):
             mykaarma.init_app(app)
-            print("in if")
             from pybossa.view.mykaarma import blueprint as mykaarma_bp
             app.register_blueprint(mykaarma_bp, url_prefix='/saml')
     except Exception as inst:  # pragma: no cover
         print(type(inst))
-        print("nin exception")
         print(inst.args)
         print(inst)
         print("mykaarma signin disabled")

@@ -30,6 +30,7 @@ from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from .api_base import APIBase
+from pybossa.util import get_mykaarma_username_from_full_name
 from pybossa.util import get_user_id_or_ip, get_avatar_url
 from pybossa.core import task_repo, sentinel, anonymizer, project_repo
 from pybossa.core import uploader
@@ -123,7 +124,6 @@ class TaskRunAPI(APIBase):
                     data[key] = json.loads(request.form[key])
                 else:
                     data[key] = request.form[key]
-            # inst = self._create_instance_from_request(data)
 
             #Check if task exists
             tasks = task_repo.getTasks(data['info']['uuid'],data['project_id'])
@@ -141,8 +141,11 @@ class TaskRunAPI(APIBase):
             """Try to get user by uuid, if not present, add a new user"""
             user = user_repo.get_by(mykaarma_user_id=data['useruuid'])
             if(user is None):
-                body = data['fullname']
-                name = data["fullname"] + "1234"
+                name = get_mykaarma_username_from_full_name(data["fullname"]) 
+                user = user_repo.get_by_name(name)
+                while(user is not None):
+                    name = get_mykaarma_username_from_full_name(data["fullname"])
+                    user = user_repo.get_by_name(name)
                 user = User(fullname=data['fullname'],
                     name=name,
                     email_addr=data['email'],
@@ -192,3 +195,4 @@ class TaskRunAPI(APIBase):
                     ensure_authorized_to('delete', obj)
                     uploader.delete_file(obj.info['file_name'],
                                          obj.info['container'])
+                                         
