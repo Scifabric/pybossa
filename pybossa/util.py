@@ -49,6 +49,7 @@ from werkzeug.utils import secure_filename
 from flask import safe_join
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.cloud_store_api.connection import create_connection
+from pybossa.extensions import misaka
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
 
@@ -1179,3 +1180,19 @@ def get_taskrun_date_range_sql_clause_params(start_date, end_date):
         date_clause += " AND task_run.finish_time <=:end_date"
         sql_params['end_date'] = end_date
     return date_clause, sql_params
+    
+    
+def description_from_long_description(desc, long_desc):
+    """If description, return, else get from long description"""
+    if desc:
+        return desc
+    html_long_desc = misaka.render(long_desc)[:-1]
+    remove_html_tags_regex = re.compile('<[^>]*>')
+    blank_space_regex = re.compile('\n')
+    text_desc = remove_html_tags_regex.sub("", html_long_desc)[:255]
+    if len(text_desc) >= 252:
+        text_desc = text_desc[:-3]
+        text_desc += "..."
+    description = blank_space_regex.sub(" ", text_desc)
+    return description if description else " "
+    

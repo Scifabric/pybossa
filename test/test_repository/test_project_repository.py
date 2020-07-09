@@ -191,14 +191,117 @@ class TestProjectRepositoryForProjects(Test):
 
 
     @with_context
-    def test_save_fails_if_integrity_error(self):
-        """Test save raises a DBIntegrityError if the instance to be saved lacks
-        a required value"""
-
+    def test_save_fails_if_missing_name(self):
+        """Test save raises a BadRequest if project has no name"""
         project = ProjectFactory.build(name=None)
         project.set_password('hello')
 
-        assert_raises(DBIntegrityError, self.project_repo.save, project)
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Name required"
+
+
+    @with_context
+    def test_save_fails_if_missing_short_name(self):
+        """Test save raises a BadRequest if project has no short_name"""
+        project = ProjectFactory.build(name="exists", short_name=None)
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Short_name required"
+
+
+    @with_context
+    def test_save_fails_if_missing_description(self):
+        """Test save raises a BadRequest if project has no description"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description=None)
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Description required"
+
+
+    @with_context
+    def test_save_fails_if_missing_kpi(self):
+        """Test save raises a BadRequest if project has no kpi"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description="exists")
+        project.info["kpi"] = None
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "KPI required"
+
+
+    @with_context
+    def test_save_fails_if_invalid_kpi(self):
+        """Test save raises a BadRequest if project kpi is invalid"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description="exists")
+        project.info["kpi"] = ''
+        project.set_password('hello')
+
+        # fail if not value
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "KPI must be value between 0.1 and 120"
+
+        project.info["kpi"] = 121
+        project.set_password('hello')
+
+        # fail if out of range
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "KPI must be value between 0.1 and 120"
+
+
+    @with_context
+    def test_save_fails_if_missing_product(self):
+        """Test save raises a BadRequest if project has no product"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description="exists")
+        project.info["product"] = None
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Product and subproduct required"
+
+
+    @with_context
+    def test_save_fails_if_missing_subproduct(self):
+        """Test save raises a BadRequest if project has no subproduct"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description="exists")
+        project.info["subproduct"] = None
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Product and subproduct required"
+
+
+    @with_context
+    def test_save_fails_if_invalid_product(self):
+        """Test save raises a BadRequest if project has invalid product"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description="exists")
+        project.info["product"] = "wrong"
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Invalid product"
+
+
+    @with_context
+    def test_save_fails_if_invalid_subproduct(self):
+        """Test save raises a BadRequest if project has invalid subproduct"""
+        project = ProjectFactory.build(name="exists", short_name="exists", description="exists")
+        project.info["subproduct"] = "wrong"
+        project.set_password('hello')
+
+        with assert_raises(BadRequest) as err:
+            self.project_repo.save(project)
+        assert err.exception.description == "Invalid subproduct"
 
 
     @with_context

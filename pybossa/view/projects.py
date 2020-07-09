@@ -52,7 +52,8 @@ from pybossa.model.blogpost import Blogpost
 from pybossa.util import (Pagination, admin_required, get_user_id_or_ip, rank,
                           handle_content_type, redirect_content_type,
                           get_avatar_url, admin_or_subadmin_required,
-                          s3_get_file_contents, fuzzyboolean, is_own_url_or_else)
+                          s3_get_file_contents, fuzzyboolean, is_own_url_or_else,
+                          description_from_long_description)
 from pybossa.auth import ensure_authorized_to
 from pybossa.cache import projects as cached_projects
 from pybossa.cache import users as cached_users
@@ -374,19 +375,6 @@ def new():
                         prodsubprods=prodsubprods)
         return handle_content_type(response)
 
-    def _description_from_long_description():
-        if form.description.data:
-            return form.description.data
-        long_desc = form.long_description.data
-        html_long_desc = misaka.render(long_desc)[:-1]
-        remove_html_tags_regex = re.compile('<[^>]*>')
-        blank_space_regex = re.compile('\n')
-        text_desc = remove_html_tags_regex.sub("", html_long_desc)[:255]
-        if len(text_desc) >= 252:
-            text_desc = text_desc[:-3]
-            text_desc += "..."
-        description = blank_space_regex.sub(" ", text_desc)
-        return description if description else " "
 
     if request.method != 'POST':
         return respond(False)
@@ -409,7 +397,10 @@ def new():
 
     project = Project(name=form.name.data,
                       short_name=form.short_name.data,
-                      description=_description_from_long_description(),
+                      description=description_from_long_description(
+                          form.description.data, 
+                          form.long_description.data
+                          ),
                       long_description=form.long_description.data,
                       owner_id=current_user.id,
                       info=info,

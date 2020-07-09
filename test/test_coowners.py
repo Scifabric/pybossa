@@ -222,7 +222,13 @@ class TestCoowners(web.Helper):
         """
         from pybossa.core import project_repo
         self.register()
-        project = Fixtures.create_project({'passwd_hash': 'hello', 'data_classification': dict(input_data="L4 - public", output_data="L4 - public")})
+        project = Fixtures.create_project({
+            'passwd_hash': 'hello', 
+            'data_classification': dict(input_data="L4 - public", output_data="L4 - public"), 
+            'kpi': 0.5,
+            'product': 'abc',
+            'subproduct': 'def'
+            })
         project.owner_id = 1
         project_repo.save(project)
         assert project.owners_ids == [1]

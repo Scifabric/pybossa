@@ -60,7 +60,8 @@ class ProjectRepository(Repository):
         self._creator_is_owner(project)
         self._verify_has_password(project)
         self._verify_data_classification(project)
-
+        self._verify_required_fields(project)
+        self._verify_product_subproduct(project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -180,6 +181,29 @@ class ProjectRepository(Repository):
         if data_access:
             project.info['data_access'] = [data_access]
 
+    def _verify_product_subproduct(self, project):
+        products_subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS', {})
+        product = project.info.get("product")
+        subproduct = project.info.get("subproduct")
+        if not (product and subproduct):
+            raise BadRequest("Product and subproduct required")
+        if product not in products_subproducts:
+            raise BadRequest("Invalid product")
+        if subproduct not in products_subproducts[product]:
+            raise BadRequest("Invalid subproduct")
+        
+    def _verify_required_fields(self, project):
+        if not project.name:
+            raise BadRequest("Name required")
+        if not project.short_name:
+            raise BadRequest("Short_name required")
+        if not project.description:
+            raise BadRequest("Description required")
+        kpi = project.info.get("kpi")
+        if kpi is None:
+            raise BadRequest("KPI required")
+        if not isinstance(kpi, (float, int)) or kpi > 120 or kpi < 0.1:
+            raise BadRequest("KPI must be value between 0.1 and 120")
 
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):

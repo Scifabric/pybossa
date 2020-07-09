@@ -29,7 +29,7 @@ from flask_login import current_user
 from api_base import APIBase
 from pybossa.model.project import Project
 from pybossa.cache.categories import get_all as get_categories
-from pybossa.util import is_reserved_name
+from pybossa.util import is_reserved_name, description_from_long_description
 from pybossa.core import auditlog_repo, result_repo, http_signer
 from pybossa.auditlogger import AuditLogger
 from pybossa.data_access import ensure_user_assignment_to_project, set_default_amp_store
@@ -57,10 +57,22 @@ class ProjectAPI(APIBase):
         amp_config = data.get('info', {}).get('annotation_config', {}).get('amp_store')
         if amp_config is None:
             set_default_amp_store(data)
-
+        # clean up description and long description
+        long_desc = data.get("long_description")
+        desc = data.get("description")
+        if not long_desc and not desc:
+            raise BadRequest("description or long description required")
+        if not long_desc:
+            data["long_description"] = desc
+        if not desc:
+            data["description"] = description_from_long_description(desc, long_desc)
 
     def _create_instance_from_request(self, data):
+        if 'password' not in data.keys():
+            raise BadRequest("password required")
+        password = data.pop("password")
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
+        inst.set_password(password)
         category_ids = [c.id for c in get_categories()]
         default_category = get_categories()[0]
         inst.category_id = default_category.id
