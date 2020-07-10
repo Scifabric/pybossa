@@ -16,6 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from flask_oauthlib.client import OAuth
+from flask_saml2.utils import certificate_from_file, private_key_from_file
+from pathlib import Path
+
+KEY_DIR = Path(__file__).parent.parent / 'keys' / 'sample'
+CERTIFICATE_FILE = KEY_DIR / 'sp-certificate.pem'
+PRIVATE_KEY_FILE = KEY_DIR / 'sp-private-key.pem'
 
 class Twitter(object):
 
@@ -97,6 +103,8 @@ class Mykaarma(object):
 
     def init_app(self, app):
         """Init app using factories pattern."""
+        CERTIFICATE = certificate_from_file(CERTIFICATE_FILE)
+        PRIVATE_KEY = private_key_from_file(PRIVATE_KEY_FILE)
         app.config['SAML2_IDENTITY_PROVIDERS'] = [
             {
                 'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
@@ -111,10 +119,11 @@ class Mykaarma(object):
         ]
         
         app.config['SAML2_SP'] = {
-            # 'certificate': 'abc',
-            # 'private_key': 'abc',
+
+            'certificate': CERTIFICATE,
+            'private_key': PRIVATE_KEY,
+
         }
-        print("APP INITIALISED")
         
 
 class Flickr(object):

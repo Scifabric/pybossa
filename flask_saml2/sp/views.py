@@ -80,7 +80,7 @@ class AssertionConsumer(SAML2View):
     def dispatch_request(self):
         if request.method == 'POST':
             saml_request = request.form['SAMLResponse']
-            relay_state = "https://play.mykaarma.dev/saml/"
+            relay_state = "http://localhost:5000/saml/"
 
             for handler in self.sp.get_idp_handlers():
                 try:
