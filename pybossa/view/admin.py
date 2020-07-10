@@ -564,12 +564,14 @@ def management_dashboard():
         DASHBOARD_QUEUE.enqueue(get_management_dashboard_stats, current_user.email_addr)
         return redirect_content_type(url_for('admin.index'))
 
+    # charts
     project_chart = site_stats.project_chart()
     category_chart = site_stats.category_chart()
     task_chart = site_stats.task_chart()
     submission_chart = site_stats.submission_chart()
     current_app.logger.info(task_chart)
 
+    # General platform usage
     timed_stats_funcs = [
         site_stats.number_of_active_jobs,
         site_stats.number_of_created_jobs,
@@ -580,6 +582,7 @@ def management_dashboard():
         site_stats.categories_with_new_projects
     ]
 
+    # Work on platform
     current_stats_funcs = [
         site_stats.avg_task_per_job,
         site_stats.tasks_per_category

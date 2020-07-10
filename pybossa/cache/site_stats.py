@@ -347,12 +347,14 @@ def task_chart():
         AS created_monthly
         FROM task
         GROUP BY created_monthly
-        ORDER BY created_monthly ASC
+        ORDER BY created_monthly DESC
         LIMIT 24;
         ''')
     rows = session.execute(sql).fetchall()
     labels = [date.strftime('%b %Y') for _, date in rows]
     series = [count for count, _ in rows]
+    labels.reverse()
+    series.reverse()
     return dict(labels=labels, series=[series])
 
 
@@ -367,12 +369,14 @@ def submission_chart():
         AS task_run_monthly
         FROM task_run
         GROUP BY task_run_monthly
-        ORDER BY task_run_monthly ASC
+        ORDER BY task_run_monthly DESC
         LIMIT 24;
         ''')
     rows = session.execute(sql).fetchall()
     labels = [date.strftime('%b %Y') for _, date in rows]
     series = [count for count, _ in rows]
+    labels.reverse()
+    series.reverse()
     return dict(labels=labels, series=[series])
 
 
