@@ -111,8 +111,8 @@ class Mykaarma(object):
         ]
         
         app.config['SAML2_SP'] = {
-            'certificate': 'abc',
-            'private_key': 'abc',
+            # 'certificate': 'abc',
+            # 'private_key': 'abc',
         }
         print("APP INITIALISED")
         
