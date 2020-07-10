@@ -119,8 +119,10 @@ class Mykaarma(object):
         ]
         
         app.config['SAML2_SP'] = {
+
             'certificate': CERTIFICATE,
             'private_key': PRIVATE_KEY,
+
         }
         
 

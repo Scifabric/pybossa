@@ -95,7 +95,7 @@ requirements = [
     "PyJWT==1.7.1",
     "PyLD==1.0.4",
     "pyldap==3.0.0.post1",
-    "pyOpenSSL==18.0.0",
+    # "pyOpenSSL==18.0.0",
     "pyparsing==2.3.0",
     "python-dateutil==2.7.5",
     "python-editor==1.0.3",
@@ -137,7 +137,11 @@ requirements = [
     "WTForms>=1.0.5",
     "WTForms-Components>=0.10.3",
     "yacryptopan==1.0.0",
-    "email_validator==1.1.1"
+    "email_validator==1.1.1",
+    "attrs>=18.1.0",
+    "signxml>=2.4.0",
+    "pyopenssl<18",
+    "defusedxml>=0.5.0",
 ]
 
 setup(
