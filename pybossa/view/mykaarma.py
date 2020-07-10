@@ -15,7 +15,7 @@ from flask_saml2.exceptions import CannotHandleAssertion
 
 from flask_saml2.sp import ServiceProvider
 
-from tests.sp.base import CERTIFICATE, PRIVATE_KEY
+
 from pybossa.extensions import csrf
 from pybossa.core import mykaarma, user_repo, newsletter
 from pybossa.model.user import User
