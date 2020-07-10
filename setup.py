@@ -138,10 +138,10 @@ requirements = [
     "WTForms-Components>=0.10.3",
     "yacryptopan==1.0.0",
     "email_validator==1.1.1",
-    'attrs>=18.1.0',
-    'signxml>=2.4.0',
-    'pyopenssl<18',
-    'defusedxml>=0.5.0',
+    "attrs>=18.1.0",
+    "signxml>=2.4.0",
+    "pyopenssl<18",
+    "defusedxml>=0.5.0",
 ]
 
 setup(
