@@ -608,6 +608,7 @@ def delete_bulk_tasks(data):
     coowners = data['coowners']
     current_user_fullname = data['current_user_fullname']
     force_reset = data['force_reset']
+    url = data['url']
     params = {}
 
     # bulkdel db conn is with db user having session_replication_role
@@ -687,8 +688,8 @@ def delete_bulk_tasks(data):
                 COMMIT;
                 '''.format(sql_session_repl, conditions))
         msg = ("Tasks, taskruns and results associated have been "
-               "deleted from project {0} as requested by {1}"
-               .format(project_name, current_user_fullname))
+               "deleted from project {0} on {1} as requested by {2}"
+               .format(project_name, url, current_user_fullname))
     db.bulkdel_session.execute(sql, dict(project_id=project_id, **params))
     cached_projects.clean_project(project_id)
     subject = 'Tasks deletion from %s' % project_name
