@@ -66,6 +66,11 @@ class ProjectAPI(APIBase):
             data["long_description"] = desc
         if not desc:
             data["description"] = description_from_long_description(desc, long_desc)
+        # set default data_access
+        if not data.get('info', {}).get("data_access"):
+            data["info"] = data.get("info", {})
+            # set to least restrictive, will overwrite when saved
+            data["info"]["data_access"] = ["L4"]
 
     def _create_instance_from_request(self, data):
         if 'password' not in data.keys():
