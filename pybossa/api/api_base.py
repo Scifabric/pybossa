@@ -100,7 +100,8 @@ class APIBase(MethodView):
                               'helpingmaterial',
                               'announcement',
                               'taskrun',
-                              'page']
+                              'page',
+                              'task']
 
     def refresh_cache(self, cls_name, oid):
         """Refresh the cache."""
@@ -312,7 +313,7 @@ class APIBase(MethodView):
         try:
             cls_name = self.__class__.__name__
             data = None
-            self.valid_args()
+            self.valid_args()            
             data = self._file_upload(request)
             if data is None:
                 data = json.loads(request.data)
@@ -320,7 +321,8 @@ class APIBase(MethodView):
             inst = self._create_instance_from_request(data)
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
-            getattr(repo, save_func)(inst)
+            if ( not str(type(self)) == "<class 'pybossa.api.mk_tasks.mkTaskAPI'>"):
+                getattr(repo, save_func)(inst)
             self._log_changes(None, inst)
             self.refresh_cache(cls_name, inst.id)
             json_response = json.dumps(inst.dictize())
@@ -486,6 +488,7 @@ class APIBase(MethodView):
         """Method to be overriden by inheriting classes for logging purposes"""
         pass
 
+    
     def _forbidden_attributes(self, data):
         """Method to be overriden by inheriting classes that will not allow for
         certain fields to be used in PUT or POST requests"""

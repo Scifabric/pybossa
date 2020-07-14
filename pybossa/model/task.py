@@ -52,7 +52,9 @@ class Task(db.Model, DomainObject):
     n_answers = Column(Integer, default=30)
     #: Array of User IDs that favorited this task
     fav_user_ids = Column(MutableList.as_mutable(ARRAY(Integer)))
-
+    #: Integer to mark if task flagged or not
+    flagged = Column(Integer, default=0)
+    
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 
 

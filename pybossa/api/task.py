@@ -39,6 +39,7 @@ class TaskAPI(APIBase):
     def _forbidden_attributes(self, data):
         for key in list(data.keys()):
             if key in self.reserved_keys:
+                print("bad keys?")
                 raise BadRequest("Reserved keys in payload")
 
     def _update_attribute(self, new, old):
