@@ -1195,4 +1195,32 @@ def description_from_long_description(desc, long_desc):
         text_desc += "..."
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
+
+firm_to_type = {
+    9001: 'Full-time Employee',
+    937686: 'Infosys Vendor',
+    905877: 'Liberty Vendor',
+    354126: 'Tata Vendor',
+    569446: 'Wipro Vendor',
+    905195: 'iMerit Vendor'
+    }
     
+def get_user_type(firm_num):
+    try:
+        user_type = firm_to_type.get(int(firm_num))
+        return user_type
+    except:
+        return None
+
+
+def get_user_data_access_level(firm_num):
+    # all Bloomberg Employee types – L2
+    # all vendors - L2
+    # Upwork and Green Markets - L4
+    # Public GIGwork does not have access level for users.   
+    if firm_num == 9001:
+        return 'L2'
+    elif firm_num in firm_to_type.keys():
+        return 'L2'
+    else:
+        return 'L4'
