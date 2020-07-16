@@ -471,10 +471,12 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
                                email_addr=user_data['email_addr'],
                                valid_email=True,
                                consent=user_data.get('consent', True))
-
+    
     if user_data.get('user_pref'):
         new_user.user_pref = user_data['user_pref']
+   
     if user_data.get('metadata'):
+        print(user_data.get('metadata'))
         new_user.info = dict(metadata=user_data['metadata'])
 
     if ldap_disabled:

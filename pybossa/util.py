@@ -1215,11 +1215,9 @@ def get_user_type(firm_num):
 
 def get_user_data_access_level(firm_num):
     # if user is a Bloomberg employee, assign level 2 access 
-    if firm_num == 9001:
-        return 'L2'
     # if user is a vendor, assign level 2 access
-    elif firm_num in firm_to_type.keys():
-        return 'L2'
+    if firm_num in firm_to_type.keys():
+        return ['L2']
     # for Upwork, Green Markets and anything else, assign level 4
     else:
-        return 'L4'
+        return ['L4']
