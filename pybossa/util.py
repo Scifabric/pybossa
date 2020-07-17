@@ -1195,17 +1195,9 @@ def description_from_long_description(desc, long_desc):
         text_desc += "..."
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
-
-firm_to_type = {
-    9001: 'Full-time Employee',
-    937686: 'Infosys Vendor',
-    905877: 'Liberty Vendor',
-    354126: 'Tata Vendor',
-    569446: 'Wipro Vendor',
-    905195: 'iMerit Vendor'
-    }
     
 def get_user_type(firm_num):
+    firm_to_type = current_app.config.get('FIRM_TO_TYPE ') or {}
     try:
         user_type = firm_to_type.get(int(firm_num))
         return user_type
@@ -1214,6 +1206,5 @@ def get_user_type(firm_num):
 
 
 def get_user_data_access_level(firm_num):
-    # if user is a Bloomberg employee or vendor assign 2 access, 
-    # for Upwork, Green Markets and anything else, assign level 4
+    firm_to_type = current_app.config.get('FIRM_TO_TYPE ') or {}
     return ['L2'] if int(firm_num) in firm_to_type.keys() else ['L4']
