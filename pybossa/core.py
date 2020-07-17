@@ -198,6 +198,7 @@ def setup_repositories(app):
     from pybossa.repositories import AnnouncementRepository
     from pybossa.repositories import BlogRepository
     from pybossa.repositories import TaskRepository
+    from pybossa.repositories import FlaggedTaskRepository
     from pybossa.repositories import AuditlogRepository
     from pybossa.repositories import WebhookRepository
     from pybossa.repositories import ResultRepository
@@ -209,6 +210,7 @@ def setup_repositories(app):
     global announcement_repo
     global blog_repo
     global task_repo
+    global flagged_task_repo
     global auditlog_repo
     global webhook_repo
     global result_repo
@@ -221,6 +223,7 @@ def setup_repositories(app):
     announcement_repo = AnnouncementRepository(db)
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db, language)
+    flagged_task_repo = FlaggedTaskRepository(db)
     auditlog_repo = AuditlogRepository(db)
     webhook_repo = WebhookRepository(db)
     result_repo = ResultRepository(db)
