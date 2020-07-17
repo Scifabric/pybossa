@@ -37,5 +37,9 @@ class Sentinel(object):
         redis_db = app.config.get('REDIS_DB') or 0
         redis_master = app.config.get('REDIS_MASTER') or 'mymaster'
         
-        self.master = self.connection.master_for(redis_master, db=redis_db)
-        self.slave = self.connection.slave_for(redis_master, db=redis_db)
+        if(app.config.get('REDIS_MK_MASTER')):
+            self.master = StrictRedis(host=app.config.get('REDIS_MK_MASTER'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'))
+            self.slave = StrictRedis(host=app.config.get('REDIS_MK_SLAVE'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'))
+        else:
+            self.master = self.connection.master_for(redis_master, db=redis_db)
+            self.slave = self.connection.slave_for(redis_master, db=redis_db)
