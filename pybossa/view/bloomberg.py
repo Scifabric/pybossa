@@ -91,7 +91,7 @@ def handle_bloomberg_response():
                 user_data['metadata']    = {"admin" : "BSSO"}
                 # Get user access levels for Private GIGWork  
                 if current_app.config.get('PRIVATE_INSTANCE') == True:
-                    user_data['user_type']  = get_user_type(attributes.get('firmId', ['L4'])[0])
+                    user_data['user_type']  = get_user_type(attributes.get('firmId', ['None'])[0])
                 create_account(user_data, auto_create=True)
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
