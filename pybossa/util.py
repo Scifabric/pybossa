@@ -1201,9 +1201,6 @@ def get_user_type(firm_num):
     try:
         user_type = firm_to_type.get(int(firm_num))
         return user_type
-    except:
-        return None
-
 
 def get_user_data_access_level(firm_num):
     firm_to_type = current_app.config.get('FIRM_TO_TYPE ') or {}
