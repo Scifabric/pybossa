@@ -80,8 +80,7 @@ class AssertionConsumer(SAML2View):
     def dispatch_request(self):
         if request.method == 'POST':
             saml_request = request.form['SAMLResponse']
-            relay_state = "http://localhost:5000/saml/"
-
+            relay_state = "/saml/"
             for handler in self.sp.get_idp_handlers():
                 try:
                     response = handler.get_response_parser(saml_request)
