@@ -32,7 +32,7 @@ from werkzeug.exceptions import Forbidden, BadRequest
 from .api_base import APIBase
 from pybossa.util import get_mykaarma_username_from_full_name
 from pybossa.util import get_user_id_or_ip, get_avatar_url
-from pybossa.core import task_repo, sentinel, anonymizer, project_repo
+from pybossa.core import task_repo, sentinel, anonymizer, project_repo, flagged_task_repo
 from pybossa.core import uploader
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.auth import jwt_authorize_project
@@ -43,6 +43,8 @@ from pybossa.sched import can_post
 from pybossa.model.user import User
 from pybossa.core import user_repo
 from pybossa.model.task import Task
+from pybossa.model.flagged_task import FlaggedTask
+
 
 class mkTaskAPI(APIBase):
 
@@ -67,7 +69,8 @@ class mkTaskAPI(APIBase):
     def _ensure_task_was_requested(self, task, guard):
         pass
 
-    def _add_user_info(self, taskrun):
+    def _add_user_info(self):
+                   
         pass
 
     def _add_created_timestamp(self, taskrun, task, guard):
@@ -86,13 +89,17 @@ class mkTaskAPI(APIBase):
             data = dict()
             enc = json.loads(request.data)
             data['id'] = enc['task_id']
+            enc['reason']= "inappropriateMessage"
             task = task_repo.get_task(enc['task_id'])
-            task.state="completed"
+            data['project_id'] = task.project_id
+            # task.state="completed"
             task.flagged=1
-            task_repo.update(task)
-            data['project_id'] = 1
-            data['state']='completed'
+            task_repo.update(task)            
+            # data['state']='completed'
             data['flagged']=1
+            data['project_id'] = 1
+            flag_task = FlaggedTask(project_id=data['project_id'], task_id=data['id'], user_id=current_user.id, reason=enc['reason'])
+            flagged_task_repo.save(flag_task)
             return data
         else:
             return None

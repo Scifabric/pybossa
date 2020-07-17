@@ -246,6 +246,7 @@ from .user_repository import UserRepository
 from .announcement_repository import AnnouncementRepository
 from .blog_repository import BlogRepository
 from .task_repository import TaskRepository
+from .flagged_task_repository import FlaggedTaskRepository
 from .auditlog_repository import AuditlogRepository
 from .webhook_repository import WebhookRepository
 from .result_repository import ResultRepository
@@ -258,6 +259,7 @@ assert UserRepository
 assert AnnouncementRepository
 assert BlogRepository
 assert TaskRepository
+assert FlaggedTaskRepository
 assert AuditlogRepository
 assert WebhookRepository
 assert ResultRepository
