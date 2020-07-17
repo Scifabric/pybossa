@@ -22,10 +22,6 @@ from pathlib import Path
 KEY_DIR = Path(__file__).parent.parent / 'keys' / 'sample'
 CERTIFICATE_FILE = KEY_DIR / 'certificate.pem'
 PRIVATE_KEY_FILE = KEY_DIR / 'private-key.pem'
-<<<<<<< HEAD
-
-=======
->>>>>>> f34ecc191831b95f23a6c2dea164340931ddd894
 
 class Twitter(object):
 
