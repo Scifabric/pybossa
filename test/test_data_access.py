@@ -129,9 +129,9 @@ class TestAccessLevels(Test):
             data_access.ensure_user_data_access_assignment_from_form(data, form)
             assert data['data_access'] == ['L3']
 
-    '''def test_copy_user_data_access_levels(self):
+    def test_copy_user_data_access_levels(self):
         with patch.dict(data_access.data_access_levels, self.patched_levels()):
             target = dict()
             access_level = ['L3']
             data_access.copy_user_data_access_levels(target, access_level)
-            assert target['data_access'] == access_level'''
+            assert target['data_access'] == access_level
