@@ -155,7 +155,7 @@ def ensure_valid_user_access_levels(access_levels):
 
 @when_data_access()
 def copy_user_data_access_levels(target, access_levels):
-    #if target:
+    ensure_valid_user_access_levels(access_levels)
     target['data_access'] = access_levels
 
 
