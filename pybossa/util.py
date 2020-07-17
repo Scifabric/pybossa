@@ -1198,9 +1198,8 @@ def description_from_long_description(desc, long_desc):
     
 def get_user_type(firm_num):
     firm_to_type = current_app.config.get('FIRM_TO_TYPE ') or {}
-    try:
-        user_type = firm_to_type.get(int(firm_num))
-        return user_type
+    user_type = firm_to_type.get(int(firm_num), None)
+    return user_type
 
 def get_user_data_access_level(firm_num):
     firm_to_type = current_app.config.get('FIRM_TO_TYPE ') or {}
