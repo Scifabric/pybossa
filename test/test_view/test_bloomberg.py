@@ -77,7 +77,7 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = False
         mock_one_login.return_value = mock_auth
-        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'emailAddress': ['test@test.com'], 'lastName': [u'test'], 'username': [u'test'], 'firmId': [u'9001']}
+        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'emailAddress': ['test@test.com'], 'lastName': [u'test'], 'username': [u'test'], 'firmId': [u'1234567']}
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_create_account.called == False
         assert res.status_code == 302, res.status_code
@@ -94,7 +94,7 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
-        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'9001']}
+        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'1234567']}
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_create_account.called
         assert res.status_code == 302, res.status_code
@@ -111,7 +111,7 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
-        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'905877']}
+        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'1234567']}
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_create_account.called
         assert res.status_code == 302, res.status_code
@@ -127,7 +127,7 @@ class TestBloomberg(Test):
         mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
         mock_bsso_alert.return_value = None
-        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'9001']}
+        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'1234567']}
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_bsso_alert.called
         assert res.status_code == 302, res.status_code
@@ -155,7 +155,7 @@ class TestBloomberg(Test):
         mock_auth.is_authenticated = True
         mock_one_login.return_value = mock_auth
         mock_sign_in.side_effect = Exception()
-        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'emailAddress': ['test@test.com'], 'lastName': [u'test'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test'], 'firmId': [u'9001']}
+        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'emailAddress': ['test@test.com'], 'lastName': [u'test'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test'], 'firmId': [u'1234567']}
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_create_account.called 
         assert res.status_code == 302, res.status_code
