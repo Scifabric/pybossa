@@ -20,8 +20,9 @@ from flask_saml2.utils import certificate_from_file, private_key_from_file
 from pathlib import Path
 
 KEY_DIR = Path(__file__).parent.parent / 'keys' / 'sample'
-CERTIFICATE_FILE = KEY_DIR / 'sp-certificate.pem'
-PRIVATE_KEY_FILE = KEY_DIR / 'sp-private-key.pem'
+CERTIFICATE_FILE = KEY_DIR / 'certificate.pem'
+PRIVATE_KEY_FILE = KEY_DIR / 'private-key.pem'
+
 
 class Twitter(object):
 
