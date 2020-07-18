@@ -466,6 +466,7 @@ def confirm_account():
 
 
 def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_create=False):
+    #import pdb; pdb.set_trace()
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
@@ -477,6 +478,9 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
    
     if user_data.get('metadata'):
         new_user.info = dict(metadata=user_data['metadata'])
+
+    if user_data.get('user_type'):
+        new_user.user_type = dict(user_data['user_type']) 
 
     if ldap_disabled:
         new_user.set_password(user_data['password'])
