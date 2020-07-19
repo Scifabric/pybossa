@@ -76,7 +76,6 @@ def handle_bloomberg_response():
         # User is authenticated on BSSO, load user from GIGwork API.
         attributes = auth.get_attributes()
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
-        #user = user_repo.get_by(email_addr=unicode(attributes['Email'][0]).lower())
         if user is not None:
             # User is authenticated on BSSO and already has a GIGwork account.
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
@@ -87,11 +86,8 @@ def handle_bloomberg_response():
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
                 user_data['name']        = attributes['username'][0]
-                #user_data['fullname']    = attributes['FirstName'][0] + " " + attributes['LastName'][0]
-                #user_data['email_addr']  = attributes['Email'][0]
-                #user_data['name']        = attributes['LoginID'][0]
                 user_data['password']    = generate_password()
-                user_data['metadata']    = {"admin" : "BSSO"}
+                user_data['admin']       = 'BSSO'
                 user_data['user_type']   = get_user_type(attributes.get('firmId', [None])[0])
                 user_data['data_access'] = get_user_data_access_level(attributes.get('firmId', [None])[0])
                 create_account(user_data, auto_create=True)
