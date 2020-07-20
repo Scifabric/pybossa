@@ -466,7 +466,6 @@ def confirm_account():
 
 
 def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_create=False):
-    print()
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
