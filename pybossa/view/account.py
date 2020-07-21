@@ -477,7 +477,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
 
     if user_data.get('metadata'):
         new_user.info = dict(metadata=user_data['metadata'])
-        new_user.info.update("metadata", {"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)})
+        new_user.info.metadata.update({"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)})
     else:
         new_user.info = {"metadata": {"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)}}
 
