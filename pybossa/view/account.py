@@ -482,6 +482,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
             new_user.ldap = user_data['ldap']
 
     new_user.info = {"metadata": {"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)}}
+
     copy_user_data_access_levels(new_user.info, user_data.get('data_access'))
     user_repo.save(new_user)
     if not ldap_disabled:

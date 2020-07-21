@@ -75,11 +75,14 @@ class TestUserImport(web.Helper):
 
         self.register()
         self.signin()
+
         url = '/admin/userimport?type=%s' % 'usercsvimport'
+
         users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
             newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_a"}'''
         res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
-            data={'file': (StringIO(users), 'users.csv')})
+            data={'file': (StringIO(users), 'users.csv')}) 
+
         assert '1 new users were imported successfully' in res.data, res.data
 
         new_user = user_repo.get_by_name('newuser')
