@@ -88,7 +88,7 @@ class TestUserImport(web.Helper):
         new_user = user_repo.get_by_name('newuser')
         assert new_user.fullname == 'New User'
         assert new_user.email_addr == 'new@user.com'
-        assert new_user.info['metadata']['user_type'] == 'None'
+        assert new_user.info['metadata']['user_type'] == None
 
     @with_context
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')
