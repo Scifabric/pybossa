@@ -75,17 +75,20 @@ class TestUserImport(web.Helper):
 
         self.register()
         self.signin()
+
         url = '/admin/userimport?type=%s' % 'usercsvimport'
+
         users = '''name,fullname,email_addr,password,project_slugs,user_pref,metadata
             newuser,New User,new@user.com,NewU$3r!,,{},{"user_type": "type_a"}'''
         res = self.app.post(url, follow_redirects=True, content_type='multipart/form-data',
-            data={'file': (StringIO(users), 'users.csv')})
+            data={'file': (StringIO(users), 'users.csv')}) 
+
         assert '1 new users were imported successfully' in res.data, res.data
 
         new_user = user_repo.get_by_name('newuser')
         assert new_user.fullname == 'New User'
         assert new_user.email_addr == 'new@user.com'
-        assert new_user.info['metadata']['user_type'] == 'type_a'
+        assert new_user.info['metadata']['user_type'] == None
 
     @with_context
     @patch('pybossa.forms.forms.app_settings.upref_mdata.get_upref_mdata_choices')

@@ -21,7 +21,7 @@ from flask_babel import gettext
 from pybossa.core import user_repo, csrf
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
-from pybossa.util import is_own_url_or_else, generate_password
+from pybossa.util import is_own_url_or_else, generate_password, get_user_type, get_user_data_access_level
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
@@ -83,11 +83,13 @@ def handle_bloomberg_response():
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
             try:
-                user_data['fullname']   = attributes['firstName'][0] + " " + attributes['lastName'][0]
-                user_data['email_addr'] = attributes['emailAddress'][0]
-                user_data['name']       = attributes['username'][0]
-                user_data['data_access']= ["L4"]
-                user_data['password']   = generate_password()
+                user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
+                user_data['email_addr']  = attributes['emailAddress'][0]
+                user_data['name']        = attributes['username'][0]
+                user_data['password']    = generate_password()
+                user_data['admin']       = 'BSSO'
+                user_data['user_type']   = get_user_type(attributes.get('firmId', [None])[0])
+                user_data['data_access'] = get_user_data_access_level(attributes.get('firmId', [None])[0])
                 create_account(user_data, auto_create=True)
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))

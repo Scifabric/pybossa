@@ -39,23 +39,25 @@ class Helper(Test):
             return "<title>PYBOSSA &middot; %s - PyBossa by Scifabric</title>" % title
 
     @patch('pybossa.view.account.signer')
-    def register(self, mock=None, fullname="John Doe", name="johndoe",
-                 password="p4ssw0rd", email=None, consent=False, subadmin=False,
-                 admin=False):
+    def register(self, mock=None, fullname=u'John Doe', name=u'johndoe',
+                 password=u'p4ssw0rd', email=None, consent=False, subadmin=False,
+                 data_access=[u'L4'], admin=True):
+
         """Helper function to register and sign in a user"""
         if email is None:
             email = name + '@example.com'
         userdict = {'fullname': fullname, 'name': name,
                     'email_addr': email, 'password': password,
                     'consent': consent, 'subadmin': subadmin,
-                    'admin': admin}
+                    'admin': admin, 'data_access': data_access}
         if mock:
             mock.loads.return_value = userdict
+
         return self.app.get('/account/register/confirmation?key=fake-key',
                             follow_redirects=True)
 
     def signin(self, method="POST", email="johndoe@example.com",
-               password="p4ssw0rd", next=None,
+               password="p4ssw0rd", next=None, data_access=[u'L4'],  
                content_type="multipart/form-data", follow_redirects=True, csrf=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
