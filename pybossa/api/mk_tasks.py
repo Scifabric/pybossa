@@ -92,10 +92,10 @@ class mkTaskAPI(APIBase):
             enc['reason']= "inappropriateMessage"
             task = task_repo.get_task(enc['task_id'])
             data['project_id'] = task.project_id
-            # task.state="completed"
+            task.state="completed"
             task.flagged=1
             task_repo.update(task)            
-            # data['state']='completed'
+            data['state']='completed'
             data['flagged']=1
             data['project_id'] = 1
             flag_task = FlaggedTask(project_id=data['project_id'], task_id=data['id'], user_id=current_user.id, reason=enc['reason'])
