@@ -63,7 +63,6 @@ from pybossa.cache.helpers import add_custom_contrib_button_to, has_no_presenter
 from pybossa.cache.task_browse_helpers import (get_searchable_columns,
                                                parse_tasks_browse_args)
 from pybossa.ckan import Ckan
-from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import (webhook, send_mail,
@@ -398,7 +397,7 @@ def new():
     project = Project(name=form.name.data,
                       short_name=form.short_name.data,
                       description=description_from_long_description(
-                          form.description.data, 
+                          form.description.data,
                           form.long_description.data
                           ),
                       long_description=form.long_description.data,
@@ -777,7 +776,7 @@ def update(short_name):
     data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
         for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', ('', False))
     ]
-    
+
     title = project_title(project, "Update")
     if request.method == 'GET':
         sync = project.info.get('sync')

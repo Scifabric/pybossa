@@ -49,10 +49,12 @@ from werkzeug.utils import secure_filename
 from flask import safe_join
 from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.cloud_store_api.connection import create_connection
-from pybossa.extensions import misaka
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
 
+# Markdown support
+from flask_misaka import Misaka
+misaka = Misaka()
 
 def last_flashed_message():
     """Return last flashed message by flask."""
@@ -811,7 +813,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
     return msg
 
 def generate_bsso_account_notification(user, admins_emails, access_type):
-    
+
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
     brand = current_app.config.get('BRAND')
@@ -1180,8 +1182,8 @@ def get_taskrun_date_range_sql_clause_params(start_date, end_date):
         date_clause += " AND task_run.finish_time <=:end_date"
         sql_params['end_date'] = end_date
     return date_clause, sql_params
-    
-    
+
+
 def description_from_long_description(desc, long_desc):
     """If description, return, else get from long description"""
     if desc:
@@ -1195,7 +1197,7 @@ def description_from_long_description(desc, long_desc):
         text_desc += "..."
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
-    
+
 def get_user_type(firm_num):
     firm_to_type = current_app.config.get('FIRM_TO_TYPE', {})
     return firm_to_type.get(int(firm_num), None) if firm_num else None
