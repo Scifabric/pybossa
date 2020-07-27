@@ -3218,6 +3218,7 @@ def ext_config(short_name):
     project, owner, ps = project_by_shortname(short_name)
     sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
 
+    project.info[u'ext_config'] = project.info.get(u'ext_config', {}) 
     ext_conf = project.info.get(u'ext_config', {})
 
     ensure_authorized_to('read', project)
@@ -3249,16 +3250,18 @@ def ext_config(short_name):
 
                 if u'hdfs' in ext_conf:
                     if not u'path' in ext_conf[u'hdfs']:
-                        del project.info[u'ext_config'][u'hdfs']
+                        project.info[u'ext_config'].pop(u'hdfs')
                     else:
                         project.info[u'ext_config'].update({u'hdfs': ext_conf[u'hdfs']})   
 
-                print("PROJECT: ", project.info)
+                if project.info[u'ext_config'] == {}:
+                    project.info.pop(u'ext_config')
+
                 project_repo.save(project)
                 sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
 
-                current_app.logger.info('Project id {} external configurations set. {} {}'.format(
-                    project.id, form_name, form.data))
+                current_app.logger.info('Project id {} external configurations set. Project name:{}; Project info: {}'.format(
+                    project.id, form_name, project.info))
                 flash(gettext('Configuration for {} was updated').format(display), 'success')
 
     template_forms = [(name, disp, cl(MultiDict(ext_conf.get(name, {}))))
