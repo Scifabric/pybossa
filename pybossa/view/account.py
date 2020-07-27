@@ -471,23 +471,24 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
                                email_addr=user_data['email_addr'],
                                valid_email=True,
                                consent=user_data.get('consent', True))
-    
+
     if user_data.get('user_pref'):
         new_user.user_pref = user_data['user_pref']
 
     if user_data.get('metadata'):
         new_user.info = dict(metadata=user_data['metadata'])
-        new_user.info['metadata'].update({"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)})
+        new_user.info['metadata'].update({"user_type": user_data.get('user_type', None),
+       "admin":user_data.get('admin', None)})
     else:
-        new_user.info = {"metadata": {"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)}}
+        new_user.info = dict(metadata={})
+        new_user.info['metadata'].update({"user_type": user_data.get('user_type', None), 
+        "admin":user_data.get('admin', None)})
 
     if ldap_disabled:
         new_user.set_password(user_data['password'])
     else:
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
-
-
 
     copy_user_data_access_levels(new_user.info, user_data.get('data_access'))
     user_repo.save(new_user)
@@ -500,7 +501,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
     if auto_create is True:
-        admin_msg = generate_bsso_account_notification(user=user_info, admins_emails=['tbarrett@bloomberg.net'], access_type="BSSO")
+        admin_msg = generate_bsso_account_notification(user=user_info, access_type="BSSO")
         mail_queue.enqueue(send_mail, admin_msg) 
 
 
