@@ -655,11 +655,15 @@ class TestPybossaUtil(Test):
         assert util.is_int('1') is True
         assert util.is_int(1.0) is True
         assert util.is_int('1.0') is True
+        assert util.is_int(-2147483648) is True
+        assert util.is_int(2147483647) is True
         assert util.is_int(1.1) is False
         assert util.is_int('1.1') is False
         assert util.is_int('a') is False
         assert util.is_int(None) is False
         assert util.is_int(True) is False
+        assert util.is_int(-2147483649) is False
+        assert util.is_int(2147483648) is False
 
     @with_context
     def test_integer_required_cast_string(self):
