@@ -98,6 +98,8 @@ from pybossa.data_access import (data_access_levels, subadmins_are_privileged,
 import app_settings
 from copy import deepcopy
 
+from collections import defaultdict
+
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -3216,7 +3218,7 @@ def ext_config(short_name):
     project, owner, ps = project_by_shortname(short_name)
     sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
 
-    ext_conf = project.info.get('ext_config', {})
+    ext_conf = project.info.get(u'ext_config', {})
 
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
@@ -3235,21 +3237,23 @@ def ext_config(short_name):
                 form = form_class()
                 if not form.validate():
                     flash(gettext('Please correct the errors', 'error'))
+
                 ext_conf[form_name] = {k: v for k, v in six.iteritems(form.data) if v}
                 ext_conf[form_name].pop('csrf_token', None)     #Fflask-wtf v0.14.2 issue 102
-            
-                if u'gigwork_poller' in ext_conf.keys():
-                    if not u'target_bucket' in ext_conf[u'gigwork_poller'].keys():
-                        del project.info[u'ext_config'][u'gigwork_poller']
-                else:
-                    project.info[u'ext_config'] = ext_conf 
-
-                if u'hdfs' in ext_conf.keys():
-                    if not u'path' in ext_conf[u'hdfs'].keys():
-                        del project.info[u'ext_config'][u'hdfs']
-                else:
-                    project.info[u'ext_config'] = ext_conf     
                 
+                if u'gigwork_poller' in ext_conf:
+                    if u'target_bucket' not in ext_conf[u'gigwork_poller']:
+                        project.info[u'ext_config'].pop(u'gigwork_poller')
+                    else:
+                        project.info[u'ext_config'].update({u'gigwork_poller': ext_conf[u'gigwork_poller']})
+
+                if u'hdfs' in ext_conf:
+                    if not u'path' in ext_conf[u'hdfs']:
+                        del project.info[u'ext_config'][u'hdfs']
+                    else:
+                        project.info[u'ext_config'].update({u'hdfs': ext_conf[u'hdfs']})   
+
+                print("PROJECT: ", project.info)
                 project_repo.save(project)
                 sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
 
