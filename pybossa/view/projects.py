@@ -3237,7 +3237,19 @@ def ext_config(short_name):
                     flash(gettext('Please correct the errors', 'error'))
                 ext_conf[form_name] = {k: v for k, v in six.iteritems(form.data) if v}
                 ext_conf[form_name].pop('csrf_token', None)     #Fflask-wtf v0.14.2 issue 102
-                project.info['ext_config'] = ext_conf
+            
+                if u'gigwork_poller' in ext_conf.keys():
+                    if not u'target_bucket' in ext_conf[u'gigwork_poller'].keys():
+                        del project.info[u'ext_config'][u'gigwork_poller']
+                else:
+                    project.info[u'ext_config'] = ext_conf 
+
+                if u'hdfs' in ext_conf.keys():
+                    if not u'path' in ext_conf[u'hdfs'].keys():
+                        del project.info[u'ext_config'][u'hdfs']
+                else:
+                    project.info[u'ext_config'] = ext_conf     
+                
                 project_repo.save(project)
                 sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
 
