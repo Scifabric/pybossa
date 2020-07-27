@@ -98,7 +98,6 @@ from pybossa.data_access import (data_access_levels, subadmins_are_privileged,
 import app_settings
 from copy import deepcopy
 
-from collections import defaultdict
 
 
 cors_headers = ['Content-Type', 'Authorization']
