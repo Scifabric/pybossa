@@ -103,8 +103,9 @@ def enqueue_periodic_jobs(queue_name):
                                kwargs=job['kwargs'],
                                timeout=job['timeout'])
         print("in for loop for jobs generator")
-    print("in enqueue periodic jobs, message is ",msg)
+    
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
+    print("in enqueue periodic jobs, message is ",msg)
     return msg
 
 
@@ -133,7 +134,7 @@ def get_periodic_jobs(queue):
             engage_jobs, non_contrib_jobs, dashboard_jobs,
             weekly_update_jobs, failed_jobs, leaderboard_jobs,
             warning_jobs, delete_account_jobs]
-    
+
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
