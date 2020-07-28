@@ -44,6 +44,7 @@ def schedule_job(function, scheduler):
             msg = ('WARNING: Job %s(%s, %s) is already scheduled'
                    % (function['name'].__name__, function['args'],
                       function['kwargs']))
+            print(msg)
             return msg
     # If job was scheduled, it exists up here, else it continues
     job = scheduler.schedule(
@@ -58,6 +59,7 @@ def schedule_job(function, scheduler):
     msg = ('Scheduled %s(%s, %s) to run every %s seconds'
            % (function['name'].__name__, function['args'], function['kwargs'],
               function['interval']))
+    print("second message",msg)
     print("fucntion return")
     return msg
 
