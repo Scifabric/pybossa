@@ -545,15 +545,17 @@ def disable_users_job():
     from pybossa.core import db, user_repo
     from pybossa.util import generate_manage_user_email
 
+    # default user deactivation time
     user_interval = current_app.config.get('STALE_USERS_MONTHS') or 3
+    # if disabling extended users, time until this is done
     ext_user_interval = current_app.config.get('EXTENDED_STALE_USERS_MONTHS') or 9
+    # domains that are in extended users category
     ext_user_domains = current_app.config.get('EXTENDED_STALE_USERS_DOMAINS') or []
 
     if ext_user_domains:
+        # never disable extended users
         ext_users_filter = ' OR '.join('(u.email_addr LIKE \'%{}\')'.format(domain) for domain in ext_user_domains)
-        where = '''((u.inactivity > interval '{} month') AND NOT ({})) OR
-                   ((u.inactivity > interval '{} month') AND ({}))'''.format(user_interval, ext_users_filter,
-                                                                             ext_user_interval, ext_users_filter)
+        where = '''((u.inactivity > interval '{} month') AND NOT ({}))'''.format(user_interval, ext_users_filter)
     else:
         where = 'u.inactivity > interval \'{} month\''.format(user_interval)
 
