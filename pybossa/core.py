@@ -734,7 +734,7 @@ def setup_scheduled_jobs(app):  # pragma: no cover
                  scheduled_time=first_quaterly_execution)]
     print("JOBS,",JOBS)
     for job in JOBS:
-        print("sending each job to schedule_job func")
+        print("sending each job to")
         schedule_job(job, scheduler)
 
 

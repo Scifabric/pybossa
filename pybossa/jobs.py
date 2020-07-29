@@ -34,9 +34,10 @@ from pybossa.exporter.json_export import JsonExporter
 def schedule_job(function, scheduler):
     """Schedule a job and return a log message."""
     scheduled_jobs = scheduler.get_jobs()
+    print(scheduled_jobs)
     print("inside schedule job function")
     for sj in scheduled_jobs:
-        print("in each job,")
+        print("in each job")
         if (function['name'].__name__ in sj.description and
             sj.args == function['args'] and
                 sj.kwargs == function['kwargs']):
@@ -59,7 +60,7 @@ def schedule_job(function, scheduler):
     msg = ('Scheduled %s(%s, %s) to run every %s seconds'
            % (function['name'].__name__, function['args'], function['kwargs'],
               function['interval']))
-    print("second message",msg)
+    print("in")
     print("fucntion return")
     return msg
 
@@ -102,10 +103,7 @@ def enqueue_periodic_jobs(queue_name):
                                args=job['args'],
                                kwargs=job['kwargs'],
                                timeout=job['timeout'])
-        print("in for loop for jobs generator")
-    
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
-    print("in enqueue periodic jobs, message is ",msg)
     return msg
 
 
