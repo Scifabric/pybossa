@@ -30,7 +30,7 @@ class TestAccessLevels(Test):
     @staticmethod
     def patched_levels(**kwargs):
         patch_data_access_levels = dict(
-            valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")],
+            valid_access_levels=['L1', 'L2', 'L3', 'L4'],
             valid_user_levels_for_project_level=dict(
                 L1=[], L2=["L1"], L3=["L1", "L2"], L4=["L1", "L2", "L3"]),
             valid_project_levels_for_user_level=dict(
@@ -99,6 +99,13 @@ class TestAccessLevels(Test):
             data = dict()
             data_access.ensure_data_access_assignment_from_form(data, form)
             assert data['data_access'] == ['L3']
+
+    def test_get_user_data_access_db_clause(self):
+        invalid_data_access = ['L5']
+        with patch.dict(data_access.data_access_levels, self.patched_levels()):
+            query = data_access.get_user_data_access_db_clause(invalid_data_access)
+            assert not query
+
 
     def test_ensure_annotation_config_from_form(self):
         class TestForm:

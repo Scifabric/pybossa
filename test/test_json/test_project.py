@@ -332,7 +332,7 @@ class TestJsonProject(web.Helper):
 
         self.register()
         self.signin()
-        data_access_levels = dict(valid_access_levels=[("King", "King"), ("Queen", "Queen")])
+        data_access_levels = dict(valid_access_levels=["King", "Queen"])
 
         configs = {
             'WTF_CSRF_ENABLED': True,
