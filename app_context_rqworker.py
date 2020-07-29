@@ -27,9 +27,11 @@ app = create_app(run_as_server=False)
 # Provide queue names to listen to as arguments to this script,
 # similar to rqworker
 with app.app_context():
+    print("Inside app context class")
     with Connection(sentinel.master):
+        print("before creating queue map")
         qs = map(Queue, sys.argv[1:]) or [Queue()]
-
+        print("before creating worker object")
         w = Worker(qs)
         print("1",w.successful_job_count)  # Number of jobs finished successfully
         print("2",w.failed_job_count) # Number of failed jobs processed by this worker
