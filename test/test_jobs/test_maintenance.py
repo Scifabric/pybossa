@@ -97,7 +97,7 @@ class TestMaintenance(Test):
         assert users[0].enabled, 'recent user should be enabled'
         assert not users[1].enabled, 'stale user should be disabled'
         assert users[2].enabled, 'recent extended user should be enabled'
-        assert not users[3].enabled, 'stale extended user should be disabled'
+        assert users[3].enabled, 'stale extended user should be enabled'
 
 
     @with_context
