@@ -3236,14 +3236,26 @@ def ext_config(short_name):
                     flash(gettext('Please correct the errors', 'error'))
                 ext_conf[form_name] = {k: v for k, v in six.iteritems(form.data) if v}
                 ext_conf[form_name].pop('csrf_token', None)     #Fflask-wtf v0.14.2 issue 102
-                project.info['ext_config'] = ext_conf
-                project_repo.save(project)
-                sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
 
-                current_app.logger.info('Project id {} external configurations set. {} {}'.format(
-                    project.id, form_name, form.data))
-                flash(gettext('Configuration for {} was updated').format(display), 'success')
+                target_bucket = ext_conf.get('gigwork_poller', {}).get('target_bucket')
+                if not target_bucket:
+                    ext_conf.pop('gigwork_poller', None)
 
+                hdfs_path = ext_conf.get('hdfs', {}).get('path')
+                if not hdfs_path:
+                    ext_conf.pop('hdfs', None)
+
+                if not ext_conf and current_app.config.get('PRIVATE_INSTANCE'):
+                    flash(gettext('At least one target location must be provided. {} was not updated').format(display), 'error')
+                else:
+                    project.info['ext_config'] = ext_conf
+                    project_repo.save(project)
+                    sanitize_project, _ = sanitize_project_owner(project, owner, current_user, ps)
+
+                    current_app.logger.info('Project id {} external configurations set. {} {}'.format(
+                                            project.id, form_name, form.data))
+                    flash(gettext('Configuration for {} was updated').format(display), 'success')
+                   
     template_forms = [(name, disp, cl(MultiDict(ext_conf.get(name, {}))))
                       for name, disp, cl in form_classes]
 
