@@ -31,4 +31,10 @@ with app.app_context():
         qs = map(Queue, sys.argv[1:]) or [Queue()]
 
         w = Worker(qs)
+        print("1",w.successful_job_count)  # Number of jobs finished successfully
+        print("2",w.failed_job_count) # Number of failed jobs processed by this worker
+        print("3",w.total_working_time)  # Amount of time spent executing jobs (in seconds)
         w.work()
+        print("4",w.successful_job_count)  # Number of jobs finished successfully
+        print("5",w.failed_job_count) # Number of failed jobs processed by this worker
+        print("6",w.total_working_time)  # Amount of time spent executing jobs (in seconds)
