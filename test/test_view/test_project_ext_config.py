@@ -65,3 +65,22 @@ class TestProjectExtConfig(web.Helper):
 
         project = project_repo.get(self.project_id)
         assert project.info['ext_config']['ml_service']['model'] == 'random_forest'
+        
+    @with_context
+    def test_update_config(self):
+        ext_config = {
+                'ml_service': {
+                    'display': 'Active Learning Config',
+                    'fields': {
+                        'model': ('TextField', '', None)
+                    }
+                }
+            }
+
+        with patch.dict(self.flask_app.config, 
+                        {'EXTERNAL_CONFIGURATIONS': ext_config}):
+            project = project_repo.get(self.project_id)
+            self.app.post('/project/%s/ext-config' % project.short_name)
+
+        project = project_repo.get(self.project_id)
+        assert 'TextField' not in project.info['ext_config'].keys()
