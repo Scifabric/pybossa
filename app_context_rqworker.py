@@ -22,8 +22,9 @@ from rq import Queue, Connection, Worker
 
 from pybossa.core import create_app, sentinel
 
+print("calling create app function")
 app = create_app(run_as_server=False)
-
+print("returned from app")
 print("just before try")
 try:
     print("inside try")

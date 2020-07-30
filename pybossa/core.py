@@ -80,6 +80,7 @@ def create_app(run_as_server=True):
     import pybossa.model.event_listeners
     setup_upref_mdata(app)
     anonymizer.init_app(app)
+    print("just before returning from")
     return app
 
 
