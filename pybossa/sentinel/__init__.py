@@ -30,13 +30,13 @@ class Sentinel(object):
 
     def init_app(self, app):
         
-        
+        socket_timeout = app.config.get('REDIS_SOCKET_TIMEOUT', None)
+        retry_on_timeout = app.config.get('REDIS_RETRY_ON_TIMEOUT', True)
         if(app.config.get('REDIS_MODE')=='master'):
-            self.master = StrictRedis(host=app.config.get('REDIS_MK_MASTER'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'))
-            self.slave = StrictRedis(host=app.config.get('REDIS_MK_SLAVE'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'))
+            self.master = StrictRedis(host=app.config.get('REDIS_MK_MASTER'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'),socket_timeout=socket_timeout,retry_on_timeout=retry_on_timeout,db=0)
+            self.slave = StrictRedis(host=app.config.get('REDIS_MK_SLAVE'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'),socket_timeout=socket_timeout,retry_on_timeout=retry_on_timeout,db=0)
         else:
-            socket_timeout = app.config.get('REDIS_SOCKET_TIMEOUT', None)
-            retry_on_timeout = app.config.get('REDIS_RETRY_ON_TIMEOUT', True)
+            
             self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
                                                 socket_timeout=socket_timeout,
                                                 retry_on_timeout=retry_on_timeout)
