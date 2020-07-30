@@ -57,9 +57,7 @@ when_no_data_access = execute_if(not data_access_levels)
 
 def valid_access_levels(levels):
     """check if levels are valid levels"""
-
     access_levels = data_access_levels['valid_access_levels']
-    access_levels = [level[0] for level in access_levels]
     return all(l in access_levels for l in levels)
 
 def valid_user_access_levels(levels):
