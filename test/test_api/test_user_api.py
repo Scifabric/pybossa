@@ -537,7 +537,7 @@ class TestUserAPI(Test):
 
         admin = UserFactory.create()
         user = UserFactory.create()
-        data_access_levels = dict(valid_access_levels=[("L1", "L1"), ("L2", "L2"),("L3", "L3"), ("L4", "L4")])
+        data_access_levels = dict(valid_access_levels=['L1', 'L2', 'L3', 'L4'])
 
         url = 'api/user/%s' % user.id
         with patch.dict(data_access.data_access_levels, data_access_levels):
