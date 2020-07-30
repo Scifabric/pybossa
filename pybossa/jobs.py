@@ -92,7 +92,7 @@ def enqueue_periodic_jobs(queue_name):
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
-
+    print("in enqueue periodic jobs")
     jobs_generator = get_periodic_jobs(queue_name)
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
@@ -104,6 +104,7 @@ def enqueue_periodic_jobs(queue_name):
                                kwargs=job['kwargs'],
                                timeout=job['timeout'])
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
+    print("return from enqueue periodic jobs")
     return msg
 
 
@@ -112,6 +113,7 @@ def get_periodic_jobs(queue):
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)
     # Default ones
+    print("in gwt periodic jobs")
     jobs = get_default_jobs()
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs(queue) if queue in ('high', 'low') else []
@@ -132,14 +134,16 @@ def get_periodic_jobs(queue):
             engage_jobs, non_contrib_jobs, dashboard_jobs,
             weekly_update_jobs, failed_jobs, leaderboard_jobs,
             warning_jobs, delete_account_jobs]
-
+    print("return from get periodic jobs")
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
 def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
+    print("in get default jobs")
     timeout = current_app.config.get('TIMEOUT')
     unpublish_projects = current_app.config.get('UNPUBLISH_PROJECTS')
+    print("return get default jobs")
     yield dict(name=warm_up_stats, args=[], kwargs={},
                timeout=timeout, queue='high')
     if unpublish_projects:
@@ -151,13 +155,16 @@ def get_default_jobs():  # pragma: no cover
                timeout=timeout, queue='low')
 
 def get_maintenance_jobs():
+    print("in get maintenance jobs")
     """Return mantainance jobs."""
     timeout = current_app.config.get('TIMEOUT')
+    print("ret from get maintenance jobs")
     yield dict(name=check_failed, args=[], kwargs={},
                timeout=timeout, queue='maintenance')
 
 
 def get_export_task_jobs(queue):
+    print("in get export task jobs")
     """Export tasks to zip."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
@@ -178,6 +185,8 @@ def get_export_task_jobs(queue):
                    args=[project_id], kwargs={},
                    timeout=timeout,
                    queue=queue)
+        print("ret from get export task jobs")
+
         yield job
 
 
@@ -192,6 +201,8 @@ def project_export(_id):
 
 
 def get_project_jobs(queue):
+    print("in get project jobs")
+
     """Return a list of jobs based on user type."""
     from pybossa.core import project_repo
     from pybossa.cache import projects as cached_projects
@@ -210,6 +221,8 @@ def get_project_jobs(queue):
                    args=[project_id, project_short_name], kwargs={},
                    timeout=timeout,
                    queue=queue)
+        print("ret from get project jobs")
+
         yield job
 
 
@@ -266,6 +279,8 @@ def get_inactive_users_jobs(queue='quaterly'):
 
 
 def get_dashboard_jobs(queue='low'):  # pragma: no cover
+    print("in get dashboard jobs")
+
     """Return dashboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
     yield dict(name=dashboard.active_users_week, args=[], kwargs={},
@@ -289,6 +304,8 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
 
 
 def get_leaderboard_jobs(queue='super'):  # pragma: no cover
+    print("in get leaderboard jobs")
+
     """Return leaderboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
     leaderboards = current_app.config.get('LEADERBOARDS')
