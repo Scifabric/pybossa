@@ -83,4 +83,5 @@ class TestProjectExtConfig(web.Helper):
             self.app.post('/project/%s/ext-config' % project.short_name)
 
         project = project_repo.get(self.project_id)
-        assert 'TextField' not in project.info['ext_config'].keys()
+        print(project)
+        assert 'ext_config' not in project.info.keys()
