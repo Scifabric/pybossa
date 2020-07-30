@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from redis import sentinel, StrictRedis
+from redis import sentinel, StrictRedis, Redis
 
 
 class Sentinel(object):
@@ -33,8 +33,8 @@ class Sentinel(object):
         socket_timeout = app.config.get('REDIS_SOCKET_TIMEOUT', None)
         retry_on_timeout = app.config.get('REDIS_RETRY_ON_TIMEOUT', True)
         if(app.config.get('REDIS_MODE')=='master'):
-            self.master = StrictRedis(host=app.config.get('REDIS_MK_MASTER'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'),socket_timeout=socket_timeout,retry_on_timeout=retry_on_timeout,db=0)
-            self.slave = StrictRedis(host=app.config.get('REDIS_MK_SLAVE'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'),socket_timeout=socket_timeout,retry_on_timeout=retry_on_timeout,db=0)
+            self.master = Redis(host=app.config.get('REDIS_MK_MASTER'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'),socket_timeout=socket_timeout,retry_on_timeout=retry_on_timeout,db=0)
+            self.slave = Redis(host=app.config.get('REDIS_MK_SLAVE'),port=app.config.get('REDIS_PORT'),password=app.config.get('REDIS_PASSWORD'),ssl=app.config.get('REDIS_SSL'),socket_timeout=socket_timeout,retry_on_timeout=retry_on_timeout,db=0)
         else:
             
             self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
