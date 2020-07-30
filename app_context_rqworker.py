@@ -47,5 +47,4 @@ try:
         print("outside inner with", flush=True)
     print("outside outer with", flush=True)
 except Exception as e: 
-    logger.error('Failed to add worker: '+ str(e))
     print("error", flush=True)
