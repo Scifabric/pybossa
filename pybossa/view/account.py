@@ -43,7 +43,6 @@ from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
-from pybossa.util import generate_bsso_account_notification
 from pybossa.util import redirect_content_type, is_own_url_or_else
 from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info, url_for_app_type
