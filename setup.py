@@ -113,7 +113,7 @@ requirements = [
     "requests==2.21.0",
     "requests-oauthlib==1.0.0",
     "rfc3986==1.2.0",
-    "rq==0.13",
+    "rq==0.11",
     "rq-dashboard==0.6.1",
     "rq-scheduler==0.9",
     "rsa>=4.0",
