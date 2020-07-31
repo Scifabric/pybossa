@@ -108,7 +108,7 @@ requirements = [
     "rackspace-novaclient>=2.1",
     "raven==6.10.0",
     "readability-lxml==0.7",
-    "redis==3.3.6",
+    "redis==3.5.3",
     "rednose==1.3.0",
     "requests==2.21.0",
     "requests-oauthlib==1.0.0",
