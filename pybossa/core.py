@@ -80,7 +80,6 @@ def create_app(run_as_server=True):
     import pybossa.model.event_listeners
     setup_upref_mdata(app)
     anonymizer.init_app(app)
-    print("just before returning from")
     return app
 
 
@@ -708,8 +707,6 @@ def setup_scheduled_jobs(app):  # pragma: no cover
     from rq_scheduler import Scheduler
     redis_conn = sentinel.master
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
-    print("in setup scheduler jobs")
-    print(scheduler)
     MINUTE = 60
     HOUR = 60 * 60
     MONTH = 30 * (24 * HOUR)
@@ -733,9 +730,7 @@ def setup_scheduled_jobs(app):  # pragma: no cover
             dict(name=enqueue_periodic_jobs, args=['quaterly'], kwargs={},
                  interval=(3 * MONTH), timeout=(30 * MINUTE),
                  scheduled_time=first_quaterly_execution)]
-    print("JOBS,",JOBS)
     for job in JOBS:
-        print("sending each job to")
         schedule_job(job, scheduler)
 
 
