@@ -811,28 +811,7 @@ def generate_notification_email_for_admins(user, admins_emails, access_type):
                                   server_url=server_url,
                                   is_qa=is_qa)
     return msg
-
-def generate_bsso_account_notification(user, admins_emails, access_type):
-
-    is_qa = current_app.config.get('IS_QA')
-    server_url = current_app.config.get('SERVER_URL')
-    brand = current_app.config.get('BRAND')
-
-    subject = 'A new account has been created via BSSO for {}'.format(brand)
-    msg = dict(subject=subject,
-               recipients=admins_emails)
-    fullname = user['fullname']
-    msg['body'] = render_template('/account/email/adminbssonotification.md',
-                                  username=fullname,
-                                  access_type=access_type,
-                                  server_url=server_url,
-                                  is_qa=is_qa)
-    msg['html'] = render_template('/account/email/adminbssonotification.html',
-                                  username=fullname,
-                                  access_type=access_type,
-                                  server_url=server_url,
-                                  is_qa=is_qa)
-    return msg
+    
 
 def generate_manage_user_email(user, operation):
     assert user

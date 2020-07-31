@@ -43,7 +43,6 @@ from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
-from pybossa.util import generate_bsso_account_notification
 from pybossa.util import redirect_content_type, is_own_url_or_else
 from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info, url_for_app_type
@@ -471,23 +470,24 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
                                email_addr=user_data['email_addr'],
                                valid_email=True,
                                consent=user_data.get('consent', True))
-    
+
     if user_data.get('user_pref'):
         new_user.user_pref = user_data['user_pref']
 
     if user_data.get('metadata'):
         new_user.info = dict(metadata=user_data['metadata'])
-        new_user.info['metadata'].update({"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)})
+        new_user.info['metadata'].update({"user_type": user_data.get('user_type', None),
+       "admin":user_data.get('admin', None)})
     else:
-        new_user.info = {"metadata": {"user_type": user_data.get('user_type', None), "admin":user_data.get('admin', None)}}
+        new_user.info = dict(metadata={})
+        new_user.info['metadata'].update({"user_type": user_data.get('user_type', None), 
+        "admin":user_data.get('admin', None)})
 
     if ldap_disabled:
         new_user.set_password(user_data['password'])
     else:
         if user_data.get('ldap'):
             new_user.ldap = user_data['ldap']
-
-
 
     copy_user_data_access_levels(new_user.info, user_data.get('data_access'))
     user_repo.save(new_user)
@@ -499,10 +499,6 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
                      password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
-    if auto_create is True:
-        admin_msg = generate_bsso_account_notification(user=user_info, admins_emails=['tbarrett@bloomberg.net'], access_type="BSSO")
-        mail_queue.enqueue(send_mail, admin_msg) 
-
 
 def _update_user_with_valid_email(user, email_addr):
     user.valid_email = True
