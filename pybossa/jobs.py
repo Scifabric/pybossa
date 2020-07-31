@@ -159,7 +159,7 @@ def get_maintenance_jobs():
     """Return mantainance jobs."""
     timeout = current_app.config.get('TIMEOUT')
     print("ret from get maintenance jobs", flush=True)
-    yield dict(name=check_failed, args=['maintenance'], kwargs={},
+    yield dict(name=check_failed, args=[], kwargs={},
                timeout=timeout, queue='maintenance')
 
 
@@ -776,14 +776,14 @@ def news():
         notify_news_admins()
 
 
-def check_failed(queue_name):
+def check_failed():
     """Check the jobs that have failed and requeue them."""
     # from rq import Queue, get_failed_queue, requeue_job
     from rq import Queue, requeue_job
     from pybossa.core import sentinel
     from rq.registry import FailedJobRegistry
 
-    
+    queue_name='maintenance'
     redis_conn = sentinel.master 
     queue = Queue(queue_name, connection=redis_conn)
 
