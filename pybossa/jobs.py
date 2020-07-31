@@ -159,7 +159,7 @@ def get_maintenance_jobs():
     """Return mantainance jobs."""
     timeout = current_app.config.get('TIMEOUT')
     print("ret from get maintenance jobs", flush=True)
-    yield dict(name=check_failed, args=[], kwargs={},
+    yield dict(name=check_failed, args=['maintenance'], kwargs={},
                timeout=timeout, queue='maintenance')
 
 
