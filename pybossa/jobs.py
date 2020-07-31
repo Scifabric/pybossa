@@ -776,7 +776,7 @@ def news():
         notify_news_admins()
 
 
-def check_failed():
+def check_failed(queue):
     """Check the jobs that have failed and requeue them."""
     #from rq import Queue, get_failed_queue, requeue_job
     from rq import Queue, requeue_job
