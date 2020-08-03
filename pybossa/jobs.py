@@ -86,7 +86,6 @@ def enqueue_periodic_jobs(queue_name):
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
-
     jobs_generator = get_periodic_jobs(queue_name)
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
@@ -126,7 +125,6 @@ def get_periodic_jobs(queue):
             engage_jobs, non_contrib_jobs, dashboard_jobs,
             weekly_update_jobs, failed_jobs, leaderboard_jobs,
             warning_jobs, delete_account_jobs]
-
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -172,6 +170,7 @@ def get_export_task_jobs(queue):
                    args=[project_id], kwargs={},
                    timeout=timeout,
                    queue=queue)
+
         yield job
 
 
@@ -180,12 +179,12 @@ def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
     app = project_repo.get(_id)
     if app is not None:
-        print("Export project id %d" % _id)
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
 
 def get_project_jobs(queue):
+
     """Return a list of jobs based on user type."""
     from pybossa.core import project_repo
     from pybossa.cache import projects as cached_projects
@@ -204,6 +203,7 @@ def get_project_jobs(queue):
                    args=[project_id, project_short_name], kwargs={},
                    timeout=timeout,
                    queue=queue)
+
         yield job
 
 
@@ -260,6 +260,7 @@ def get_inactive_users_jobs(queue='quaterly'):
 
 
 def get_dashboard_jobs(queue='low'):  # pragma: no cover
+
     """Return dashboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
     yield dict(name=dashboard.active_users_week, args=[], kwargs={},
@@ -283,6 +284,7 @@ def get_dashboard_jobs(queue='low'):  # pragma: no cover
 
 
 def get_leaderboard_jobs(queue='super'):  # pragma: no cover
+
     """Return leaderboard jobs."""
     timeout = current_app.config.get('TIMEOUT')
     leaderboards = current_app.config.get('LEADERBOARDS')
@@ -369,7 +371,6 @@ def get_project_stats(_id, short_name):  # pragma: no cover
 @with_cache_disabled
 def warm_up_stats():  # pragma: no cover
     """Background job for warming stats."""
-    print("Running on the background warm_up_stats")
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
@@ -755,23 +756,32 @@ def news():
 
 def check_failed():
     """Check the jobs that have failed and requeue them."""
-    from rq import Queue, get_failed_queue, requeue_job
+    # from rq import Queue, get_failed_queue, requeue_job
+    from rq import Queue, requeue_job
     from pybossa.core import sentinel
+    from rq.registry import FailedJobRegistry
 
-    fq = get_failed_queue()
-    job_ids = fq.job_ids
+    queue_name='maintenance'
+    redis_conn = sentinel.master 
+    queue = Queue(queue_name, connection=redis_conn)
+
+    #fq = get_failed_queue()
+    registry = FailedJobRegistry(queue=queue)
+    job_ids = registry.get_job_ids()
+    #job_ids = fq.job_ids
     count = len(job_ids)
     FAILED_JOBS_RETRIES = current_app.config.get('FAILED_JOBS_RETRIES')
     for job_id in job_ids:
         KEY = 'pybossa:job:failed:%s' % job_id
-        job = fq.fetch_job(job_id)
+        job = queue.fetch_job(job_id)
+        # job = fq.fetch_job(job_id)
         if sentinel.slave.exists(KEY):
             sentinel.master.incr(KEY)
         else:
             ttl = current_app.config.get('FAILED_JOBS_MAILS')*24*60*60
             sentinel.master.setex(KEY, ttl, 1)
         if int(sentinel.slave.get(KEY)) < FAILED_JOBS_RETRIES:
-            requeue_job(job_id)
+            requeue_job(job_id,connection=redis_conn)
         else:
             KEY = 'pybossa:job:failed:mailed:%s' % job_id
             if (not sentinel.slave.exists(KEY) and

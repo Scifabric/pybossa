@@ -23,12 +23,10 @@ from rq import Queue, Connection, Worker
 from pybossa.core import create_app, sentinel
 
 app = create_app(run_as_server=False)
-
 # Provide queue names to listen to as arguments to this script,
 # similar to rqworker
 with app.app_context():
     with Connection(sentinel.master):
         qs = map(Queue, sys.argv[1:]) or [Queue()]
-
         w = Worker(qs)
         w.work()
