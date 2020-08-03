@@ -329,7 +329,11 @@ def setup_blueprints(app):
 
     # from rq_dashboard import RQDashboard
     import rq_dashboard
-    app.config.from_object(rq_dashboard.default_settings)
+    
+    #print(rq_dashboard.default_settings)
+    #app.config.update(REDIS_URL=['redis://:0RZO6Iypz5fkCZ5K@localhost:6379'])
+    #app.config.from_object(rq_dashboard.default_settings)
+    #app.config.from_object(app.config['RQ_DASHBOARD_REDIS_URL'])
     rq_dashboard.blueprint.before_request(is_admin)
     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
                            redis_conn=sentinel.master)
