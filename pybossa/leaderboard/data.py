@@ -62,6 +62,7 @@ def get_leaderboard(top_users=20, user_id=None, window=0, info=None):
         else:
             if user:
                 top_users.append(user)
+            
         return top_users
     return top_users
 

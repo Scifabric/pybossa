@@ -61,13 +61,7 @@ def login():  # pragma: no cover
             next_url = request.args.get('next') or url_for_app_type('home.home')
             return manage_user_login(user, user_data, next_url)
         else:
-            print("in else user logged in")
-            message = '<p>You are logged out.</p>'
-
-            login_url = url_for('mykaarma.login_mykaarma')
-            print("LOGIN URL IT IS GETTING",login_url)
-            link = f'<p><a href="{login_url}">Log in to continue</a></p>'
-            return message + link
+            return redirect(url_for('mykaarma.login_mykaarma'), code=302)
     else:
         return abort(404)
     
