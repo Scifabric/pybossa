@@ -1810,6 +1810,7 @@ def delete_tasks(short_name):
 @login_required
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
+    import pybossa.exporter.consensus_exporter as export_consensus
     project, owner, ps = allow_deny_project_info(short_name)
     ensure_authorized_to('read', project)
     supported_tables = ['task', 'task_run', 'result', 'consensus']
@@ -1831,6 +1832,10 @@ def export_to(short_name):
                                                                 ps)
 
     disclose_gold = current_user.admin or current_user.subadmin
+
+    # import pdb; pdb.set_trace()
+    # data = export_consensus.get_consensus_data(project.id, dict(task_id=121))
+    # print(data)
 
     def respond():
         return render_template('/projects/export.html',
