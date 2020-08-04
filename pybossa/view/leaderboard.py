@@ -43,6 +43,11 @@ def index(window=0):
     if info is not None:
         if leaderboards is None or info not in leaderboards:
             return abort(404)
+        underscore = info.find("_")    
+        answer = info[underscore+1:]
+        dept = info[:underscore]
+        if(current_user.info['container'][dept] != answer):
+            return abort(401)
 
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
                                              user_id=user_id,
