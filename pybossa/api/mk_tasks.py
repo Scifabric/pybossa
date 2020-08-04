@@ -89,7 +89,6 @@ class mkTaskAPI(APIBase):
             data = dict()
             enc = json.loads(request.data)
             data['id'] = enc['task_id']
-            enc['reason']= "inappropriateMessage"
             task = task_repo.get_task(enc['task_id'])
             data['project_id'] = task.project_id
             task.state="completed"
