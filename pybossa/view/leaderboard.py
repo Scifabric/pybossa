@@ -46,7 +46,7 @@ def index(window=0):
         underscore = info.find("_")    
         answer = info[underscore+1:]
         dept = info[:underscore]
-        if(current_user.info['container'][dept] != answer):
+        if(current_user.info is None or current_user.info['container'] is None or current_user.info['container'].get(dept) is None or current_user.info['container'][dept] != answer):
             return abort(401)
 
     top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
