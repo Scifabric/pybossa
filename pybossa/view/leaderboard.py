@@ -30,6 +30,8 @@ def index(window=0):
     """Get the last activity from users and projects."""
     if current_user.is_authenticated:
         user_id = current_user.id
+        rank_and_score = cached_users.rank_and_score(user_id)
+        current_user.rank = rank_and_score['rank']
     else:
         user_id = None
 
