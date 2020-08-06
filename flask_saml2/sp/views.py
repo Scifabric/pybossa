@@ -28,7 +28,7 @@ class Login(SAML2View):
         handler = self.sp.get_default_idp_handler()
         login_next = self.sp.get_login_return_url()
         if handler:
-            return redirect(url_for('.login_idp', entity_id=handler.entity_id, next=login_next))
+            return redirect(url_for('.login_idp', entity_id=handler.entity_id, next=login_next, _external=True, _scheme='https'))
         return self.sp.render_template(
             'flask_saml2_sp/choose_idp.html',
             login_next=login_next,

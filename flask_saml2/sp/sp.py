@@ -135,22 +135,22 @@ class ServiceProvider:
     def get_login_url(self) -> str:
         """The URL of the endpoint that starts the login process.
         """
-        return url_for(self.blueprint_name + '.login')
+        return url_for(self.blueprint_name + '.login', _external=True, _scheme='https')
 
     def get_acs_url(self) -> str:
         """The URL for the Assertion Consumer Service for this SP.
         """
-        return url_for(self.blueprint_name + '.acs', _external=True)
+        return url_for(self.blueprint_name + '.acs', _external=True, _scheme='https')
 
     def get_sls_url(self) -> str:
         """The URL for the Single Logout Service for this SP.
         """
-        return url_for(self.blueprint_name + '.sls', _external=True)
+        return url_for(self.blueprint_name + '.sls', _external=True, _scheme='https')
 
     def get_metadata_url(self) -> str:
         """The URL for the metadata xml for this SP.
         """
-        return url_for(self.blueprint_name + '.metadata', _external=True)
+        return url_for(self.blueprint_name + '.metadata', _external=True, _scheme='https')
 
     def get_default_login_return_url(self) -> Optional[str]:
         """The default URL to redirect users to once the have logged in.

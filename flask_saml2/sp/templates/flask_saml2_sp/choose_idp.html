@@ -5,7 +5,7 @@
     <ul>
         {% for idp in handlers %}
             <li>
-                <a href="{{ url_for('.login_idp', entity_id=idp.entity_id, next=login_next) }}">{{ idp }}</a>
+                <a href="{{ url_for('.login_idp', entity_id=idp.entity_id, next=login_next, _external=True, _scheme='https') }}">{{ idp }}</a>
             </li>
         {% endfor %}
     </ul>

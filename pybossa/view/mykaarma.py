@@ -31,10 +31,10 @@ from flask_saml2.sp.views import (
 
 class ExampleServiceProvider(ServiceProvider):
     def get_logout_return_url(self):
-        return url_for('mykaarma.login', _external=True)
+        return url_for('mykaarma.login', _external=True, _scheme='https')
 
     def get_default_login_return_url(self):
-        return url_for('mykaarma.login', _external=True)
+        return url_for('mykaarma.login', _external=True, _scheme='https')
 
 
 sp = ExampleServiceProvider()
@@ -61,7 +61,7 @@ def login():  # pragma: no cover
             next_url = request.args.get('next') or url_for_app_type('home.home')
             return manage_user_login(user, user_data, next_url)
         else:
-            return redirect(url_for('mykaarma.login_mykaarma'), code=302)
+            return redirect(url_for('mykaarma.login_mykaarma',_scheme='https',_external=True), code=302)
     else:
         return abort(404)
     
