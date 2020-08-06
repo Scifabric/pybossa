@@ -120,9 +120,9 @@ def format_consensus(rows):
         data.update(task_info)
         consensus = data.pop('consensus') or OrderedDict()
         if consensus.get('consensus'):
-            answer_fields = {k: v.get('answser_field_config', {}) for k, v in consensus['consensus'].items()}
+            answer_fields = {k: v.get('answer_field_config', {}) for k, v in consensus['consensus'].items()}
         consensus = flatten(consensus, level=2,
-                            ignore=['contributorsMetConsensus', 'answser_field_config'])
+                            ignore=['contributorsMetConsensus', 'answer_field_config'])
         task_runs = data['task_run__info']
         for k, v in consensus.items():
             match = re.match(__KEY_RE, k)
