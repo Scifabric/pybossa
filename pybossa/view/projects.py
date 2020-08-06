@@ -162,6 +162,10 @@ def pro_features(owner=None):
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
     """List projects in the system"""
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        rank_and_score = cached_users.rank_and_score(user_id)
+        current_user.rank = rank_and_score['rank']
     order_by = request.args.get('orderby', None)
     desc = bool(request.args.get('desc', False))
     if cached_projects.n_count('featured') > 0:
@@ -247,7 +251,10 @@ def historical_contributions(page):
     order_by = request.args.get('orderby', None)
     desc = bool(request.args.get('desc', False))
     pre_ranked = True
-    user_id = current_user.id
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        rank_and_score = cached_users.rank_and_score(user_id)
+        current_user.rank = rank_and_score['rank']
     def lookup(*args, **kwargs):
         return cached_users.projects_contributed(user_id, order_by='last_contribution')
     return project_index(page, lookup, 'historical_contributions', False, True, order_by,
@@ -258,6 +265,10 @@ def historical_contributions(page):
 @blueprint.route('/category/<string:category>/page/<int:page>/')
 def project_cat_index(category, page):
     """Show Projects that belong to a given category"""
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        rank_and_score = cached_users.rank_and_score(user_id)
+        current_user.rank = rank_and_score['rank']
     order_by = request.args.get('orderby', None)
     desc = bool(request.args.get('desc', False))
     return project_index(page, cached_projects.get_all, category, False, True,
