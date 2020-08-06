@@ -109,7 +109,7 @@ class Mykaarma(object):
             {
                 'CLASS': 'flask_saml2.sp.idphandler.IdPHandler',
                 'OPTIONS': {
-                    'display_name': 'mkplaydevvm',
+                    'display_name': 'mkplay',
                     'entity_id': app.config['ENTITY_ID'],
                     'sso_url': app.config['SSO_URL'],
                     'slo_url': app.config['SLO_URL'],
