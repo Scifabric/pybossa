@@ -24,6 +24,8 @@ from flask import Flask, url_for, request, render_template, \
 from flask_login import current_user
 from flask_babel import gettext
 from flask_assets import Bundle
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 from flask_json_multidict import get_json_multidict
 from pybossa import default_settings as settings
 from pybossa.extensions import *
@@ -39,6 +41,7 @@ from pybossa import util
 def create_app(run_as_server=True):
     """Create web app."""
     app = Flask(__name__)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_num=0, x_proto=1)
     configure_app(app)
     setup_assets(app)
     setup_cache_timeouts(app)
