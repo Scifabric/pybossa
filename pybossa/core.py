@@ -41,7 +41,7 @@ from pybossa import util
 def create_app(run_as_server=True):
     """Create web app."""
     app = Flask(__name__)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_num=0, x_proto=1)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
     configure_app(app)
     setup_assets(app)
     setup_cache_timeouts(app)
