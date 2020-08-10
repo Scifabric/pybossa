@@ -46,6 +46,7 @@ from pybossa.core import page_repo, helping_repo
 from pybossa.core import project_stats_repo
 from pybossa.model import DomainObject, announcement
 from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun	
 from pybossa.cache.projects import clean_project
 from pybossa.cache.users import delete_user_summary_id
 from pybossa.cache.categories import reset
@@ -136,9 +137,13 @@ class APIBase(MethodView):
         """
         try:
             ensure_authorized_to('read', self.__class__)
-            query = self._db_query(oid)
-            json_response = self._create_json_response(query, oid)
-            return Response(json_response, mimetype='application/json')
+            try:
+                if(current_user.admin):
+                    query = self._db_query(oid)
+                    json_response = self._create_json_response(query, oid)
+                    return Response(json_response, mimetype='application/json')
+            except:
+                raise Forbidden
         except Exception as e:
             return error.format_exception(
                 e,
@@ -245,19 +250,22 @@ class APIBase(MethodView):
     def api_context(self, all_arg, **filters):
         if current_user.is_authenticated:
             filters['owner_id'] = current_user.id
-        if filters.get('owner_id') and all_arg == '1':
+        # if filters.get('owner_id') and all_arg == '1':
+        if filters.get('owner_id'):
             del filters['owner_id']
         return filters
 
     def _filter_query(self, repo_info, limit, offset, orderby):
         filters = {}
         for k in list(request.args.keys()):
-            if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
+            # if k not in ['limit', 'offset', 'api_key', 'last_id', 'all',
+            #              'fulltextsearch', 'desc', 'orderby', 'related',
+            #              'participated', 'full', 'stats']:
+            if k not in ['limit', 'offset', 'last_id', 'all',
                          'fulltextsearch', 'desc', 'orderby', 'related',
                          'participated', 'full', 'stats']:
-                # Raise an error if the k arg is not a column
-                if self.__class__ == Task and k == 'external_uid':
-                    pass
+                if (self.__class__ == Task or self.__class__ == TaskRun) and (k == 'external_uid' or k=='api_key'):
+                    continue
                 else:
                     getattr(self.__class__, k)
                 filters[k] = request.args[k]
