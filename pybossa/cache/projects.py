@@ -162,6 +162,18 @@ def n_tasks(project_id):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
+def n_tasks_not_gold(project_id):
+    """Return number of tasks of a project."""
+    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
+                  WHERE task.project_id=:project_id AND calibration = 0;''')
+    results = session.execute(sql, dict(project_id=project_id))
+    n_tasks = 0
+    for row in results:
+        n_tasks = row.n_tasks
+    return n_tasks
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'), cache_group_keys=[[0]])
 def n_completed_tasks(project_id):
     """Return number of completed tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
@@ -278,7 +290,7 @@ def n_expected_task_runs(project_id):
 def overall_progress(project_id):
     """Return the percentage of completed tasks for a project."""
     if n_tasks(project_id) != 0:
-        return ((n_completed_tasks(project_id) * 100) / n_tasks(project_id))
+        return ((n_completed_tasks(project_id) * 100) / n_tasks_not_gold(project_id))
     else:
         return 0
 
