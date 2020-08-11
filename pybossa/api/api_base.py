@@ -135,16 +135,14 @@ class APIBase(MethodView):
         :returns: The JSON item/s stored in the DB
 
         """
-        try:
+         try:
             ensure_authorized_to('read', self.__class__)
-            try:
-                if(current_user.admin):
-                    query = self._db_query(oid)
-                    json_response = self._create_json_response(query, oid)
-                    return Response(json_response, mimetype='application/json')
-            except:
-                raise Forbidden
+            if(current_app.config.get('RESTRICT_API') is False or (current_user.admin)):
+                query = self._db_query(oid)
+                json_response = self._create_json_response(query, oid)
+                return Response(json_response, mimetype='application/json')   
         except Exception as e:
+            raise Forbidden
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
