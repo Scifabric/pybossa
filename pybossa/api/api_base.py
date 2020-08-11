@@ -135,7 +135,7 @@ class APIBase(MethodView):
         :returns: The JSON item/s stored in the DB
 
         """
-         try:
+        try:
             ensure_authorized_to('read', self.__class__)
             if(current_app.config.get('RESTRICT_API') is False or (current_user.admin)):
                 query = self._db_query(oid)
