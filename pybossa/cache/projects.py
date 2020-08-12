@@ -289,7 +289,7 @@ def n_expected_task_runs(project_id):
 
 def overall_progress(project_id):
     """Return the percentage of completed tasks for a project."""
-    if n_tasks(project_id) != 0:
+    if n_tasks_not_gold(project_id) != 0:
         return ((n_completed_tasks(project_id) * 100) / n_tasks_not_gold(project_id))
     else:
         return 0
