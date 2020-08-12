@@ -69,7 +69,7 @@ class TestConsensusExporter(Test):
         user_info.return_value = {'name': 'joe'}
         consensus = {
             "context.name": {
-                "answser_field_config": {
+                "answer_field_config": {
                     "config": {},
                     "type": "categorical",
                     "retry_for_consensus": False
@@ -105,7 +105,7 @@ class TestConsensusExporter(Test):
         user_info.return_value = {'name': 'joe'}
         consensus = {
             "context.0.name": {
-                "answser_field_config": {
+                "answer_field_config": {
                     "config": {},
                     "type": "categorical",
                     "retry_for_consensus": False
@@ -141,7 +141,7 @@ class TestConsensusExporter(Test):
         user_info.return_value = {'name': 'joe'}
         consensus = {
             "context.2000.ny.name": {
-                "answser_field_config": {
+                "answer_field_config": {
                     "config": {
                         "keys": ['name'],
                         "keyValues": [
@@ -186,7 +186,7 @@ class TestConsensusExporter(Test):
         user_info.return_value = {'name': 'joe'}
         consensus = {
             "context.name": {
-                "answser_field_config": {
+                "answer_field_config": {
                     "config": {},
                     "type": "other",
                     "retry_for_consensus": False
