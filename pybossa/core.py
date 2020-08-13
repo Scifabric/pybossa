@@ -328,13 +328,14 @@ def setup_blueprints(app):
                   ]
 
     for bp in blueprints:
+        bp['url_prefix'] = app.config['BASE_URL'] + bp['url_prefix']
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
     # from rq_dashboard import RQDashboard
     import rq_dashboard
     #app.config.from_object(rq_dashboard.default_settings)
     rq_dashboard.blueprint.before_request(is_admin)
-    app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
+    app.register_blueprint(rq_dashboard.blueprint, url_prefix=app.config['BASE_URL'] + "/admin/rq",
                            redis_conn=sentinel.master)
 
 
@@ -364,7 +365,7 @@ def setup_twitter_login(app):
                 app.config['TWITTER_CONSUMER_SECRET']):
             twitter.init_app(app)
             from pybossa.view.twitter import blueprint as twitter_bp
-            app.register_blueprint(twitter_bp, url_prefix='/twitter')
+            app.register_blueprint(twitter_bp, url_prefix=app.config['BASE_URL'] + '/twitter')
     except Exception as inst:  # pragma: no cover
         print(type(inst))
         print(inst.args)
@@ -381,7 +382,7 @@ def setup_facebook_login(app):
                 and app.config.get('LDAP_HOST') is None):
             facebook.init_app(app)
             from pybossa.view.facebook import blueprint as facebook_bp
-            app.register_blueprint(facebook_bp, url_prefix='/facebook')
+            app.register_blueprint(facebook_bp, url_prefix=app.config['BASE_URL'] + '/facebook')
     except Exception as inst:  # pragma: no cover
         print(type(inst))
         print(inst.args)
@@ -398,7 +399,7 @@ def setup_google_login(app):
                 and app.config.get('LDAP_HOST') is None):
             google.init_app(app)
             from pybossa.view.google import blueprint as google_bp
-            app.register_blueprint(google_bp, url_prefix='/google')
+            app.register_blueprint(google_bp, url_prefix=app.config['BASE_URL'] + '/google')
     except Exception as inst:  # pragma: no cover
         print(type(inst))
         print(inst.args)
@@ -413,7 +414,7 @@ def setup_mykaarma_login(app):
                 and app.config.get('LDAP_HOST') is None):
             mykaarma.init_app(app)
             from pybossa.view.mykaarma import blueprint as mykaarma_bp
-            app.register_blueprint(mykaarma_bp, url_prefix='/saml')
+            app.register_blueprint(mykaarma_bp, url_prefix=app.config['BASE_URL'] + '/saml')
     except Exception as inst:  # pragma: no cover
         print(type(inst))
         print(inst.args)
@@ -429,7 +430,7 @@ def setup_flickr_importer(app):
                 and app.config['FLICKR_SHARED_SECRET']):
             flickr.init_app(app)
             from pybossa.view.flickr import blueprint as flickr_bp
-            app.register_blueprint(flickr_bp, url_prefix='/flickr')
+            app.register_blueprint(flickr_bp, url_prefix=app.config['BASE_URL'] + '/flickr')
             importer_params = {'api_key': app.config['FLICKR_API_KEY']}
             importer.register_flickr_importer(importer_params)
     except Exception as inst:  # pragma: no cover

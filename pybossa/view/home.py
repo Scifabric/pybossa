@@ -53,7 +53,7 @@ def home():
         current_user.rank = rank_and_score['rank']
     response = dict(template='/home/index.html', **data)
     #return handle_content_type(response)
-    return redirect('/project/category/mkplaygames', code=302)
+    return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=302)
 
 
 @blueprint.route("about")
