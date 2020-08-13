@@ -2,6 +2,7 @@ import logging
 
 from flask import Response, make_response, redirect, request, url_for
 from flask.views import MethodView, View
+from flask import current_app
 
 from flask_saml2.exceptions import CannotHandleAssertion, UserNotAuthorized
 
@@ -80,7 +81,7 @@ class AssertionConsumer(SAML2View):
     def dispatch_request(self):
         if request.method == 'POST':
             saml_request = request.form['SAMLResponse']
-            relay_state = "/saml/"
+            relay_state = current_app.config['BASE_URL'] + "/saml/"
             for handler in self.sp.get_idp_handlers():
                 try:
                     response = handler.get_response_parser(saml_request)
