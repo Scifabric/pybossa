@@ -136,10 +136,15 @@ class APIBase(MethodView):
 
         """
         try:
+            print("in get request")
             ensure_authorized_to('read', self.__class__)
+            print("here")
             if(current_app.config.get('RESTRICT_API') is False or (current_user.admin)):
+                print("hi")
                 query = self._db_query(oid)
+                print("query",query)
                 json_response = self._create_json_response(query, oid)
+                print("json_response",json_response)
                 return Response(json_response, mimetype='application/json')   
         except Exception as e:
             raise Forbidden
