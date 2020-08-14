@@ -135,6 +135,7 @@ class APIBase(MethodView):
         :returns: The JSON item/s stored in the DB
 
         """
+        print("get request try")
         try:
             print("in get request")
             ensure_authorized_to('read', self.__class__)
