@@ -18,7 +18,6 @@
 
 import json
 from mock import patch, Mock
-from pybossa.syncer import Syncer
 from default import Test, with_context
 from factories import ProjectFactory
 from nose.tools import assert_raises
@@ -32,6 +31,7 @@ class TestSyncer(Test):
     target_id = 'some_target_id'
 
     def setUp(self):
+        from pybossa.syncer import Syncer
         super(TestSyncer, self).setUp()
         self.syncer = Syncer(self.target_url, self.target_key)
 

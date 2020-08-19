@@ -73,11 +73,18 @@ class ProjectAPI(APIBase):
             data["info"]["data_access"] = ["L4"]
 
     def _create_instance_from_request(self, data):
-        if 'password' not in data.keys():
+        # password required if not syncing
+        sync_json = data["info"].get("sync", {})
+        # keys added when syncing
+        sync_keys = ("latest_sync", "source_url", "syncer")
+        sync = all(sync_key in sync_json for sync_key in sync_keys)
+        password = data.pop("password", "")
+        if not (sync or password) or (sync and "passwd_hash" not in data["info"]):
             raise BadRequest("password required")
-        password = data.pop("password")
         inst = super(ProjectAPI, self)._create_instance_from_request(data)
-        inst.set_password(password)
+        if not sync:
+            # set password if not syncing
+            inst.set_password(password)
         category_ids = [c.id for c in get_categories()]
         default_category = get_categories()[0]
         inst.category_id = default_category.id
