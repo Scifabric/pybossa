@@ -31,10 +31,11 @@ from pybossa.cache.task_browse_helpers import get_task_filters, parse_tasks_brow
 class TestProjectsCache(Test):
 
 
-    def create_project_with_tasks(self, completed_tasks, ongoing_tasks):
+    def create_project_with_tasks(self, completed_tasks, ongoing_tasks, gold_tasks=0):
         project = ProjectFactory.create()
         TaskFactory.create_batch(completed_tasks, state='completed', project=project)
         TaskFactory.create_batch(ongoing_tasks, state='ongoing', project=project)
+        TaskFactory.create_batch(gold_tasks, calibration=1, project=project)
         return project
 
     def create_project_with_contributors(self, anonymous, registered,
@@ -567,6 +568,22 @@ class TestProjectsCache(Test):
 
         progress = cached_projects.overall_progress(project.id)
 
+        assert progress == 50, progress
+
+
+    @with_context
+    def test_overall_progress_excludes_gold(self):
+        total_tasks = 4
+        completed_tasks = 2
+        gold_tasks = 2
+        project = self.create_project_with_tasks(
+                            completed_tasks=completed_tasks,
+                            ongoing_tasks=total_tasks-completed_tasks,
+                            gold_tasks=gold_tasks)
+
+        progress = cached_projects.overall_progress(project.id)
+
+        assert len(project.tasks) == total_tasks + gold_tasks
         assert progress == 50, progress
 
 

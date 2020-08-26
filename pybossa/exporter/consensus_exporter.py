@@ -75,6 +75,41 @@ def flatten(obj, level=1, prefix=None, sep='__', ignore=tuple()):
     _flatten(obj, 0, prefix)
     return flattened
 
+def get_contributor_answer(data, path, answer_field_config):
+
+    def match_nested_value(record):
+        match = [str(record[k]) == str(v) for k, v in key_value_pair.items()]
+        return all(match)
+
+    if not answer_field_config or not path:
+        return None
+    paths = path.split('.')
+    if answer_field_config.get('type') == 'categorical_nested':
+        key_values = answer_field_config.get('config', {}).get('keyValues', [])
+
+        field_name = paths[0]
+        key = paths[-1]
+        values = paths[1 : -1]
+        key_value_pair = {key_values[i]: values[i] for i in range(len(key_values))}
+
+        field_data = data.get(field_name, [])
+        target_field_data = [d for d in field_data if match_nested_value(d)]
+        return target_field_data[0][key] if target_field_data else None
+    elif answer_field_config.get('type') in ['categorical', 'freetext']:
+        return get_value_by_path(data, paths)
+    else:
+        return None
+
+def get_value_by_path(data, path):
+    if not path or not data:
+        return data
+    key = path[0]
+    try:
+        index = int(key)
+        return get_value_by_path(data[index], path[1:])
+    except ValueError:
+        return get_value_by_path(data.get(key), path[1:])
+
 
 def format_consensus(rows):
     rv = []
@@ -84,10 +119,11 @@ def format_consensus(rows):
         task_info = flatten(data.get('task_info', {}), prefix='task_info')
         data.update(task_info)
         consensus = data.pop('consensus') or OrderedDict()
+        if consensus.get('consensus'):
+            answer_fields = {k: v.get('answer_field_config', {}) for k, v in consensus['consensus'].items()}
         consensus = flatten(consensus, level=2,
-                            ignore=['contributorsMetConsensus'])
+                            ignore=['contributorsMetConsensus', 'answer_field_config'])
         task_runs = data['task_run__info']
-
         for k, v in consensus.items():
             match = re.match(__KEY_RE, k)
             if match:
@@ -97,11 +133,10 @@ def format_consensus(rows):
                     if user_id not in local_user_cache:
                         user_info = get_user_info(user_id) or {'user_id': user_id}
                         local_user_cache[user_id] = user_info
-                    user_info = local_user_cache[user_id]
                     user_name = user_info.get('name')
                     tr = task_runs.get(user_name, {})
                     user_pct['contributor_name'] = user_name
-                    user_pct['contributor_answer'] = tr.get(ans_key)
+                    user_pct['contributor_answer'] = get_contributor_answer(tr, ans_key, answer_fields[ans_key])
                     user_pct['answer_percentage'] = user_pct.pop('percentage', None)
 
         consensus.update(data)

@@ -301,7 +301,13 @@ class ProjectRepository(Repository):
             category.name AS category_name,
             "user".name AS owner_name,
             "user".email_addr AS owner_email,
-            project.updated AS updated
+            project.updated AS updated,
+            (project.info::json->>'kpi')::float as kpi,
+            project.info::json->>'product' as product,
+            project.info::json->>'subproduct' as subproduct,
+            project.info::json#>>'{data_classification,input_data}' as input_data_classification,
+            project.info::json#>>'{data_classification,output_data}' as output_data_classification,
+            project.info::json->'data_access' as data_access
             FROM project JOIN category
             ON project.category_id = category.id
             JOIN "user" ON project.owner_id = "user".id
@@ -363,5 +369,7 @@ class ProjectRepository(Repository):
         data = data[[
             'project_id', 'name', 'url', 'short_name', 'long_description', 'created', 'owner_name',
             'owner_email', 'category_name', 'finish_time', 'percent_complete', 'n_tasks', 'n_pending_tasks',
-            'n_workers', 'workers', 'updated', 'last_submission', 'n_taskruns', 'n_pending_taskruns']]
+            'n_workers', 'workers', 'updated', 'last_submission', 'n_taskruns', 'n_pending_taskruns',
+            'kpi', 'product', 'subproduct', 'input_data_classification', 'output_data_classification',
+            'data_access']]
         return data
