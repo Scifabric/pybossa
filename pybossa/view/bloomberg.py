@@ -106,7 +106,7 @@ def handle_bloomberg_response():
         current_app.logger.exception('BSSO login error')
         flash(gettext('We were unable authenticate and log you into an account. Please contact a Gigwork administrator.'), 'error')
         return redirect(url_for('home.home'))
-        
+
 
 def get_user_data_access_level(firm_num):
     """Reads firm id to user type mappings from settings_upref_mdata and
