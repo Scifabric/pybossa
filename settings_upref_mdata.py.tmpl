@@ -81,6 +81,20 @@ def mdata_user_types():
 
     return types
 
+def upref_firm_to_utype():
+
+    firm_to_id_mapping = {
+        9001: 'Full-time Employee',
+        937686: 'Infosys Vendor',
+        294492: 'Infosys Vendor',
+        905877: 'Liberty Vendor',
+        354126: 'Tata Vendor',
+        569446: 'Wipro Vendor',
+        905195: 'iMerit Vendor'
+        }
+
+    return firm_to_id_mapping
+
 
 def mdata_timezones():
     tz = [("", ""), ("ACT", "Australia Central Time"),

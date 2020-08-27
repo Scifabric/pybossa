@@ -1187,3 +1187,4 @@ def get_user_pref_and_metadata(user_name, form):
         if form.locations.data:
             user_pref['locations'] = form.locations.data
         return user_pref, metadata
+

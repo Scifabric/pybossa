@@ -1178,14 +1178,6 @@ def description_from_long_description(desc, long_desc):
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
 
-def get_user_type(firm_num):
-    firm_to_type = current_app.config.get('FIRM_TO_TYPE', {})
-    return firm_to_type.get(int(firm_num), None) if firm_num else None
-
-def get_user_data_access_level(firm_num):
-    firm_to_type = current_app.config.get('FIRM_TO_TYPE', {})
-    return ['L2'] if firm_num and int(firm_num) in firm_to_type.keys() else ['L4']
-
 def generate_bsso_account_notification(user, admins_emails, access_type):
 
     is_qa = current_app.config.get('IS_QA')

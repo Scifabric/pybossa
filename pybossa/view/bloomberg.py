@@ -21,9 +21,11 @@ from flask_babel import gettext
 from pybossa.core import user_repo, csrf
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
-from pybossa.util import is_own_url_or_else, generate_password, get_user_type, get_user_data_access_level
+from pybossa.util import is_own_url_or_else, generate_password
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
+
+import app_settings
 
 blueprint = Blueprint('bloomberg', __name__)
 
@@ -104,3 +106,18 @@ def handle_bloomberg_response():
         current_app.logger.exception('BSSO login error')
         flash(gettext('We were unable authenticate and log you into an account. Please contact a Gigwork administrator.'), 'error')
         return redirect(url_for('home.home'))
+
+
+def get_user_type(firm_num):
+    """Reads firm id to user type mappings from settings_upref_mdata and
+    returns the user type"""
+    firm_to_type = app_settings.upref_mdata.upref_firm_to_utype()
+    return firm_to_type.get(int(firm_num), None) if firm_num else None
+
+
+def get_user_data_access_level(firm_num):
+    """Reads firm id to user type mappings from settings_upref_mdata and
+    returns the access type"""
+    firm_to_type = app_settings.upref_mdata.upref_firm_to_utype()
+    return ['L2'] if firm_num and int(firm_num) in firm_to_type.keys() else ['L4']
+
