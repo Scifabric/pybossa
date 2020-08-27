@@ -90,7 +90,7 @@ def handle_bloomberg_response():
                 user_data['name']        = attributes['username'][0]
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
-                user_data['user_type']   = get_user_type(attributes.get('firmId', [None])[0])
+                user_data['user_type']   = app_settings.upref_mdata.firm_id_to_type_mapping.get(attributes.get('firmId', [None])[0])
                 user_data['data_access'] = get_user_data_access_level(attributes.get('firmId', [None])[0])
                 create_account(user_data, auto_create=True)
                 flash('A new account has been created for you using BSSO.')
@@ -106,18 +106,10 @@ def handle_bloomberg_response():
         current_app.logger.exception('BSSO login error')
         flash(gettext('We were unable authenticate and log you into an account. Please contact a Gigwork administrator.'), 'error')
         return redirect(url_for('home.home'))
-
-
-def get_user_type(firm_num):
-    """Reads firm id to user type mappings from settings_upref_mdata and
-    returns the user type"""
-    firm_to_type = app_settings.upref_mdata.upref_firm_to_utype()
-    return firm_to_type.get(int(firm_num), None) if firm_num else None
-
+        
 
 def get_user_data_access_level(firm_num):
     """Reads firm id to user type mappings from settings_upref_mdata and
     returns the access type"""
-    firm_to_type = app_settings.upref_mdata.upref_firm_to_utype()
-    return ['L2'] if firm_num and int(firm_num) in firm_to_type.keys() else ['L4']
+    return ['L2'] if firm_num and int(firm_num) in app_settings.upref_mdata.firm_id_to_type_mapping.keys() else ['L4']
 
