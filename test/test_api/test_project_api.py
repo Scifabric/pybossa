@@ -1813,3 +1813,29 @@ class TestProjectAPI(TestAPI):
         assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == "BadRequest", err_msg
         assert res.status_code == 400, err_msg
+
+    @with_context
+    def test_project_post_from_sync(self):
+        user = UserFactory.create()
+        CategoryFactory.create()
+        # test create kpi out of range
+        headers = [('Authorization', user.api_key)]
+        data = dict(
+            name='my-project',
+            short_name='my-project',
+            description='my-project-description',
+            info=dict(
+                data_classification=dict(input_data="L4 - public", output_data="L4 - public"),
+                kpi=50,
+                sync=dict(latest_sync="latest_sync",
+                      source_url="test.com",
+                      syncer="test@test.com",
+                      enabled=True),
+                passwd_hash = "hashpwd",
+                product="abc",
+                subproduct="def",
+        ))
+        res = self.app.post('/api/project', headers=headers,
+                            data=json.dumps(data))
+        res_data = json.loads(res.data)
+        assert res.status_code == 200

@@ -22,8 +22,10 @@ from nose.tools import assert_raises
 from requests import Response
 from pybossa.syncer import NotEnabled
 from pybossa.syncer.project_syncer import ProjectSyncer
-from default import Test, with_context
+from default import db, Test, with_context
 from factories import ProjectFactory, UserFactory
+
+from pybossa.model.project import Project
 
 
 def create_response(ok=True, status_code=200, content=None):
@@ -154,3 +156,42 @@ class TestProjectSyncer(Test):
         assert 'user-prod@test.com' in emails
         mock_get_target_user.assert_called()
 
+    @with_context
+    @patch('pybossa.syncer.category_syncer.CategorySyncer.get_target', return_value={'id': 1})
+    def test_create_api_integration(self, mock_cat):
+        project_syncer = ProjectSyncer(self.target_url, self.target_key)
+        user = UserFactory.create(admin=True, email_addr=u'user@test.com')
+        project_syncer.syncer = user
+
+        project = ProjectFactory.create()
+        payload = project_syncer._build_payload(project)
+
+        # delete project to test api
+        db.session.query(Project).delete()
+        # sync create does post request
+        headers = [('Authorization', user.api_key)]
+        res = self.app.post("/api/project", headers=headers, data=json.dumps(payload))
+        assert res.status_code == 200, 'build_payload output should result in valid api query'
+        # check that password hash correctly handled
+        data = json.loads(res.data)
+        assert data['info']['passwd_hash'] == payload['info']['passwd_hash']
+
+    @with_context
+    @patch('pybossa.syncer.category_syncer.CategorySyncer.get_target', return_value={'id': 1})
+    def test_sync_api_integration(self, mock_cat):
+        project_syncer = ProjectSyncer(self.target_url, self.target_key)
+        user = UserFactory.create(admin=True, email_addr=u'user@test.com')
+        project_syncer.syncer = user
+        
+        target = create_target()
+        project = ProjectFactory.create()
+        # no sync info by default
+        assert not project.info.get("sync")
+
+        payload = project_syncer._build_payload(project, target)
+
+        # sync existing does put request
+        headers = [('Authorization', user.api_key)]
+        res = self.app.put("/api/project/{}".format(project.id), headers=headers, data=json.dumps(payload))
+        assert res.status_code == 200, 'build_payload output should result in valid api query'
+        assert res.json["info"]["sync"] == payload["info"]["sync"]
