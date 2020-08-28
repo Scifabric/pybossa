@@ -1199,3 +1199,4 @@ def generate_bsso_account_notification(user, admins_emails, access_type):
                                   server_url=server_url,
                                   is_qa=is_qa)
     return msg
+    
