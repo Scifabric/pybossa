@@ -501,7 +501,7 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
     if auto_create is True:
-        admin_msg = generate_bsso_account_notification(user=user_info, admins_emails=[], access_type="BSSO")
+        admin_msg = generate_bsso_account_notification(user=user_info, admins_emails=current_app.config['ALERT_LIST'], access_type="BSSO")
         mail_queue.enqueue(send_mail, admin_msg) 
 
 def _update_user_with_valid_email(user, email_addr):

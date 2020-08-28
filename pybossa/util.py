@@ -1199,4 +1199,28 @@ def generate_bsso_account_notification(user, admins_emails, access_type):
                                   server_url=server_url,
                                   is_qa=is_qa)
     return msg
-    
+
+def generate_bsso_account_warning(user, admins_emails, access_type):
+
+        is_qa = current_app.config.get('IS_QA')
+        server_url = current_app.config.get('SERVER_URL')
+        brand = current_app.config.get('BRAND')
+
+        subject = 'A new account has been created via BSSO for {}'.format(brand)
+        msg = dict(subject=subject,
+                recipients=admins_emails)
+        fullname = user['firstName'][0] + " " + user['lastName'][0]
+        firm_num = user['firmId']
+        msg['body'] = render_template('/account/email/adminbssowarning.md',
+                                    username=fullname,
+                                    firm_id=firm_num,
+                                    access_type=access_type,
+                                    server_url=server_url,
+                                    is_qa=is_qa)
+        msg['html'] = render_template('/account/email/adminbssowarning.html',
+                                    username=fullname,
+                                    firm_id=firm_num,
+                                    access_type=access_type,
+                                    server_url=server_url,
+                                    is_qa=is_qa)
+        return msg
