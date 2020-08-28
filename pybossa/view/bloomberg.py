@@ -18,16 +18,21 @@
 
 from flask import Blueprint, request, flash, url_for, redirect, current_app, abort
 from flask_babel import gettext
-from pybossa.core import user_repo, csrf
+from pybossa.core import user_repo, csrf, sentinel
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
+from pybossa.util import generate_bsso_account_warning
 from pybossa.util import is_own_url_or_else, generate_password
+from pybossa.jobs import send_mail
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
+from rq import Queue
 
 import app_settings
 
 blueprint = Blueprint('bloomberg', __name__)
+
+mail_queue = Queue('email', connection=sentinel.master)
 
 
 @blueprint.route('/login', methods=['GET', 'POST'])
@@ -92,7 +97,7 @@ def handle_bloomberg_response():
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
                 user_data['user_type']   = firm_num_to_type.get(attributes.get('firmId', [None])[0])
-                user_data['data_access'] = get_user_data_access_level(attributes.get('firmId', [None])[0])
+                user_data['data_access'] = get_user_data_access_level(attributes)
                 create_account(user_data, auto_create=True)
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
@@ -109,11 +114,14 @@ def handle_bloomberg_response():
         return redirect(url_for('home.home'))
 
 
-def get_user_data_access_level(firm_num):
+def get_user_data_access_level(user_attributes):
     """Reads firm id to user type mappings from settings_upref_mdata and
     returns the access type"""
     firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
-    if current_app.config.get('PRIVATE_INSTANCE'):
-        return ['L2'] if firm_num and int(firm_num) in firm_num_to_type.keys() else ['L4']
+    firm_num = user_attributes.get('firmId', [None])[0]
+    if current_app.config.get('PRIVATE_INSTANCE') and int(firm_num):
+        return ['L2'] if firm_num in firm_num_to_type.keys() else ['L4']
     else:
+        admin_msg = generate_bsso_account_warning(user=user_attributes, admins_emails=current_app.config['ADMINS'], access_type="BSSO")
+        mail_queue.enqueue(send_mail, admin_msg)
         return ['L4']
