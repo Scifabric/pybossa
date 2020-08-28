@@ -84,13 +84,14 @@ def handle_bloomberg_response():
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
+            firm_num_to_type = current_app.config.get('FIRM_ID_TO_TYPE')
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
                 user_data['name']        = attributes['username'][0]
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
-                user_data['user_type']   = app_settings.upref_mdata.firm_id_to_type_mapping.get(attributes.get('firmId', [None])[0])
+                user_data['user_type']   = firm_num_to_type.get(attributes.get('firmId', [None])[0])
                 user_data['data_access'] = get_user_data_access_level(attributes.get('firmId', [None])[0])
                 create_account(user_data, auto_create=True)
                 flash('A new account has been created for you using BSSO.')
@@ -111,5 +112,8 @@ def handle_bloomberg_response():
 def get_user_data_access_level(firm_num):
     """Reads firm id to user type mappings from settings_upref_mdata and
     returns the access type"""
-    return ['L2'] if firm_num and int(firm_num) in app_settings.upref_mdata.firm_id_to_type_mapping.keys() else ['L4']
-
+    firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
+    if current_app.config.get('PRIVATE_INSTANCE'):
+        return ['L2'] if firm_num and int(firm_num) in firm_num_to_type.keys() else ['L4']
+    else:
+        return ['L4']
