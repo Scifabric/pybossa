@@ -25,13 +25,14 @@ from default import Test, db, with_context
 from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
     USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH, BulkTaskLocalCSVImportForm,
     RegisterFormWithUserPrefMetadata, UserPrefMetadataForm,
-    ProjectReportForm)
+    ProjectReportForm, ProjectForm)
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
 from mock import patch, MagicMock
 from werkzeug.datastructures import MultiDict
 import six
+from pybossa.forms.dynamic_forms import dynamic_project_form
 
 user_repo = UserRepository(db)
 
@@ -137,6 +138,35 @@ class TestValidator(Test):
         form.end_date.data = date.today()
         u = validator.NotInFutureValidator()
         u(form, form.end_date)
+
+    @with_context
+    @raises(ValidationError)
+    def test_amp_pvf_validator_raises_error(self):
+        """Test AmpPvfValidator raise exception with invalid pvf value """
+        data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
+            for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', [('', False)])
+        ]
+        data_access_levels = dict(valid_access_levels=['L1', 'L2', 'L3', 'L4'])
+        form_data = dict()
+        prodsubprod = dict(abc='def')
+        form = dynamic_project_form(ProjectForm, form_data, data_access_levels, prodsubprod, data_classes)
+        form.amp_pvf.data = 'xxx yyy'
+        u = validator.AmpPvfValidator()
+        u.__call__(form, form.amp_pvf)
+
+    @with_context
+    def test_amp_pvf_validator_pass(self):
+        """Test AmpPvfValidator pass with correct format pvf value """
+        data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
+            for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', [('', False)])
+        ]
+        data_access_levels = dict(valid_access_levels=['L1', 'L2', 'L3', 'L4'])
+        form_data = dict()
+        prodsubprod = dict(abc='def')
+        form = dynamic_project_form(ProjectForm, form_data, data_access_levels, prodsubprod, data_classes)
+        form.amp_pvf.data = 'XYZ 123'
+        u = validator.AmpPvfValidator()
+        u.__call__(form, form.amp_pvf)
 
 
 class TestRegisterForm(Test):
