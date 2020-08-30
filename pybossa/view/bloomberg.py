@@ -90,7 +90,6 @@ def handle_bloomberg_response():
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
             firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
-            print("FIRM MAP: ", firm_num_to_type)
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
@@ -100,6 +99,7 @@ def handle_bloomberg_response():
                 user_data['user_type']   = firm_num_to_type.get(attributes.get('firmId', [None])[0])
                 user_data['data_access'] = get_user_data_access_level(attributes)
                 create_account(user_data, auto_create=True)
+                current_app.logger.info('Account created using BSSO info: %s', errors, user_data)
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
                 return _sign_in_user(user, next_url=request.form.get('RelayState'))
