@@ -90,6 +90,7 @@ def handle_bloomberg_response():
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
             firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
+            print("FIRM MAP: ", firm_num_to_type)
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
@@ -120,7 +121,7 @@ def get_user_data_access_level(user_attributes):
     firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
     firm_num = user_attributes.get('firmId', [None])[0]
     if current_app.config.get('PRIVATE_INSTANCE') and int(firm_num):
-        return ['L2'] if firm_num in firm_num_to_type.keys() else ['L4']
+        return ['L2'] if int(firm_num) in firm_num_to_type.keys() else ['L4']
     else:
         admin_msg = generate_bsso_account_warning(user=user_attributes, admins_emails=current_app.config['ADMINS'], access_type="BSSO")
         mail_queue.enqueue(send_mail, admin_msg)
