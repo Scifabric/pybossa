@@ -21,7 +21,7 @@ from flask_babel import gettext
 from pybossa.core import user_repo, csrf, sentinel
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
-from pybossa.util import generate_bsso_account_warning
+from pybossa.util import generate_bsso_account_notification
 from pybossa.util import is_own_url_or_else, generate_password
 from pybossa.jobs import send_mail
 from pybossa.exc.repository import DBIntegrityError
@@ -123,6 +123,6 @@ def get_user_data_access_level(user_attributes):
     if current_app.config.get('PRIVATE_INSTANCE') and int(firm_num):
         return ['L2'] if int(firm_num) in firm_num_to_type.keys() else ['L4']
     else:
-        admin_msg = generate_bsso_account_warning(user=user_attributes, admins_emails=current_app.config['ADMINS'], access_type="BSSO")
+        admin_msg = generate_bsso_account_notification(user=user_attributes, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
         mail_queue.enqueue(send_mail, admin_msg)
         return ['L4']

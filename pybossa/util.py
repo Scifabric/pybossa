@@ -1178,7 +1178,9 @@ def description_from_long_description(desc, long_desc):
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
 
-def generate_bsso_account_notification(user, admins_emails, access_type):
+def generate_bsso_account_notification(user, admins_emails, access_type, warning=False):
+    template_type = 'adminbssowarning' if warning else 'adminbssonotification'
+    template = '/account/email/{}'.format(template_type)
 
     is_qa = current_app.config.get('IS_QA')
     server_url = current_app.config.get('SERVER_URL')
@@ -1187,7 +1189,14 @@ def generate_bsso_account_notification(user, admins_emails, access_type):
     subject = 'A new account has been created via BSSO for {}'.format(brand)
     msg = dict(subject=subject,
                recipients=admins_emails)
-    fullname = user['fullname']
+    msg['body'] = render_template('{}.md'.format(template))
+    msg['html'] = render_template('{}.html'.format(template))
+
+    try:
+        fullname = user['fullname']
+    except:
+        fullname = user['firstName'][0] + " " + user['lastName'][0]
+
     msg['body'] = render_template('/account/email/adminbssonotification.md',
                                   username=fullname,
                                   access_type=access_type,
@@ -1199,28 +1208,3 @@ def generate_bsso_account_notification(user, admins_emails, access_type):
                                   server_url=server_url,
                                   is_qa=is_qa)
     return msg
-
-def generate_bsso_account_warning(user, admins_emails, access_type):
-
-        is_qa = current_app.config.get('IS_QA')
-        server_url = current_app.config.get('SERVER_URL')
-        brand = current_app.config.get('BRAND')
-
-        subject = 'A new account has been created via BSSO for {}'.format(brand)
-        msg = dict(subject=subject,
-                recipients=admins_emails)
-        fullname = user['firstName'][0] + " " + user['lastName'][0]
-        firm_num = user['firmId']
-        msg['body'] = render_template('/account/email/adminbssowarning.md',
-                                    username=fullname,
-                                    firm_id=firm_num,
-                                    access_type=access_type,
-                                    server_url=server_url,
-                                    is_qa=is_qa)
-        msg['html'] = render_template('/account/email/adminbssowarning.html',
-                                    username=fullname,
-                                    firm_id=firm_num,
-                                    access_type=access_type,
-                                    server_url=server_url,
-                                    is_qa=is_qa)
-        return msg
