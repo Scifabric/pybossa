@@ -97,7 +97,7 @@ def handle_bloomberg_response():
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
                 user_data['user_type']   = firm_num_to_type.get(attributes.get('firmId', [None])[0])
-                user_data['data_access'] = get_user_data_access_level(attributes)
+                user_data['data_access'] = get_user_data_access_level(user_data)
                 create_account(user_data, auto_create=True)
                 if user_data['data_access'] == ['L4']:
                     admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
@@ -127,4 +127,4 @@ def get_user_data_access_level(user_attributes):
         return ['L2'] if int(firm_num) in firm_num_to_type.keys() else ['L4']
     else:
         return ['L4']
-        
+
