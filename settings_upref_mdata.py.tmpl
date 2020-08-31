@@ -131,13 +131,3 @@ def get_valid_user_preferences():
         for user_pref, values in upref_mdata_choices.iteritems():
             valid_user_preferences[user_pref] = [v[0] for v in values]
     return valid_user_preferences
-
-firm_to_id_mapping = {
-    9001: 'Full-time Employee',
-    937686: 'Infosys Vendor',
-    294492: 'Infosys Vendor',
-    905877: 'Liberty Vendor',
-    354126: 'Tata Vendor',
-    569446: 'Wipro Vendor',
-    905195: 'iMerit Vendor'
-}
