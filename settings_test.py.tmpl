@@ -220,12 +220,3 @@ VALID_DATA_CLASSES = [data_class for data_class, enabled in DATA_CLASSIFICATION 
 VALID_ACCESS_LEVELS = sorted(set(data_class.split('-')[0].strip() for data_class in VALID_DATA_CLASSES))
 
 
-FIRM_TO_TYPE = {
-    9001: 'Full-time Employee',
-    937686: 'Infosys Vendor',
-    294492: 'Infosys Vendor', 
-    905877: 'Liberty Vendor',
-    354126: 'Tata Vendor',
-    569446: 'Wipro Vendor',
-    905195: 'iMerit Vendor'
-    }
