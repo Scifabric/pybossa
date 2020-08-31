@@ -99,6 +99,9 @@ def handle_bloomberg_response():
                 user_data['user_type']   = firm_num_to_type.get(attributes.get('firmId', [None])[0])
                 user_data['data_access'] = get_user_data_access_level(attributes)
                 create_account(user_data, auto_create=True)
+                if user_data['data_access'] == ['L4']:
+                    admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
+                    mail_queue.enqueue(send_mail, admin_msg)
                 current_app.logger.info('Account created using BSSO info: %s', errors, user_data)
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
@@ -123,6 +126,5 @@ def get_user_data_access_level(user_attributes):
     if current_app.config.get('PRIVATE_INSTANCE') and int(firm_num):
         return ['L2'] if int(firm_num) in firm_num_to_type.keys() else ['L4']
     else:
-        admin_msg = generate_bsso_account_notification(user=user_attributes, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
-        mail_queue.enqueue(send_mail, admin_msg)
         return ['L4']
+        
