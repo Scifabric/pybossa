@@ -82,7 +82,7 @@ def handle_bloomberg_response():
     elif auth.is_authenticated:
         # User is authenticated on BSSO, load user from GIGwork API.
         attributes = auth.get_attributes()
-        user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
+        user = user_repo.get_by(email_addr=unicode(attributes['Email'][0]).lower())
         if user is not None:
             # User is authenticated on BSSO and already has a GIGwork account.
             return _sign_in_user(user, next_url=request.form.get('RelayState'))
@@ -91,9 +91,9 @@ def handle_bloomberg_response():
             user_data = {}
             firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
             try:
-                user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
-                user_data['email_addr']  = attributes['emailAddress'][0]
-                user_data['name']        = attributes['username'][0]
+                user_data['fullname']    = attributes['FirstName'][0] + " " + attributes['LastName'][0]
+                user_data['email_addr']  = attributes['Email'][0]
+                user_data['name']        = attributes['LoginID'][0]
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
                 user_data['user_type']   = firm_num_to_type.get(attributes.get('firmId', [None])[0])
@@ -102,7 +102,7 @@ def handle_bloomberg_response():
                 if user_data['data_access'] == ['L4']:
                     admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
                     mail_queue.enqueue(send_mail, admin_msg)
-                current_app.logger.info('Account created using BSSO info: %s', errors, user_data)
+                current_app.logger.info('Account created using BSSO info: %s', str(user_data))
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
                 return _sign_in_user(user, next_url=request.form.get('RelayState'))
@@ -123,7 +123,7 @@ def get_user_data_access_level(user_attributes):
     returns the access type"""
     firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
     firm_num = user_attributes.get('firmId', [None])[0]
-    if current_app.config.get('PRIVATE_INSTANCE') and int(firm_num):
+    if current_app.config.get('PRIVATE_INSTANCE') and firm_num:
         return ['L2'] if int(firm_num) in firm_num_to_type.keys() else ['L4']
     else:
         return ['L4']
