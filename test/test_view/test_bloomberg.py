@@ -143,11 +143,28 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
-        user = {'firstName': [u'test'], 'emailAddress': ['test@test.com'], 'lastName': [u'test'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test'], 'firmId': [u'1234567']}
+        user = {'firstName': [u'test1'], 'emailAddress': ['test1@test.com'], 'lastName': [u'test1'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test1'], 'firmId': [u'905877']}
         mock_auth.get_attributes.return_value = user
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         msg = generate_bsso_account_notification(user, "test_admin@test.com", "test")
-        assert "BSSO" in msg['body']
+        assert "check" in msg['body']
+        assert res.status_code == 302, res.status_code
+    
+    @with_context
+    @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
+    def test_bsso_auto_account_warning(self, mock_two_login):
+        from pybossa.view.account import generate_bsso_account_notification
+        redirect_url = 'http://localhost'
+        mock_auth = MagicMock()
+        mock_auth.get_errors.return_value = False
+        mock_auth.process_response.return_value = None
+        mock_auth.is_authenticated = True 
+        mock_two_login.return_value = mock_auth
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'0000000']}
+        mock_auth.get_attributes.return_value = user
+        res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
+        msg = generate_bsso_account_notification(user, "test_admin@test.com", "test", True)
+        assert "valid" in msg['body']
         assert res.status_code == 302, res.status_code
 
     @with_context
