@@ -1189,20 +1189,17 @@ def generate_bsso_account_notification(user, admins_emails, access_type, warning
     subject = 'A new account has been created via BSSO for {}'.format(brand)
     msg = dict(subject=subject,
                recipients=admins_emails)
-    msg['body'] = render_template('{}.md'.format(template))
-    msg['html'] = render_template('{}.html'.format(template))
-
     try:
         fullname = user['fullname']
     except:
         fullname = user['firstName'][0] + " " + user['lastName'][0]
 
-    msg['body'] = render_template('/account/email/adminbssonotification.md',
+    msg['body'] = render_template('{}.md'.format(template),
                                   username=fullname,
                                   access_type=access_type,
                                   server_url=server_url,
                                   is_qa=is_qa)
-    msg['html'] = render_template('/account/email/adminbssonotification.html',
+    msg['html'] = render_template('{}.html'.format(template),
                                   username=fullname,
                                   access_type=access_type,
                                   server_url=server_url,
