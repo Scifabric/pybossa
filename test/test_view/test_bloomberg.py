@@ -144,11 +144,7 @@ class TestBloomberg(Test):
         mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
         mock_bsso_alert.return_value = None
-<<<<<<< HEAD
-        mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'000000']}
-=======
         mock_auth.get_attributes.return_value = {'firstName': [u'test'], 'lastName': [u'test'], 'emailAddress': [u'test@bloomberg.net'], 'username': [u'test'], 'firmId': [u'1234567']}
->>>>>>> 6aecad2a3a9266ad3993b31c982a31b4fa17e70e
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         assert mock_bsso_alert.called
         assert res.status_code == 302, res.status_code
