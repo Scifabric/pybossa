@@ -3,7 +3,7 @@ import json
 import re
 from sqlalchemy.sql import text
 from werkzeug.exceptions import BadRequest
-from pybossa.cache import memoize, ONE_WEEK
+from pybossa.cache import memoize, ONE_DAY
 from pybossa.core import db
 from pybossa.util import (convert_est_to_utc,
     get_user_pref_db_clause)
@@ -138,7 +138,7 @@ def is_valid_searchable_column(column_name):
     return is_valid
 
 
-@memoize(ONE_WEEK)
+@memoize(ONE_DAY)
 def get_searchable_columns(project_id):
     sql = text('''SELECT distinct jsonb_object_keys(info) AS col
                   FROM task
