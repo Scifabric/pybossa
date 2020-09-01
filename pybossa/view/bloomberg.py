@@ -82,6 +82,7 @@ def handle_bloomberg_response():
     elif auth.is_authenticated:
         # User is authenticated on BSSO, load user from GIGwork API.
         attributes = auth.get_attributes()
+        current_app.logger.info('User authenitcated but no account found. Attempting to create account for: %s', str(attributes))
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         if user is not None:
             # User is authenticated on BSSO and already has a GIGwork account.
