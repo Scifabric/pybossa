@@ -4167,7 +4167,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[1]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
-        enqueue_call = queue.enqueue.call_args_list[5]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
@@ -4188,7 +4188,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[2]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
-        enqueue_call = queue.enqueue.call_args_list[6]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
         assert 'your Google account to ' in enqueue_call[0][1]['html']
@@ -4207,7 +4207,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[3]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
-        enqueue_call = queue.enqueue.call_args_list[7]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
@@ -4228,7 +4228,6 @@ class TestWeb(web.Helper):
         assert msg in resdata.get('flash'), res.data
         assert resdata.get('form').get('errors').get('email_addr') is not None, resdata
 
-        import pdb; pdb.set_trace()
         with patch.dict(self.flask_app.config, {'SPA_SERVER_NAME':
                                                 'http://local.com'}):
             data = {'password': user.passwd_hash, 'user': user.name}
