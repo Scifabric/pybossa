@@ -4146,6 +4146,7 @@ class TestWeb(web.Helper):
         assert "sent you an email" in resdata.get('flash'), err_msg
         enqueue_call = queue.enqueue.call_args_list[4]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
+        enqueue_call = queue.enqueue.call_args_list[-1] #testing
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
         assert mock_url.called_with('.reset_password', key=key, _external=True)
@@ -4227,6 +4228,7 @@ class TestWeb(web.Helper):
         assert msg in resdata.get('flash'), res.data
         assert resdata.get('form').get('errors').get('email_addr') is not None, resdata
 
+        import pdb; pdb.set_trace()
         with patch.dict(self.flask_app.config, {'SPA_SERVER_NAME':
                                                 'http://local.com'}):
             data = {'password': user.passwd_hash, 'user': user.name}
