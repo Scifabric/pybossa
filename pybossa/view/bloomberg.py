@@ -26,14 +26,8 @@ from pybossa.util import is_own_url_or_else, generate_password
 from pybossa.jobs import send_mail
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
-from rq import Queue
-
-import app_settings
 
 blueprint = Blueprint('bloomberg', __name__)
-
-mail_queue = Queue('email', connection=sentinel.master)
-
 
 @blueprint.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
