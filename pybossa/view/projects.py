@@ -362,7 +362,7 @@ def new():
     # Sort list of subproducts (value) for each product (key).
     prodsubprods = {key:sorted(value) for key, value in current_app.config.get('PRODUCTS_SUBPRODUCTS', {}).items()}
     data_classes = [(data_class, data_class, {} if enabled else dict(disabled='disabled'))
-        for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', ('', False))
+        for data_class, enabled in current_app.config.get('DATA_CLASSIFICATION', [('', False)])
     ]
     form = dynamic_project_form(ProjectForm, request.body, data_access_levels, prodsubprods, data_classes)
 
