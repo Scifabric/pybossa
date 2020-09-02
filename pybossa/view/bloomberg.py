@@ -18,7 +18,7 @@
 
 from flask import Blueprint, request, flash, url_for, redirect, current_app, abort
 from flask_babel import gettext
-from pybossa.core import user_repo, csrf, sentinel
+from pybossa.core import user_repo, csrf
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
 from pybossa.util import generate_bsso_account_notification
