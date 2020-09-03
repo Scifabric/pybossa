@@ -4283,19 +4283,21 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[0]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[4]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
+
+        
 
         data = {'password': jane.passwd_hash, 'user': jane.name}
         self.app.post('/account/forgot-password',
                       data={'email_addr': 'janedoe@example.com'},
                       follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[1]
+        enqueue_call = queue.enqueue.call_args_list[2]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[5]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
@@ -4304,10 +4306,10 @@ class TestWeb(web.Helper):
         self.app.post('/account/forgot-password',
                       data={'email_addr': 'google@example.com'},
                       follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[2]
+        enqueue_call = queue.enqueue.call_args_list[4]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[6]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
         assert 'your Google account to ' in enqueue_call[0][1]['html']
@@ -4316,10 +4318,10 @@ class TestWeb(web.Helper):
         self.app.post('/account/forgot-password',
                       data={'email_addr': 'facebook@example.com'},
                       follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[3]
+        enqueue_call = queue.enqueue.call_args_list[6]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[7]
+        enqueue_call = queue.enqueue.call_args_list[-1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
