@@ -500,11 +500,11 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
                      password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
-    data_access = user_data.get('data_access', None)
-    if data_access and 'L4' in data_access and len(data_access)<2:
+    data_access = user_data.get('data_access', [])
+    if auto_create and 'L4' in data_access:
         admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
         mail_queue.enqueue(send_mail, admin_msg)
-    elif auto_create is True:
+    elif auto_create:
         alert_msg = generate_bsso_account_notification(user=user_info, admins_emails=current_app.config['ALERT_LIST'], access_type="BSSO")
         mail_queue.enqueue(send_mail, alert_msg) 
 
