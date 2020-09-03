@@ -466,6 +466,8 @@ def confirm_account():
 
 
 def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_create=False):
+    """Creates the Gigwork account based on the criteria included in the user_data.
+    The auto-create tag is set when the create_account is triggered by a BSSO sign-in attempt."""
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],

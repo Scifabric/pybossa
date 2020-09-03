@@ -2368,7 +2368,6 @@ class TestWeb(web.Helper):
         assert 'api_key' not in data['owner'], res.data
         assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
-
         res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '302 FOUND', res.status
         '''
@@ -4146,7 +4145,6 @@ class TestWeb(web.Helper):
         assert "sent you an email" in resdata.get('flash'), err_msg
         enqueue_call = queue.enqueue.call_args_list[4]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
-        enqueue_call = queue.enqueue.call_args_list[-1] #testing
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
         assert mock_url.called_with('.reset_password', key=key, _external=True)
@@ -4167,7 +4165,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[1]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[5]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
@@ -4188,7 +4186,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[2]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[6]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
         assert 'your Google account to ' in enqueue_call[0][1]['html']
@@ -4207,7 +4205,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[3]
         assert resdata.get('flash'), err_msg
         assert "sent you an email" in resdata.get('flash'), err_msg
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[7]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
@@ -4283,21 +4281,19 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[0]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[4]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
         assert 'To recover your password' in enqueue_call[0][1]['html']
-
-        
 
         data = {'password': jane.passwd_hash, 'user': jane.name}
         self.app.post('/account/forgot-password',
                       data={'email_addr': 'janedoe@example.com'},
                       follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[2]
+        enqueue_call = queue.enqueue.call_args_list[1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[5]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
         assert 'your Twitter account to ' in enqueue_call[0][1]['html']
@@ -4306,10 +4302,10 @@ class TestWeb(web.Helper):
         self.app.post('/account/forgot-password',
                       data={'email_addr': 'google@example.com'},
                       follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[4]
+        enqueue_call = queue.enqueue.call_args_list[2]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[6]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
         assert 'your Google account to ' in enqueue_call[0][1]['html']
@@ -4318,10 +4314,10 @@ class TestWeb(web.Helper):
         self.app.post('/account/forgot-password',
                       data={'email_addr': 'facebook@example.com'},
                       follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[6]
+        enqueue_call = queue.enqueue.call_args_list[3]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Account Registration' in enqueue_call[0][1]['html']
-        enqueue_call = queue.enqueue.call_args_list[-1]
+        enqueue_call = queue.enqueue.call_args_list[7]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
         assert 'your Facebook account to ' in enqueue_call[0][1]['html']
@@ -4837,7 +4833,6 @@ class TestWeb(web.Helper):
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'test-app_task.json', zip.namelist()[0]
-
         exported_tasks = json.loads(zip.read(extracted_filename))
         project = db.session.query(Project)\
             .filter_by(short_name=Fixtures.project_short_name)\
@@ -5641,7 +5636,6 @@ class TestWeb(web.Helper):
         assert extracted_filename == 'project1_task_run.csv', zip.namelist()[0]
         extracted_filename_info_only = zip.namelist()[1]
         assert extracted_filename_info_only == 'project1_task_run_info_only.csv', zip.namelist()[1]
-
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
         project = db.session.query(Project)\
@@ -5658,12 +5652,10 @@ class TestWeb(web.Helper):
         err_msg = "The number of exported task runs is different \
                    from Project Tasks Runs: %s != %s" % (len(exported_task_runs), len(project.task_runs))
         assert len(exported_task_runs) == len(project.task_runs), err_msg
-
         for t in project.tasks[0].task_runs:
             for tk in flatten(t.dictize()).keys():
                 expected_key = "%s" % tk
                 assert expected_key in keys, expected_key
-
         for et in exported_task_runs:
             task_run_id = et[keys.index('id')]
             task_run = db.session.query(TaskRun).get(task_run_id)
