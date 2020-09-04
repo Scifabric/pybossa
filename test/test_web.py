@@ -4130,6 +4130,7 @@ class TestWeb(web.Helper):
         db.session.add_all([jane, google, facebook])
         db.session.commit()
 
+        # queue contains msgs for each of the types, accesses them by index
         data = {'password': user.passwd_hash, 'user': user.name}
         csrf = self.get_csrf('/account/forgot-password')
         res = self.app.post('/account/forgot-password',
