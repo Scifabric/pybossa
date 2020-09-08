@@ -85,7 +85,7 @@ def handle_bloomberg_response():
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
             firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
-            firm_num = int(attributes.get('firmId', [None])[0])
+            firm_num = int(attributes.get('firmId', [0])[0])
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
