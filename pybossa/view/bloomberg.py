@@ -93,7 +93,9 @@ def handle_bloomberg_response():
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
                 user_data['user_type']   = firm_num_to_type.get(firm_num)
-                user_data['data_access'] = get_user_data_access_level(firm_num)
+                data_access_level, data_access_type = get_user_data_access_level(firm_num)
+                user_data['data_access'] = data_access_level
+                user_data['data_access_type'] = data_access_type
                 create_account(user_data, auto_create=True)
                 current_app.logger.info('Account created using BSSO info: %s', str(user_data))
                 flash('A new account has been created for you using BSSO.')
@@ -115,8 +117,11 @@ def get_user_data_access_level(firm_num):
     """Reads firm id to user type mappings from settings_upref_mdata and
     returns the access type"""
     firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
-    if current_app.config.get('PRIVATE_INSTANCE') and firm_num:
-        return ['L2'] if firm_num in firm_num_to_type.keys() else ['L4']
+    if current_app.config.get('VALID_ACCESS_LEVELS_FOR_USER_TYPES') and firm_num:
+        if firm_num in firm_num_to_type.keys():
+            return ['L2'], "internal"
+        else:
+            return ['L4'], "external"
     else:
-        return ['L4']
+        return ['L4'], "default"
 
