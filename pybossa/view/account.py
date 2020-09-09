@@ -505,7 +505,8 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
 
     if auto_create and user_data.get("data_access_type", None) == "external":
         # if the account is created automatically and has external data access, send warning
-        admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=current_app.config.get('ADMINS',[]), access_type="BSSO", warning=True)
+        admins_email_list = [u.email_addr for u in user_repo.filter_by(admin=True)]
+        admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=admins_email_list, access_type="BSSO", warning=True)
         mail_queue.enqueue(send_mail, admin_msg)
     elif auto_create:
         # if the account is just automatically created, just send notification
