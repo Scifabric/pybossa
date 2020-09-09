@@ -152,7 +152,8 @@ class TestBloomberg(Test):
     
     @with_context
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
-    def test_bsso_auto_account_warning(self, mock_two_login):
+    @patch('pybossa.view.bloomberg.get_user_data_access_level', autospec=True)
+    def test_bsso_auto_account_warning(self, mock_access_level, mock_two_login):
         from pybossa.view.account import generate_bsso_account_notification
         redirect_url = 'http://localhost'
         mock_auth = MagicMock()
@@ -160,7 +161,8 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_two_login.return_value = mock_auth
-        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'0000000']}
+        mock_access_level.return_value = ['L4'], 'extternal'
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'0000000'], 'data_access_type': [u'external']}
         mock_auth.get_attributes.return_value = user
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         msg = generate_bsso_account_notification(user, "test_admin@test.com", "test", True)
