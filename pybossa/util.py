@@ -1178,8 +1178,15 @@ def description_from_long_description(desc, long_desc):
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
 
-def generate_bsso_account_notification(user, admins_emails, access_type, warning=False):
-    template_type = 'adminbssowarning' if warning else 'adminbssonotification'
+def generate_bsso_account_notification(user):
+    from pybossa.core import user_repo
+    if user.get("data_access_type", None) == 'external':
+        admins_email_list = [u.email_addr for u in user_repo.filter_by(admin=True)]
+        template_type = 'adminbssowarning'
+    else:
+        admins_email_list = current_app.config.get('ALERT_LIST',[])
+        template_type = 'adminbssonotification'
+
     template = '/account/email/{}'.format(template_type)
 
     is_qa = current_app.config.get('IS_QA')
@@ -1188,18 +1195,19 @@ def generate_bsso_account_notification(user, admins_emails, access_type, warning
 
     subject = 'A new account has been created via BSSO for {}'.format(brand)
     msg = dict(subject=subject,
-               recipients=admins_emails)
+               recipients=admins_email_list)
 
     fullname = user.get('fullname') or user['firstName'][0] + " " + user['lastName'][0]
 
     msg['body'] = render_template('{}.md'.format(template),
                                   username=fullname,
-                                  access_type=access_type,
+                                  access_type="BSSO",
                                   server_url=server_url,
                                   is_qa=is_qa)
     msg['html'] = render_template('{}.html'.format(template),
                                   username=fullname,
-                                  access_type=access_type,
+                                  access_type="BSSO",
                                   server_url=server_url,
                                   is_qa=is_qa)
+    print(msg)
     return msg

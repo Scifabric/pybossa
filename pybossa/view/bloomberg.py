@@ -119,9 +119,7 @@ def get_user_data_access_level(firm_num):
     firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
     if current_app.config.get('VALID_ACCESS_LEVELS_FOR_USER_TYPES') and firm_num:
         if firm_num in firm_num_to_type.keys():
-            return ['L2'], "internal"
-        else:
-            return ['L4'], "external"
+            return ['L2'], 'internal'
     else:
-        return ['L4'], "default"
+        return ['L4'], 'external'
 

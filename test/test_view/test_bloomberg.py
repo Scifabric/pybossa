@@ -146,7 +146,7 @@ class TestBloomberg(Test):
         user = {'firstName': [u'test1'], 'emailAddress': ['test1@test.com'], 'lastName': [u'test1'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test1'], 'firmId': [u'905877']}
         mock_auth.get_attributes.return_value = user
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
-        msg = generate_bsso_account_notification(user, "test_admin@test.com", "test")
+        msg = generate_bsso_account_notification(user)
         assert "check" in msg['body']
         assert res.status_code == 302, res.status_code
     
@@ -161,11 +161,10 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_two_login.return_value = mock_auth
-        mock_access_level.return_value = ['L4'], 'extternal'
-        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'0000000'], 'data_access_type': [u'external']}
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'username': [u'test2'], 'firmId': [u'0000000'], 'data_access_type': 'external'}
         mock_auth.get_attributes.return_value = user
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
-        msg = generate_bsso_account_notification(user, "test_admin@test.com", "test", True)
+        msg = generate_bsso_account_notification(user)
         assert "valid" in msg['body']
         assert res.status_code == 302, res.status_code
 
@@ -177,6 +176,6 @@ class TestBloomberg(Test):
         mock_alert.body = None
         mock_alert.html = None
         mock_bsso_alert = mock_alert
-        user = { 'fullname': "test test", "email": "test@test.com"}
-        assert generate_bsso_account_notification(user, "test_admin@test.com", "test") != None
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'data_access_type': [u'internal']}
+        assert generate_bsso_account_notification(user) != None
 
