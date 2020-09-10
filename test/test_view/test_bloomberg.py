@@ -143,7 +143,7 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_one_login.return_value = mock_auth
-        user = {'firstName': [u'test1'], 'emailAddress': ['test1@test.com'], 'lastName': [u'test1'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test1'], 'firmId': [u'905877']}
+        user = {'firstName': [u'test1'], 'emailAddress': ['test1@test.com'], 'lastName': [u'test1'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test1'], 'firmId': [u'905877'], 'user_type': "Test firm id 3"}
         mock_auth.get_attributes.return_value = user
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         msg = generate_bsso_account_notification(user)
@@ -161,7 +161,7 @@ class TestBloomberg(Test):
         mock_auth.process_response.return_value = None
         mock_auth.is_authenticated = True 
         mock_two_login.return_value = mock_auth
-        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'username': [u'test2'], 'firmId': [u'0000000'], 'data_access_type': 'external'}
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'username': [u'test2'], 'firmId': [u'0000000']}
         mock_auth.get_attributes.return_value = user
         res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
         msg = generate_bsso_account_notification(user)

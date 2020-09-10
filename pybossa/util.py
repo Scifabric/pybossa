@@ -1180,7 +1180,9 @@ def description_from_long_description(desc, long_desc):
 
 def generate_bsso_account_notification(user):
     from pybossa.core import user_repo
-    if user.get("data_access_type", None) == 'external':
+    access_type = "BSSO"
+    warning = False if user.get('user_type') else True
+    if warning:
         admins_email_list = [u.email_addr for u in user_repo.filter_by(admin=True)]
         template_type = 'adminbssowarning'
     else:
@@ -1201,12 +1203,12 @@ def generate_bsso_account_notification(user):
 
     msg['body'] = render_template('{}.md'.format(template),
                                   username=fullname,
-                                  access_type="BSSO",
+                                  access_type=access_type,
                                   server_url=server_url,
                                   is_qa=is_qa)
     msg['html'] = render_template('{}.html'.format(template),
                                   username=fullname,
-                                  access_type="BSSO",
+                                  access_type=access_type,
                                   server_url=server_url,
                                   is_qa=is_qa)
     print(msg)

@@ -25,6 +25,7 @@ from pybossa.util import generate_bsso_account_notification
 from pybossa.util import is_own_url_or_else, generate_password
 from pybossa.jobs import send_mail
 from pybossa.exc.repository import DBIntegrityError
+from pybossa.data_access import data_access_levels
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 blueprint = Blueprint('bloomberg', __name__)
@@ -67,6 +68,7 @@ def handle_bloomberg_response():
     auth = OneLogin_Saml2_Auth(prepare_onelogin_request(), sso_settings)
     auth.process_response()
     errors = auth.get_errors()
+
     if errors:
         # BSSO was unable to authenticate the user
         error_reason = auth.get_last_error_reason()
@@ -84,18 +86,18 @@ def handle_bloomberg_response():
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
-            firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
-            firm_num = int(attributes.get('firmId', [0])[0])
+            data_access = "L2" if bool(data_access_levels) else "L4"
+            firm_id_to_type = current_app.config.get('FIRM_TO_TYPE')
+            firm_id = int(attributes.get('firmId', [0])[0])
+            user_type = firm_id_to_type.get(firm_id, "")       # firm_num_to_type -> firm_id_to_type
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
                 user_data['name']        = attributes['username'][0]
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
-                user_data['user_type']   = firm_num_to_type.get(firm_num)
-                data_access_level, data_access_type = get_user_data_access_level(firm_num)
-                user_data['data_access'] = data_access_level
-                user_data['data_access_type'] = data_access_type
+                user_data['data_access'] = data_access
+                user_data['user_type'] = user_type
                 create_account(user_data, auto_create=True)
                 current_app.logger.info('Account created using BSSO info: %s', str(user_data))
                 flash('A new account has been created for you using BSSO.')
