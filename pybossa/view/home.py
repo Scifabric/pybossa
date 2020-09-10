@@ -53,7 +53,11 @@ def home():
         current_user.rank = rank_and_score['rank']
     response = dict(template='/home/index.html', **data)
     #return handle_content_type(response)
-    return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=307)
+    url = current_app.config['BASE_URL'] + '/project/category/mkplaygames'
+    url.replace('http://', 'https://')
+    return redirect(url, code=302)
+    # return redirect(url_for('.mkplaygames', entity_id=handler.entity_id, next=login_next, _external=True, _scheme='https'))
+    #  return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=307)
 
 
 @blueprint.route("about")
@@ -77,3 +81,6 @@ def result():
         return handle_content_type(response)
     except TemplateNotFound:
         return abort(404)
+
+
+# blueprint.add_url_rule('/project/category/mkplaygames', view_func=mkplaygames)
