@@ -2368,7 +2368,6 @@ class TestWeb(web.Helper):
         assert 'api_key' not in data['owner'], res.data
         assert 'email_addr' not in data['owner'], res.data
         assert 'secret_key' not in data['project'], res.data
-
         res = self.app_get_json('/project/sampleapp/settings')
         assert res.status == '302 FOUND', res.status
         '''
@@ -4131,6 +4130,7 @@ class TestWeb(web.Helper):
         db.session.add_all([jane, google, facebook])
         db.session.commit()
 
+        # queue contains msgs for each of the types, accesses them by index
         data = {'password': user.passwd_hash, 'user': user.name}
         csrf = self.get_csrf('/account/forgot-password')
         res = self.app.post('/account/forgot-password',
@@ -4834,7 +4834,6 @@ class TestWeb(web.Helper):
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
         assert extracted_filename == 'test-app_task.json', zip.namelist()[0]
-
         exported_tasks = json.loads(zip.read(extracted_filename))
         project = db.session.query(Project)\
             .filter_by(short_name=Fixtures.project_short_name)\
@@ -5638,7 +5637,6 @@ class TestWeb(web.Helper):
         assert extracted_filename == 'project1_task_run.csv', zip.namelist()[0]
         extracted_filename_info_only = zip.namelist()[1]
         assert extracted_filename_info_only == 'project1_task_run_info_only.csv', zip.namelist()[1]
-
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
         project = db.session.query(Project)\
@@ -5655,12 +5653,10 @@ class TestWeb(web.Helper):
         err_msg = "The number of exported task runs is different \
                    from Project Tasks Runs: %s != %s" % (len(exported_task_runs), len(project.task_runs))
         assert len(exported_task_runs) == len(project.task_runs), err_msg
-
         for t in project.tasks[0].task_runs:
             for tk in flatten(t.dictize()).keys():
                 expected_key = "%s" % tk
                 assert expected_key in keys, expected_key
-
         for et in exported_task_runs:
             task_run_id = et[keys.index('id')]
             task_run = db.session.query(TaskRun).get(task_run_id)

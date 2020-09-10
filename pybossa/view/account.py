@@ -43,12 +43,12 @@ from pybossa.core import signer, uploader, sentinel, newsletter
 from pybossa.util import Pagination, handle_content_type, admin_required
 from pybossa.util import admin_or_subadmin_required
 from pybossa.util import get_user_signup_method, generate_invitation_email_for_new_user
+from pybossa.util import generate_bsso_account_notification
 from pybossa.util import redirect_content_type, is_own_url_or_else
 from pybossa.util import get_avatar_url
 from pybossa.util import can_update_user_info, url_for_app_type
-from pybossa.cache import users as cached_users, delete_memoized
+from pybossa.cache import users as cached_users
 from pybossa.cache.projects import get_all_projects, n_published, n_total_tasks
-from pybossa.util import url_for_app_type
 from pybossa.util import fuzzyboolean
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail, export_userdata, delete_account
@@ -465,6 +465,8 @@ def confirm_account():
 
 
 def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_create=False):
+    """Creates the Gigwork account based on the criteria included in the user_data.
+    The auto-create tag is set when the create_account is triggered by a BSSO sign-in attempt."""
     new_user = model.user.User(fullname=user_data['fullname'],
                                name=user_data['name'],
                                email_addr=user_data['email_addr'],
@@ -499,6 +501,20 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
                      password=user_data['password'])
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
+
+    if auto_create:
+        alert_msg = generate_bsso_account_notification(user=user_data)
+        mail_queue.enqueue(send_mail, alert_msg)
+
+    '''if auto_create and user_data.get("data_access_type", None) == "external":
+        # if the account is created automatically and has external data access, send warning
+        admins_email_list = [u.email_addr for u in user_repo.filter_by(admin=True)]
+        admin_msg = generate_bsso_account_notification(user=user_data, admins_emails=admins_email_list, warning=True)
+        mail_queue.enqueue(send_mail, admin_msg)
+    elif auto_create:
+        # if the account is just automatically created, just send notification
+        alert_msg = generate_bsso_account_notification(user=user_info, admins_emails=current_app.config.get('ALERT_LIST',[]), access_type="BSSO")
+        mail_queue.enqueue(send_mail, alert_msg) '''
 
 def _update_user_with_valid_email(user, email_addr):
     user.valid_email = True
@@ -1183,3 +1199,4 @@ def get_user_pref_and_metadata(user_name, form):
         if form.locations.data:
             user_pref['locations'] = form.locations.data
         return user_pref, metadata
+

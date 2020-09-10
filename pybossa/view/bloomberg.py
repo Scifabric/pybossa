@@ -21,12 +21,13 @@ from flask_babel import gettext
 from pybossa.core import user_repo, csrf
 from pybossa.view.account import _sign_in_user, create_account
 from urlparse import urlparse
-from pybossa.util import is_own_url_or_else, generate_password, get_user_type, get_user_data_access_level
+from pybossa.util import generate_bsso_account_notification
+from pybossa.util import is_own_url_or_else, generate_password
+from pybossa.jobs import send_mail
 from pybossa.exc.repository import DBIntegrityError
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 
 blueprint = Blueprint('bloomberg', __name__)
-
 
 @blueprint.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
@@ -75,6 +76,7 @@ def handle_bloomberg_response():
     elif auth.is_authenticated:
         # User is authenticated on BSSO, load user from GIGwork API.
         attributes = auth.get_attributes()
+        current_app.logger.info('User authenitcated but no account found. Attempting to create account for: %s', str(attributes))
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         if user is not None:
             # User is authenticated on BSSO and already has a GIGwork account.
@@ -82,15 +84,20 @@ def handle_bloomberg_response():
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
+            firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
+            firm_num = int(attributes.get('firmId', [0])[0])
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
                 user_data['name']        = attributes['username'][0]
                 user_data['password']    = generate_password()
                 user_data['admin']       = 'BSSO'
-                user_data['user_type']   = get_user_type(attributes.get('firmId', [None])[0])
-                user_data['data_access'] = get_user_data_access_level(attributes.get('firmId', [None])[0])
+                user_data['user_type']   = firm_num_to_type.get(firm_num)
+                data_access_level, data_access_type = get_user_data_access_level(firm_num)
+                user_data['data_access'] = data_access_level
+                user_data['data_access_type'] = data_access_type
                 create_account(user_data, auto_create=True)
+                current_app.logger.info('Account created using BSSO info: %s', str(user_data))
                 flash('A new account has been created for you using BSSO.')
                 user = user_repo.get_by(email_addr=unicode(user_data['email_addr'].lower()))
                 return _sign_in_user(user, next_url=request.form.get('RelayState'))
@@ -104,3 +111,15 @@ def handle_bloomberg_response():
         current_app.logger.exception('BSSO login error')
         flash(gettext('We were unable authenticate and log you into an account. Please contact a Gigwork administrator.'), 'error')
         return redirect(url_for('home.home'))
+
+
+def get_user_data_access_level(firm_num):
+    """Reads firm id to user type mappings from settings_upref_mdata and
+    returns the access type"""
+    firm_num_to_type = current_app.config.get('FIRM_TO_TYPE')
+    if current_app.config.get('VALID_ACCESS_LEVELS_FOR_USER_TYPES') and firm_num:
+        if firm_num in firm_num_to_type.keys():
+            return ['L2'], 'internal'
+    else:
+        return ['L4'], 'external'
+
