@@ -19,6 +19,7 @@ import json
 from mock import patch, call, MagicMock
 from default import db, with_context, with_context_settings, flask_app
 from nose.tools import assert_equal, assert_raises
+import copy
 from test_api import TestAPI
 from helper.gig_helper import make_subadmin, make_admin
 
@@ -1839,3 +1840,56 @@ class TestProjectAPI(TestAPI):
                             data=json.dumps(data))
         res_data = json.loads(res.data)
         assert res.status_code == 200
+
+    @with_context
+    def test_project_post_amp_pvf(self):
+        user = UserFactory.create()
+        CategoryFactory.create()
+        headers = [('Authorization', user.api_key)]
+        # post empty pvf for L1 to result into error
+        data = dict(
+            name='got',
+            short_name='gameofthrones',
+            description='winter is coming',
+            password = "dragonglass",
+            info=dict(
+                data_classification=dict(input_data="L1 - internal valid", output_data="L3 - community"),
+                kpi=0.5,
+                product="abc",
+                subproduct="def",
+                annotation_config=dict(amp_store=True, amp_pvf='')
+        ))
+        res = self.app.post('/api/project', headers=headers,
+                            data=json.dumps(data))
+        res_data = json.loads(res.data)
+        assert res.status_code == 400
+        error_msg = res_data['exception_msg']
+        assert error_msg == "Invalid PVF format. Must contain <PVF name> <PVF val>.", error_msg
+
+        # post bad pvf for L1 to result into failure
+        data["info"]["annotation_config"]["amp_pvf"] = "xxxx yyyy zzzz"
+        res = self.app.post('/api/project', headers=headers,
+                            data=json.dumps(data))
+        res_data = json.loads(res.data)
+        assert res.status_code == 400
+        error_msg = res_data['exception_msg']
+        assert error_msg == "Invalid PVF format. Must contain <PVF name> <PVF val>.", error_msg
+
+        # post valid pvf for L1 to result into success
+        data["info"]["annotation_config"]["amp_pvf"] = "XXX 123"
+        res = self.app.post('/api/project', headers=headers,
+                            data=json.dumps(data))
+        res_data = json.loads(res.data)
+        assert res.status_code == 200, "POST project api should be successful"
+        assert res_data["info"]["annotation_config"]["amp_pvf"] == "XXX 123", "Project PVF should be set to XXX 123"
+
+        # project w/ public data access and optin checked to have "GIG 200" pvf configured
+        data2 = copy.deepcopy(data)
+        data2["name"] = "got2"
+        data2["short_name"] = "got s2"
+        data2["info"]["data_classification"]["input_data"] = "L3 - community"
+        res = self.app.post('/api/project', headers=headers,
+                            data=json.dumps(data2))
+        res_data = json.loads(res.data)
+        assert res.status_code == 200, "POST project api should be successful"
+        assert res_data["info"]["annotation_config"]["amp_pvf"] == "GIG 200", "Project PVF should be set to GIG 200 for public data."

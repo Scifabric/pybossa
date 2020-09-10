@@ -236,3 +236,16 @@ class NotInFutureValidator(object):
     def __call__(self, form, field):
         if field.data > date.today():
             raise ValidationError(self.message)
+
+class AmpPvfValidator(object):
+    """Apply correct pvf as per data access level."""
+    def __init__(self, message=None):
+        if not message:
+            message = lazy_gettext("Invalid PVF.")
+        self.message = message
+        self.pvf_format = re.compile('^([A-Z]{3,4}\s\d+)?$')
+
+    def __call__(self, form, field):
+        amp_pvf = form.amp_pvf.data
+        if amp_pvf and not self.pvf_format.match(amp_pvf):
+            raise ValidationError("Invalid PVF format. Must contain <PVF name> <PVF val>.")

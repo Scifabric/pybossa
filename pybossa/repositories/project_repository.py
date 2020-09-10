@@ -30,9 +30,12 @@ from werkzeug.exceptions import BadRequest
 import pandas.io.sql as sqlio
 import pandas as pd
 from flask import current_app
+import re
 
 
 class ProjectRepository(Repository):
+
+    pvf_format = re.compile('^([A-Z]{3,4}\s\d+)?$')
 
     # Methods for Project objects
     def get(self, id):
@@ -60,6 +63,7 @@ class ProjectRepository(Repository):
         self._creator_is_owner(project)
         self._verify_has_password(project)
         self._verify_data_classification(project)
+        self._verify_annotation_config(project)
         self._verify_required_fields(project)
         self._verify_product_subproduct(project)
         try:
@@ -75,6 +79,7 @@ class ProjectRepository(Repository):
         self._creator_is_owner(project)
         self._verify_has_password(project)
         self._verify_data_classification(project)
+        self._verify_annotation_config(project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -180,6 +185,22 @@ class ProjectRepository(Repository):
                 break
         if data_access:
             project.info['data_access'] = [data_access]
+
+    def _verify_annotation_config(self, project):
+        data_access = project.info.get('data_access', [])[0]
+        valid_data_access = current_app.config.get('VALID_ACCESS_LEVELS', [])
+        if data_access not in valid_data_access:
+            raise BadRequest('Project must have valid data classification')
+
+        # L3, L4 projects to have default opted in for amp storage w/ pvf gig 200
+        amp_store = project.info.get('annotation_config', {}).get('amp_store', False)
+        if amp_store and data_access in ['L3', 'L4']:
+            project.info['annotation_config']['amp_pvf'] = 'GIG 200'
+
+        # L1, L2 projects with opted in for amp storage to have pvf set
+        amp_pvf = project.info.get('annotation_config', {}).get('amp_pvf')
+        if amp_store and not(amp_pvf and ProjectRepository.pvf_format.match(amp_pvf)):
+            raise BadRequest('Invalid PVF format. Must contain <PVF name> <PVF val>.')
 
     def _verify_product_subproduct(self, project):
         products_subproducts = current_app.config.get('PRODUCTS_SUBPRODUCTS', {})
