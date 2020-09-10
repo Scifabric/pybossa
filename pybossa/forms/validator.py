@@ -247,5 +247,6 @@ class AmpPvfValidator(object):
 
     def __call__(self, form, field):
         amp_pvf = form.amp_pvf.data
-        if amp_pvf and not self.pvf_format.match(amp_pvf):
+        amp_store = form.amp_store.data
+        if amp_store and not(amp_pvf and self.pvf_format.match(amp_pvf)):
             raise ValidationError("Invalid PVF format. Must contain <PVF name> <PVF val>.")
