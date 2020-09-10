@@ -86,9 +86,9 @@ def handle_bloomberg_response():
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
-            data_access = "L2" if bool(data_access_levels) else "L4"
             firm_id_to_type = current_app.config.get('FIRM_TO_TYPE')
             firm_id = int(attributes.get('firmId', [0])[0])
+            data_access = "L2" if bool(get_user_data_access_level(firm_id)) else "L4"
             user_type = firm_id_to_type.get(firm_id, "")       # firm_num_to_type -> firm_id_to_type
             try:
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
