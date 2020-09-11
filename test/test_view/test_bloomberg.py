@@ -152,8 +152,7 @@ class TestBloomberg(Test):
     
     @with_context
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
-    @patch('pybossa.view.bloomberg.get_user_data_access_level', autospec=True)
-    def test_bsso_auto_account_warning(self, mock_access_level, mock_two_login):
+    def test_bsso_auto_account_warning(self, mock_two_login):
         from pybossa.view.account import generate_bsso_account_notification
         redirect_url = 'http://localhost'
         mock_auth = MagicMock()
@@ -178,4 +177,5 @@ class TestBloomberg(Test):
         mock_bsso_alert = mock_alert
         user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'data_access_type': [u'internal']}
         assert generate_bsso_account_notification(user) != None
+
 
