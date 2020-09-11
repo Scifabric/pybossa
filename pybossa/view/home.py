@@ -52,7 +52,13 @@ def home():
         rank_and_score = cached_users.rank_and_score(user_id)
         current_user.rank = rank_and_score['rank']
     response = dict(template='/home/index.html', **data)
-    return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=302)
+    url = current_app.config['BASE_URL'] + '/project/category/mkplaygames'
+    # print(url)
+    if('https' not in url and current_app.config['PREFERRED_URL_SCHEME']=='https'):
+        url='https://'+current_app.config['SERVER_NAME'] + url
+    # print(url)
+    return redirect(url, code=302)
+    # return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=302)
 
 @blueprint.route("about")
 def about():
