@@ -51,7 +51,6 @@ from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.cloud_store_api.connection import create_connection
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
-import pybossa.core
 
 # Markdown support
 from flask_misaka import Misaka
@@ -1181,9 +1180,10 @@ def description_from_long_description(desc, long_desc):
 
 
 def generate_bsso_account_notification(user):
+    from pybossa.core import user_repo
     warning = False if user.get('user_type') else True
     if warning:
-        admins_email_list = [u.email_addr for u in pybossa.core.user_repo.filter_by(admin=True)]
+        admins_email_list = [u.email_addr for u in user_repo.filter_by(admin=True)]
         template_type = 'adminbssowarning'
     else:
         admins_email_list = current_app.config.get('ALERT_LIST',[])
