@@ -51,7 +51,6 @@ from pybossa.cloud_store_api.s3 import s3_upload_file_storage
 from pybossa.cloud_store_api.connection import create_connection
 from pybossa.uploader import local
 from pybossa.cloud_store_api.s3 import get_file_from_s3, delete_file_from_s3
-#from pybossa.core import user_repo
 import pybossa.core
 
 # Markdown support
@@ -1205,12 +1204,10 @@ def generate_bsso_account_notification(user):
 
     msg['body'] = render_template('{}.md'.format(template),
                                   username=fullname,
-                                  access_type=access_type,
                                   server_url=server_url,
                                   is_qa=is_qa)
     msg['html'] = render_template('{}.html'.format(template),
                                   username=fullname,
-                                  access_type=access_type,
                                   server_url=server_url,
                                   is_qa=is_qa)
     return msg

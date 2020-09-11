@@ -68,7 +68,6 @@ def handle_bloomberg_response():
     auth = OneLogin_Saml2_Auth(prepare_onelogin_request(), sso_settings)
     auth.process_response()
     errors = auth.get_errors()
-
     if errors:
         # BSSO was unable to authenticate the user
         error_reason = auth.get_last_error_reason()
@@ -78,7 +77,7 @@ def handle_bloomberg_response():
     elif auth.is_authenticated:
         # User is authenticated on BSSO, load user from GIGwork API.
         attributes = auth.get_attributes()
-        current_app.logger.info('User authenticated but no account found. Attempting to create account for: %s', str(attributes))
+        current_app.logger.info('User authenticated via bsso but no account found. Attempting to create account for: %s', str(attributes))
         user = user_repo.get_by(email_addr=unicode(attributes['emailAddress'][0]).lower())
         if user is not None:
             # User is authenticated on BSSO and already has a GIGwork account.
@@ -86,11 +85,11 @@ def handle_bloomberg_response():
         else:
             # User is authenticated on BSSO, but does not yet have a GIGwork account, auto create one.
             user_data = {}
-            firm_id_to_type = current_app.config.get('FIRM_TO_TYPE')
-            firm_id = int(attributes.get('firmId', [0])[0])
-            data_access = ["L2"] if bool(data_access_levels) else ["L4"]
-            user_type = firm_id_to_type.get(firm_id, "")
             try:
+                firm_id_to_type = current_app.config.get('FIRM_TO_TYPE', "")
+                firm_id = int(attributes.get('firmId', [0])[0])
+                data_access = ["L2"] if bool(data_access_levels) else ["L4"]
+                user_type = firm_id_to_type.get(firm_id, "")
                 user_data['fullname']    = attributes['firstName'][0] + " " + attributes['lastName'][0]
                 user_data['email_addr']  = attributes['emailAddress'][0]
                 user_data['name']        = attributes['username'][0]

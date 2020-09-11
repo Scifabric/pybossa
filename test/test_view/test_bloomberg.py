@@ -174,7 +174,7 @@ class TestBloomberg(Test):
         mock_alert.body = None
         mock_alert.html = None
         mock_bsso_alert = mock_alert
-        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'data_access_type': [u'internal']}
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'000000'] }
         assert generate_bsso_account_notification(user) != None
 
 
