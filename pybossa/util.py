@@ -1211,5 +1211,4 @@ def generate_bsso_account_notification(user):
                                   access_type=access_type,
                                   server_url=server_url,
                                   is_qa=is_qa)
-    print(msg)
     return msg
