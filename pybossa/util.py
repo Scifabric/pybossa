@@ -1181,7 +1181,6 @@ def description_from_long_description(desc, long_desc):
 
 
 def generate_bsso_account_notification(user):
-    access_type = "BSSO"
     warning = False if user.get('user_type') else True
     if warning:
         admins_email_list = [u.email_addr for u in pybossa.core.user_repo.filter_by(admin=True)]

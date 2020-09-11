@@ -21,9 +21,7 @@ from mock import MagicMock
 from factories import UserFactory
 from pybossa.view import bloomberg as bb
 from nose.tools import assert_raises, assert_true
-
 from pybossa.view.account import generate_bsso_account_notification
-
 
 class TestBloomberg(Test):
     def setUp(self):
@@ -176,5 +174,3 @@ class TestBloomberg(Test):
         mock_bsso_alert = mock_alert
         user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'000000'] }
         assert generate_bsso_account_notification(user) != None
-
-

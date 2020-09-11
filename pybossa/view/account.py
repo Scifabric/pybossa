@@ -499,7 +499,6 @@ def create_account(user_data, project_slugs=None, ldap_disabled=True, auto_creat
     user_info = dict(fullname=user_data['fullname'],
                      email_addr=user_data['email_addr'],
                      password=user_data['password'])
-                     
     msg = generate_invitation_email_for_new_user(user=user_info, project_slugs=project_slugs)
     mail_queue.enqueue(send_mail, msg)
 
