@@ -52,13 +52,12 @@ def home():
         rank_and_score = cached_users.rank_and_score(user_id)
         current_user.rank = rank_and_score['rank']
     response = dict(template='/home/index.html', **data)
-    #return handle_content_type(response)
     url = current_app.config['BASE_URL'] + '/project/category/mkplaygames'
-    url.replace('http://', 'https://')
+    # print(url)
+    if('https' not in url and current_app.config['PREFERRED_URL_SCHEME']=='https'):
+        url='https://'+current_app.config['SERVER_NAME'] + url
+    # print(url)
     return redirect(url, code=302)
-    # return redirect(url_for('.mkplaygames', entity_id=handler.entity_id, next=login_next, _external=True, _scheme='https'))
-    #  return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=307)
-
 
 @blueprint.route("about")
 def about():
@@ -81,6 +80,3 @@ def result():
         return handle_content_type(response)
     except TemplateNotFound:
         return abort(404)
-
-
-# blueprint.add_url_rule('/project/category/mkplaygames', view_func=mkplaygames)
