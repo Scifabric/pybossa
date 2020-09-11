@@ -22,6 +22,8 @@ from factories import UserFactory
 from pybossa.view import bloomberg as bb
 from nose.tools import assert_raises, assert_true
 
+from pybossa.view.account import generate_bsso_account_notification
+
 
 class TestBloomberg(Test):
     def setUp(self):
@@ -136,7 +138,6 @@ class TestBloomberg(Test):
     @with_context
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
     def test_bsso_auto_account_alert(self, mock_one_login):
-        from pybossa.view.account import generate_bsso_account_notification
         redirect_url = 'http://localhost'
         mock_auth = MagicMock()
         mock_auth.get_errors.return_value = False
@@ -153,7 +154,6 @@ class TestBloomberg(Test):
     @with_context
     @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
     def test_bsso_auto_account_warning(self, mock_two_login):
-        from pybossa.view.account import generate_bsso_account_notification
         redirect_url = 'http://localhost'
         mock_auth = MagicMock()
         mock_auth.get_errors.return_value = False
@@ -170,7 +170,6 @@ class TestBloomberg(Test):
     @with_context
     @patch('pybossa.view.account.generate_bsso_account_notification', autospec=True)
     def test_bsso_msg_generation(self, mock_bsso_alert):
-        from pybossa.view.account import generate_bsso_account_notification
         mock_alert = MagicMock() 
         mock_alert.body = None
         mock_alert.html = None
