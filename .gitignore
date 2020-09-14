@@ -30,7 +30,7 @@ keys/*
 log
 *.sql
 dat/GeoIP.dat
-*.ini
+# *.ini
 pybossa/themes/pybossa-default-theme/
 dist/*
 pybossa/themes/crowdcrafting-theme/
