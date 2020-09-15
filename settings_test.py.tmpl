@@ -220,3 +220,11 @@ DATA_CLASSIFICATION = [
 ]
 VALID_DATA_CLASSES = [data_class for data_class, enabled in DATA_CLASSIFICATION if enabled and data_class]
 VALID_ACCESS_LEVELS = sorted(set(data_class.split('-')[0].strip() for data_class in VALID_DATA_CLASSES))
+
+FIRM_TO_TYPE = {
+    1234567: "Test firm id 1",
+    1098765: "Test firm id 2",
+    905877: "Test firm id 3"
+}
+
+

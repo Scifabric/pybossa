@@ -21,7 +21,7 @@ from mock import MagicMock
 from factories import UserFactory
 from pybossa.view import bloomberg as bb
 from nose.tools import assert_raises, assert_true
-
+from pybossa.view.account import generate_bsso_account_notification
 
 class TestBloomberg(Test):
     def setUp(self):
@@ -133,3 +133,44 @@ class TestBloomberg(Test):
         assert mock_create_account.called 
         assert res.status_code == 302, res.status_code
 
+    @with_context
+    @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
+    def test_bsso_auto_account_alert(self, mock_one_login):
+        redirect_url = 'http://localhost'
+        mock_auth = MagicMock()
+        mock_auth.get_errors.return_value = False
+        mock_auth.process_response.return_value = None
+        mock_auth.is_authenticated = True 
+        mock_one_login.return_value = mock_auth
+        user = {'firstName': [u'test1'], 'emailAddress': ['test1@test.com'], 'lastName': [u'test1'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test1'], 'firmId': [u'905877'], 'user_type': "Test firm id 3"}
+        mock_auth.get_attributes.return_value = user
+        res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
+        msg = generate_bsso_account_notification(user)
+        assert "check" in msg['body']
+        assert res.status_code == 302, res.status_code
+    
+    @with_context
+    @patch('pybossa.view.bloomberg.OneLogin_Saml2_Auth', autospec=True)
+    def test_bsso_auto_account_warning(self, mock_two_login):
+        redirect_url = 'http://localhost'
+        mock_auth = MagicMock()
+        mock_auth.get_errors.return_value = False
+        mock_auth.process_response.return_value = None
+        mock_auth.is_authenticated = True 
+        mock_two_login.return_value = mock_auth
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'username': [u'test2'], 'firmId': [u'0000000']}
+        mock_auth.get_attributes.return_value = user
+        res = self.app.post('/bloomberg/login', method='POST', content_type='multipart/form-data', data={'RelayState': redirect_url})
+        msg = generate_bsso_account_notification(user)
+        assert "valid" in msg['body']
+        assert res.status_code == 302, res.status_code
+
+    @with_context
+    @patch('pybossa.view.account.generate_bsso_account_notification', autospec=True)
+    def test_bsso_msg_generation(self, mock_bsso_alert):
+        mock_alert = MagicMock() 
+        mock_alert.body = None
+        mock_alert.html = None
+        mock_bsso_alert = mock_alert
+        user = {'firstName': [u'test2'], 'emailAddress': ['test2@test.com'], 'lastName': [u'test2'], 'PVFLevels': [u'PVF_GUTS_3'], 'username': [u'test2'], 'firmId': [u'000000'] }
+        assert generate_bsso_account_notification(user) != None

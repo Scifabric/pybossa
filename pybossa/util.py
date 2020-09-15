@@ -1178,11 +1178,35 @@ def description_from_long_description(desc, long_desc):
     description = blank_space_regex.sub(" ", text_desc)
     return description if description else " "
 
-def get_user_type(firm_num):
-    firm_to_type = current_app.config.get('FIRM_TO_TYPE', {})
-    return firm_to_type.get(int(firm_num), None) if firm_num else None
 
-def get_user_data_access_level(firm_num):
-    firm_to_type = current_app.config.get('FIRM_TO_TYPE', {})
-    return ['L2'] if firm_num and int(firm_num) in firm_to_type.keys() else ['L4']
+def generate_bsso_account_notification(user):
+    from pybossa.core import user_repo
+    warning = False if user.get('user_type') else True
+    if warning:
+        admins_email_list = [u.email_addr for u in user_repo.filter_by(admin=True)]
+        template_type = 'adminbssowarning'
+    else:
+        admins_email_list = current_app.config.get('ALERT_LIST',[])
+        template_type = 'adminbssonotification'
 
+    template = '/account/email/{}'.format(template_type)
+
+    is_qa = current_app.config.get('IS_QA')
+    server_url = current_app.config.get('SERVER_URL')
+    brand = current_app.config.get('BRAND')
+
+    subject = 'A new account has been created via BSSO for {}'.format(brand)
+    msg = dict(subject=subject,
+               recipients=admins_email_list)
+
+    fullname = user.get('fullname') or user['firstName'][0] + " " + user['lastName'][0]
+
+    msg['body'] = render_template('{}.md'.format(template),
+                                  username=fullname,
+                                  server_url=server_url,
+                                  is_qa=is_qa)
+    msg['html'] = render_template('{}.html'.format(template),
+                                  username=fullname,
+                                  server_url=server_url,
+                                  is_qa=is_qa)
+    return msg
