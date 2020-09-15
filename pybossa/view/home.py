@@ -26,7 +26,7 @@ from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.util import rank, handle_content_type
 from jinja2.exceptions import TemplateNotFound
-
+from flask import request
 
 blueprint = Blueprint('home', __name__)
 
@@ -51,6 +51,7 @@ def home():
         data['historical_contributions'] = historical_projects
         rank_and_score = cached_users.rank_and_score(user_id)
         current_user.rank = rank_and_score['rank']
+    print(request.headers)
     response = dict(template='/home/index.html', **data)
     return redirect(current_app.config['BASE_URL'] + '/project/category/mkplaygames', code=302)
 
