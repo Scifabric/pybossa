@@ -70,6 +70,7 @@ from pybossa.auditlogger import AuditLogger
 from pybossa.contributions_guard import ContributionsGuard
 from pybossa.default_settings import TIMEOUT
 from pybossa.exporter.csv_reports_export import ProjectReportCsvExporter
+from pybossa.accessControl import authority_check	
 
 blueprint = Blueprint('project', __name__)
 
@@ -215,11 +216,22 @@ def project_index(page, lookup, category, fallback, use_count, order_by=None,
 
     if current_app.config.get('HISTORICAL_CONTRIBUTIONS_AS_CATEGORY'):
         categories.insert(0, historical_contributions_cat)
+
     # Check if we have to add the section Featured to local nav
     if cached_projects.n_count('featured') > 0:
         categories.insert(0, featured_cat)
+
+    authorized_projects=[]
+    if current_user.is_authenticated:
+        for i in range(len(projects)):
+            if(authority_check(current_user.id,projects[i]["id"],'project','read')):
+                authorized_projects.append(projects[i])
+    else:
+        raise abort(403)
+    
+
     template_args = {
-        "projects": projects,
+        "projects": authorized_projects,
         "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
