@@ -829,6 +829,11 @@ def password_required(short_name):
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
     project, owner, ps = project_by_shortname(short_name)
+    if current_user.is_authenticated:	
+        if(not authority_check(current_user.id,project.id,'project','read')):	
+            raise abort(403)    	
+    else:	
+        raise abort(403)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
@@ -885,7 +890,12 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
-
+    if current_user.is_authenticated:	
+        project = project_repo.get_by_shortname(short_name)	
+        if(not authority_check(current_user.id,project.id,'project','read')):	
+            raise abort(403)    	
+    else:	
+        raise abort(403)
     def invite_new_volunteers(project, ps):
         user_id = None if current_user.is_anonymous else current_user.id
         user_ip = (anonymizer.ip(request.remote_addr or '127.0.0.1')
@@ -963,6 +973,7 @@ def tutorial(short_name):
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
+    #restrict export
     """Return a file with all the TaskRuns for a given Task"""
     # Check if the project exists
     project, owner, ps = project_by_shortname(short_name)
@@ -986,6 +997,7 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
+    #restrict access
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
 
@@ -1024,6 +1036,7 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse')
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page=1):
+    #restrict access
     project, owner, ps = project_by_shortname(short_name)
     title = project_title(project, "Tasks")
     pro = pro_features()
@@ -1109,6 +1122,7 @@ def delete_tasks(short_name):
 
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
+    #export access restriction
     """Export Tasks and TaskRuns in the given format"""
     project, owner, ps = project_by_shortname(short_name)
     supported_tables = ['task', 'task_run', 'result']
@@ -2040,7 +2054,7 @@ def del_coowner(short_name, user_name=None):
 @login_required
 def export_project_report(short_name):
     """Export individual project information in the given format"""
-
+#check for project export restriction
     project, owner, ps = project_by_shortname(short_name)
     if not current_user.admin and not current_user.id in project.owners_ids:
         return abort(403)
