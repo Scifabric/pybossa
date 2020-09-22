@@ -334,3 +334,77 @@ class TestHelpersCache(Test):
                                                               user_id=user.id)
 
         assert contributing_state == 'publish', contributing_state
+
+    @with_context
+    def test_n_priority_x_tasks_no_tasks(self):
+        """Test n_priority_x_tasks returns 0 for user if the project
+        has no tasks"""
+        project = ProjectFactory.create()
+
+        n_priority_x_tasks = helpers.n_priority_x_tasks(project.id)
+
+        assert n_priority_x_tasks == 0, n_priority_x_tasks
+
+    @with_context
+    def test_n_priority_x_tasks_no_taskruns(self):
+        """Test n_priority_x_tasks returns 1 for authenticated user
+        if there are no taskruns but create task with priority 1.0"""
+        project = ProjectFactory.create()
+        _ = TaskFactory.create(project=project, priority_0=1.0)
+
+        n_priority_x_tasks = helpers.n_priority_x_tasks(project.id)
+
+        assert n_priority_x_tasks == 1, n_priority_x_tasks
+
+    @with_context
+    def test_n_priority_x_tasks_no_taskruns_default_priority(self):
+        """Test n_priority_x_tasks returns 0 for authenticated user
+        if there are no taskruns but create task with default priority"""
+        project = ProjectFactory.create()
+        _ = TaskFactory.create(project=project)
+
+        n_priority_x_tasks = helpers.n_priority_x_tasks(project.id)
+
+        assert n_priority_x_tasks == 0, n_priority_x_tasks
+
+    @with_context
+    def test_n_priority_x_tasks_all_tasks_completed(self):
+        """Test n_priority_x_tasks returns 0 for user if all the
+        tasks are completed"""
+        project = ProjectFactory.create()
+        _ = TaskFactory.create(project=project, state='completed')
+
+        n_priority_x_tasks = helpers.n_priority_x_tasks(project.id)
+
+        assert n_priority_x_tasks == 0, n_priority_x_tasks
+
+    @with_context
+    def test_n_priority_x_tasks_all_tasks_answered_by_user(self):
+        """Test n_priority_x_tasks returns 1 for user if he has
+        submitted taskruns for 1 of the tasks"""
+        user = UserFactory.create()
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=2,  priority_0=0.8)
+        _ = TaskRunFactory.create(task=task, user=user)
+
+        n_priority_x_tasks = helpers.n_priority_x_tasks(project.id, 0.8)
+
+        assert task.state != 'completed', task.state
+        assert n_priority_x_tasks == 1, n_priority_x_tasks
+
+    @with_context
+    def test_n_priority_x_tasks_include_gold_task(self):
+        """Test n_priority_x_tasks returns 0 for user if he has
+        submitted taskruns for all the tasks"""
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, calibration=1, priority_0=0.3)
+
+        n_priority_x_tasks_include_gold = helpers.n_priority_x_tasks(project.id, priority=0.3, include_gold_task=True)
+        n_priority_x_tasks_exclude_gold = helpers.n_priority_x_tasks(project.id, priority=0.3)
+        n_priority_x_tasks_include_gold_default_priority = helpers.n_priority_x_tasks(project.id,
+                                                                                      include_gold_task=True)
+
+        assert task.state != 'completed', task.state
+        assert n_priority_x_tasks_include_gold == 1, n_priority_x_tasks_include_gold
+        assert n_priority_x_tasks_exclude_gold == 0, n_priority_x_tasks_exclude_gold
+        assert n_priority_x_tasks_include_gold_default_priority == 0, n_priority_x_tasks_include_gold_default_priority

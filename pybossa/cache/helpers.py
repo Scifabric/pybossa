@@ -28,6 +28,7 @@ from pybossa.cache import users as cached_users
 
 session = db.slave_session
 
+
 def n_gold_tasks(project_id):
     """Return the number of gold tasks for a given project"""
     query = text('''SELECT COUNT(*) AS n_gold_tasks FROM task
@@ -39,6 +40,7 @@ def n_gold_tasks(project_id):
     for row in result:
         num_gold_tasks = row.n_gold_tasks
     return num_gold_tasks
+
 
 def n_available_tasks(project_id, include_gold_task=False):
     """Return the number of tasks for a given project a user can contribute to.
@@ -235,3 +237,20 @@ def n_locked_tasks(project_id):
     from pybossa.redis_lock import get_active_user_count
 
     return get_active_user_count(project_id, sentinel.master)
+
+
+def n_priority_x_tasks(project_id, priority=1.0, include_gold_task=False):
+    """Return the number of ongoing tasks with a given priority for a given project."""
+    if include_gold_task:
+        query = text('''SELECT COUNT(*) AS n_tasks FROM task
+                        WHERE project_id=:project_id AND state = 'ongoing'
+                        AND priority_0=:priority;''')
+    else:
+        query = text('''SELECT COUNT(*) AS n_tasks FROM task
+                        WHERE project_id=:project_id AND state = 'ongoing'
+                        AND calibration = 0 AND priority_0=:priority;''')
+    result = session.execute(query, dict(project_id=project_id, priority=priority))
+    n_tasks = 0
+    for row in result:
+        n_tasks = row.n_tasks
+    return n_tasks

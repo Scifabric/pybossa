@@ -24,7 +24,7 @@ import math
 import requests
 from StringIO import StringIO
 import six
-from pybossa.cache.helpers import n_unexpired_gold_tasks
+from pybossa.cache.helpers import n_unexpired_gold_tasks, n_priority_x_tasks
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, render_template_string, make_response, session
 from flask import Markup, jsonify
@@ -882,6 +882,7 @@ def details(short_name):
     num_expected_task_runs = cached_projects.n_expected_task_runs(project.id)
     num_gold_tasks = n_gold_tasks(project.id)
     num_locked_tasks = n_locked_tasks(project.id)
+    num_priority_one_tasks = n_priority_x_tasks(project.id)
 
     # all projects require password check
     redirect_to_password = _check_if_redirect_to_password(project)
@@ -915,7 +916,8 @@ def details(short_name):
                      "n_completed_tasks_by_user": num_completed_tasks_by_user,
                      "oldest_available_task": oldest_task,
                      "n_available_tasks_for_user": num_available_tasks_for_user,
-                     "latest_submitted_task": latest_submission_date
+                     "latest_submitted_task": latest_submission_date,
+                     "n_priority_1_tasks": num_priority_one_tasks
                      }
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')

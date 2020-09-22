@@ -1344,7 +1344,7 @@ def check_and_send_task_notifications(project_id, conn=None):
 
     update_reminder = False
     if n_remaining_tasks > target_remaining and email_already_sent:
-        current_app.logger.info(u'Project {}, the number of incomplete tasks: {} \
+        current_app.logger.info(u'Project {}, the number of tasks in queue: {} \
                                 exceeds target remaining: {}, \
                                 resetting the send notification flag to True'
                                 .format(project_id, n_remaining_tasks, target_remaining))
@@ -1353,7 +1353,7 @@ def check_and_send_task_notifications(project_id, conn=None):
 
     if n_remaining_tasks <= target_remaining and not email_already_sent:
         # incomplete tasks drop to or below, and email not sent yet, send email
-        current_app.logger.info(u'Project {} the number of incomplete tasks: {}, \
+        current_app.logger.info(u'Project {} the number of tasks in queue: {}, \
                                 drops equal to or below target remaining: {}, \
                                 sending task notification to owners: {}'
                                 .format(project_id, n_remaining_tasks, target_remaining, project.owners_ids))
@@ -1367,7 +1367,7 @@ def check_and_send_task_notifications(project_id, conn=None):
         update_reminder = True
 
         if webhook:
-            current_app.logger.info(u'Project {} the number of incomplete tasks: {}, \
+            current_app.logger.info(u'Project {} the number of tasks in queue: {}, \
                                 drops equal to or below target remaining: {}, hitting webhook url: {}'
                                 .format(project_id, n_remaining_tasks, target_remaining, webhook))
             try:
