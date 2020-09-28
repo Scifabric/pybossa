@@ -26,7 +26,7 @@ from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
 from pybossa.util import rank, handle_content_type
 from jinja2.exceptions import TemplateNotFound
-
+from pybossa.forms.home_view_forms import UpdateLocaleForm
 
 blueprint = Blueprint('home', __name__)
 
@@ -43,6 +43,14 @@ def home():
         data = dict(featured=rank(tmp_projects))
     else:
         data = dict(featured=[])
+
+    # Allow user to change locale on welcome page
+    if current_user.is_authenticated:
+        # Change locale
+        locale_form = UpdateLocaleForm(obj=current_user)
+        locale_form.set_locales(current_app.config['LOCALES'])
+        data['locale_form'] = locale_form
+
     response = dict(template='/home/index.html', **data)
     return handle_content_type(response)
 

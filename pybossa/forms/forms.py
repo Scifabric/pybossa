@@ -408,6 +408,20 @@ class UpdateProfileForm(Form):
         self.locale.choices = choices
 
 
+class UpdateLocaleForm(Form):
+
+    """Form Class for updating PYBOSSA's user Locale."""
+
+    locale = SelectField(lazy_gettext('Language'))
+
+    def set_locales(self, locales):
+        """Fill the locale.choices."""
+        choices = []
+        for locale in locales:
+            choices.append(locale)
+        self.locale.choices = choices
+
+
 class ChangePasswordForm(Form):
 
     """Form for changing user's password."""
