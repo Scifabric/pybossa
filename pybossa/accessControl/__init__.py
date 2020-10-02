@@ -20,4 +20,19 @@ def authority_check(user_id,resource_id,resource_type,operation):
         return False
     except SQLAlchemyError as e:
         return False
+
+def authority_check_admin(user_id,operation):
+    sql = '''
+            SELECT user_authorities.id
+            FROM user_authorities where user_id= {} and operation = '{}';
+            '''.format(user_id,operation)
+    try:
+        res = db.session.execute(sql)
+        for row in res:
+            return True
+        return False
+    except SQLAlchemyError as e:
+        return False
+
+
     
