@@ -17,8 +17,8 @@
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, with_context, flask_app
-from pybossa.jobs import get_weekly_stats_update_projects
-from pybossa.jobs import send_weekly_stats_project
+from pybossa.jobs import get_weekly_stats_update_projects, get_weekly_admin_report_jobs
+from pybossa.jobs import send_weekly_stats_project, mail_project_report, export_all_users
 from factories import TaskRunFactory, UserFactory, ProjectFactory, TaskFactory
 from mock import patch, MagicMock
 from nose.tools import assert_raises
@@ -161,3 +161,40 @@ class TestWeeklyStats(Test):
         TaskRunFactory.create(project=pr, task=task)
         res = send_weekly_stats_project(pr.id)
         assert res == "Owner does not want updates by email", res
+
+
+class TestWeeklyReport(Test):
+
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_only_on_monday(self, mock_datetime):
+        """Test JOB get jobs for weekly report works only on Monday."""
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Monday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = get_weekly_admin_report_jobs()
+        job_0 = next(jobs)
+        job_1 = next(jobs)
+        assert_raises(StopIteration, jobs.next)
+
+    @with_context
+    @patch('pybossa.jobs.datetime')
+    def test_get_jobs_only_on_monday_variant(self, mock_datetime):
+        """Test JOB get jobs for weekly report works only on Monday variant."""
+        mock_date = MagicMock()
+        mock_date.strftime.return_value = 'Monday'
+        mock_datetime.today.return_value = mock_date
+
+        jobs = [job for job in get_weekly_admin_report_jobs()]
+        assert len(jobs) == 2
+        assert jobs[0]['name'] == mail_project_report
+        assert jobs[0]['args'][0]['user_id'] == 'admin'
+        assert jobs[0]['timeout'] == self.flask_app.config.get('TIMEOUT')
+        assert jobs[0]['queue'] == 'low'
+
+        assert jobs[1]['name'] == export_all_users
+        assert jobs[1]['args'][0] == 'csv'
+        assert jobs[1]['timeout'] == self.flask_app.config.get('TIMEOUT')
+        assert jobs[1]['queue'] == 'low'

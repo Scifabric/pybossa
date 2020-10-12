@@ -131,6 +131,8 @@ def get_periodic_jobs(queue):
     # timeout, queue)
     # Default ones
     jobs = get_default_jobs()
+    # Admin jobs
+    admin_report_jobs = get_weekly_admin_report_jobs() if queue == 'low' else []
     # Based on type of user
     project_jobs = get_project_jobs(queue) if queue in ('super', 'high') else []
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
@@ -1004,6 +1006,29 @@ def notify_task_progress(info, email_addr, queue='high'):
                 queue=queue)
     enqueue_job(job)
 
+def get_weekly_admin_report_jobs():
+    """Return email jobs with weekly report to admins"""
+    send_emails_date = current_app.config.get('WEEKLY_ADMIN_REPORTS').lower()
+    recipients = current_app.config.get('WEEKLY_ADMIN_REPORTS_EMAIL')
+    today = datetime.today().strftime('%A').lower()
+    timeout = current_app.config.get('TIMEOUT')
+    if recipients and today == send_emails_date:
+        info = dict(timestamp=datetime.datetime.now().isoformat(),
+            user_id="admin",
+            base_url=current_app.config.get('SERVER_URL') or '' + '/project/')
+        project_report = dict(name=mail_project_report,
+                    args=[info, recipients],
+                    kwargs={},
+                    timeout=timeout,
+                    queue='low')
+        fmt = 'csv'
+        user_report = dict(name=export_all_users,
+                    args=[fmt, recipients],
+                    kwargs={},
+                    timeout=timeout,
+                    queue='low')
+        job = [project_report, user_report]
+        return iter(job)
 
 def get_weekly_stats_update_projects():
     """Return email jobs with weekly stats update for project owner."""
@@ -1175,9 +1200,11 @@ def push_notification(project_id, **kwargs):
                                filters=filters)
 
 
-def mail_project_report(info, current_user_email_addr):
+def mail_project_report(info, email_addr):
     from pybossa.core import project_csv_exporter
 
+    recipients = email_addr if isinstance(email_addr, list) else [email_addr]
+    current_app.logger.info(u'Scheduling mail_project_report job send to {}'.format(info['user_id']))
     try:
         zipfile = None
         filename = project_csv_exporter.zip_name(info)
@@ -1186,7 +1213,7 @@ def mail_project_report(info, current_user_email_addr):
 
         body = 'Hello,\n\n{}\n\nThe {} team.'
         body = body.format(msg, current_app.config.get('BRAND'))
-        mail_dict = dict(recipients=[current_user_email_addr],
+        mail_dict = dict(recipients=recipients,
                          subject=subject,
                          body=body)
 
@@ -1203,7 +1230,7 @@ def mail_project_report(info, current_user_email_addr):
 
         body = 'Hello,\n\n{}\n\nThe {} team.'
         body = body.format(msg, current_app.config.get('BRAND'))
-        mail_dict = dict(recipients=[current_user_email_addr],
+        mail_dict = dict(recipients=recipients,
                          subject=subject,
                          body=body)
         send_mail(mail_dict)
@@ -1445,6 +1472,10 @@ def export_all_users(fmt, email_addr):
     def add_headers(writer):
         writer.writerow(exportable_attributes)
 
+    recipients = email_addr if isinstance(email_addr, list) else [email_addr]
+    current_app.logger.info(u'Scheduling export_all_users job send to {} admins/users'
+                            .format(len(recipients)))
+
     try:
         data = {"json": respond_json, "csv": respond_csv}[fmt]()
         attachment = Attachment(
@@ -1453,7 +1484,7 @@ def export_all_users(fmt, email_addr):
             data
         )
         mail_dict = {
-            'recipients': [email_addr],
+            'recipients': recipients,
             'subject': 'User Export',
             'body': 'Your exported data is attached.',
             'attachments': [attachment]
