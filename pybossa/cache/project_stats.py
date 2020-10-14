@@ -315,7 +315,10 @@ def stats_hours(project_id, period='2 week'):
     for row in results:
         max_hours = row.max
 
+    # with anonymous access disabled, auth users and aggr users counts would be same.
+    # reuse aggr user counts for auth users.  
     if app_settings.config.get('DISABLE_ANONYMOUS_ACCESS'):
+        hours_auth, max_hours_auth = hours.copy(), max_hours
         return hours, hours_anon, hours_auth, max_hours, max_hours_anon, \
             max_hours_auth
 
@@ -381,7 +384,7 @@ def stats_hours(project_id, period='2 week'):
     for row in results:
         hours_auth[row.h] = row.count
 
-    # Get hour stats for Anon users
+    # Get maximum stats for Auth users
     sql = text('''
                WITH myquery AS
                 (SELECT to_char(
