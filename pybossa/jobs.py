@@ -1014,9 +1014,10 @@ def get_weekly_admin_report_jobs():
     timeout = current_app.config.get('TIMEOUT')
     current_app.logger.info(u'Checking weekly report for admins, scheduled date: {}, today: {}'
                             .format(send_emails_date, today))
+    jobs = []
     if recipients and today == send_emails_date:
         info = dict(timestamp=datetime.now().isoformat(),
-            user_id="admin",
+            user_id=0, # user_id=0 indicates auto-generated report for admins
             base_url=current_app.config.get('SERVER_URL') or '' + '/project/')
         project_report = dict(name=mail_project_report,
                     args=[info, recipients],
@@ -1029,8 +1030,8 @@ def get_weekly_admin_report_jobs():
                     kwargs={},
                     timeout=timeout,
                     queue='low')
-        job = [project_report, user_report]
-        return iter(job)
+        jobs = [project_report, user_report]
+    return iter(jobs)
 
 def get_weekly_stats_update_projects():
     """Return email jobs with weekly stats update for project owner."""
@@ -1206,7 +1207,7 @@ def mail_project_report(info, email_addr):
     from pybossa.core import project_csv_exporter
 
     recipients = email_addr if isinstance(email_addr, list) else [email_addr]
-    current_app.logger.info(u'Scheduling mail_project_report job send to {}'.format(info['user_id']))
+    current_app.logger.info(u'Scheduling mail_project_report job {}'.format(str(info)))
     try:
         zipfile = None
         filename = project_csv_exporter.zip_name(info)
