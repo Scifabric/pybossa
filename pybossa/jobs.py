@@ -144,7 +144,7 @@ def get_periodic_jobs(queue):
     leaderboard_jobs = get_leaderboard_jobs() if queue == 'super' else []
     weekly_update_jobs = get_weekly_stats_update_projects() if queue == 'low' else []
     failed_jobs = get_maintenance_jobs() if queue == 'maintenance' else []
-    _all = [jobs, project_jobs, autoimport_jobs,
+    _all = [jobs, admin_report_jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs, dashboard_jobs,
             weekly_update_jobs, failed_jobs, leaderboard_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
