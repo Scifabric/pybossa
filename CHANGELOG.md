@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.2.0](https://github.com/Scifabric/pybossa/compare/v3.1.2...v3.2.0) (2020-10-31)
+
+
+### Features
+
+* **userprogress:** allow external_uid as a parameter. ([#2000](https://github.com/Scifabric/pybossa/issues/2000)) ([ea3b522](https://github.com/Scifabric/pybossa/commit/ea3b5224bcc889854b79935c0cfa1bae1de39531))
+
+
+### Bug Fixes
+
+* handle properly unicode error for fixing taskrun issue. ([01a4d1b](https://github.com/Scifabric/pybossa/commit/01a4d1ba3ef11c45d11857dbf19c78f3ee45c405))
+* Python3 syntax fixes ([#1981](https://github.com/Scifabric/pybossa/issues/1981)) ([865991f](https://github.com/Scifabric/pybossa/commit/865991f782e139076539595e0b8d2a1821053b06))
+* **gdpr:** delete inactive accounts. ([#1979](https://github.com/Scifabric/pybossa/issues/1979)) ([6d3569c](https://github.com/Scifabric/pybossa/commit/6d3569c7dc832f29d6a8a96ac66cac18db8fee48))
+* **vagrant:** update playbook and requirements ([#1968](https://github.com/Scifabric/pybossa/issues/1968)) ([3fb38dc](https://github.com/Scifabric/pybossa/commit/3fb38dc3162b12591878e0226e275df0bc29eb63))
+
 ### [3.1.3](https://github.com/Scifabric/pybossa/compare/v3.1.2...v3.1.3) (2020-06-06)
 
 
