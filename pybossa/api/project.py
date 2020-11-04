@@ -47,8 +47,7 @@ class ProjectAPI(APIBase):
     """
 
     __class__ = Project
-    reserved_keys = set(['id', 'created', 'updated', 'completed', 'contacted',
-                         'published', 'secret_key'])
+    reserved_keys = set(['id', 'created', 'updated', 'completed', 'contacted', 'secret_key'])
     private_keys = set(['secret_key'])
     restricted_keys = set()
 
@@ -120,8 +119,6 @@ class ProjectAPI(APIBase):
     def _forbidden_attributes(self, data):
         for key in data.keys():
             if key in self.reserved_keys:
-                if key == 'published':
-                    raise Forbidden('You cannot publish a project via the API')
                 raise BadRequest("Reserved keys in payload")
 
     def _restricted_attributes(self, data):

@@ -261,7 +261,7 @@ class TestProjectAPI(TestAPI):
         assert error['exception_msg'] == "Reserved keys in payload", error
 
     @with_context
-    def test_project_update_with_published_attribute_is_forbidden(self):
+    def test_project_update_with_published_attribute_is_not_forbidden(self):
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         data = dict(published=True)
@@ -270,9 +270,7 @@ class TestProjectAPI(TestAPI):
 
         res = self.app.put(url, data=data)
         print res.data
-        error_msg = json.loads(res.data)['exception_msg']
-        assert res.status_code == 403, res.status_code
-        assert error_msg == 'You cannot publish a project via the API', res.data
+        assert res.status_code == 200, res.status_code
 
     @with_context
     def test_project_delete_with_results(self):
