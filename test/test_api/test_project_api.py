@@ -1908,3 +1908,4 @@ class TestProjectAPI(TestAPI):
         res_data = json.loads(res.data)
         assert res.status_code == 200, "POST project api should be successful"
         assert res_data["info"]["annotation_config"]["amp_pvf"] == "GIG 200", "Project PVF should be set to GIG 200 for public data."
+
