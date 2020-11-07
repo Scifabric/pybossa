@@ -24,6 +24,7 @@ from flask import Flask, url_for, request, render_template, \
 from flask_login import current_user
 from flask_babel import gettext
 from flask_assets import Bundle
+from flask_session import Session
 from flask_json_multidict import get_json_multidict
 from pybossa import default_settings as settings
 from pybossa.extensions import *
@@ -111,6 +112,7 @@ def configure_app(app):
         app.config['SQLALCHEMY_BINDS'] = \
             dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
     app.url_map.strict_slashes = app.config.get('STRICT_SLASHES')
+    Session(app)
 
 
 def setup_json_serializer(app):

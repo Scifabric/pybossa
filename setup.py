@@ -137,7 +137,8 @@ requirements = [
     "WTForms>=1.0.5",
     "WTForms-Components>=0.10.3",
     "yacryptopan==1.0.0",
-    "email_validator==1.1.1"
+    "email_validator==1.1.1",
+    "Flask-Session==0.3.2"
 ]
 
 setup(

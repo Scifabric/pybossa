@@ -168,3 +168,6 @@ SPAM = []
 USER_INACTIVE_NOTIFICATION = 5
 # Inactive users months to delete users
 USER_INACTIVE_DELETE = 6
+
+# Check Flask-Session to know more about which ones you can configure.
+SESSION_TYPE = 'redis'
