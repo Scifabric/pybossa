@@ -82,6 +82,20 @@ class TestConsensusExporter(Test):
                 }],
                 "value": "hello"
             },
+            "context.date": {
+                "answer_field_config": {
+                    "config": {},
+                    "type": "categorical",
+                    "retry_for_consensus": False
+                },
+                "contributorsMetConsensus": [1],
+                "percentage": 100.0,
+                "contributorsConsensusPercentage": [{
+                    "percentage": 100.0,
+                    "user_id": 1
+                }],
+                "value": "2020-01-01"
+            },
         }
         task_run = {"joe": {'context': {'name': 'hello'}}}
         rows = [dict(task_id=1,

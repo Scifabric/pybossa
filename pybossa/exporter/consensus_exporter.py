@@ -130,7 +130,10 @@ def format_consensus(rows):
                 ans_key = match.group('ans_key')
                 for user_pct in v:
                     user_id = user_pct.pop('user_id')
-                    if user_id not in local_user_cache:
+                    if user_id in local_user_cache:
+                        user_info = local_user_cache[user_id]
+                    else:
+                        # Fetch user info from db and store in cache.
                         user_info = get_user_info(user_id) or {'user_id': user_id}
                         local_user_cache[user_id] = user_info
                     user_name = user_info.get('name')
