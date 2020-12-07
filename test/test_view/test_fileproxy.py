@@ -512,7 +512,7 @@ class TestEncryptedPayload(web.Helper):
 
     @with_context
     @patch('pybossa.view.fileproxy.requests.get')
-    def test_proxy_admin(self, http_get, hdfs_get):
+    def test_proxy_admin(self, http_get):
         res = MagicMock()
         res.json.return_value = {'key': 'testkey'}
         http_get.return_value = res
