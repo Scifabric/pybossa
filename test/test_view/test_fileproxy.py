@@ -595,3 +595,50 @@ class TestEncryptedPayload(web.Helper):
         with patch.dict(self.flask_app.config, self.app_config):
             res = self.app.get(url, follow_redirects=True)
             assert res.status_code == 500, res.status_code
+
+    @with_context
+    @patch('pybossa.view.fileproxy.requests.get')
+    def test_proxy_regular_user_has_lock(self, http_get):
+        res = MagicMock()
+        res.json.return_value = {'key': 'testkey'}
+        http_get.return_value = res
+
+        admin, owner, user = UserFactory.create_batch(3)
+        project = ProjectFactory.create(owner=owner, info={
+            'ext_config': {
+                'encryption': {'key_id': 123}
+            }
+        })
+
+        encryption_key = 'testkey'
+        aes = AESWithGCM(encryption_key)
+        content = json.dumps(dict(a=1,b="2"))
+        encrypted_content = aes.encrypt(content)
+        task = TaskFactory.create(project=project, info={
+            'private_json__encrypted_payload': encrypted_content
+        })
+
+        signature = signer.dumps({'task_id': task.id})
+        url = '/fileproxy/encrypted/taskpayload/%s/%s?api_key=%s&task-signature=%s' \
+            % (project.id, task.id, user.api_key, signature)
+
+        with patch('pybossa.view.fileproxy.has_lock') as has_lock:
+            has_lock.return_value = True
+            with patch.dict(self.flask_app.config, self.app_config):
+                res = self.app.get(url, follow_redirects=True)
+                assert res.status_code == 200, res.status_code
+                assert res.data == content, res.data
+
+        with patch('pybossa.view.fileproxy.has_lock') as has_lock:
+            has_lock.return_value = False
+            with patch.dict(self.flask_app.config, self.app_config):
+                res = self.app.get(url, follow_redirects=True)
+                assert res.status_code == 403, res.status_code
+
+        # coowner can access the task
+        project.owners_ids.append(user.id)
+        with patch('pybossa.view.fileproxy.has_lock') as has_lock:
+            has_lock.return_value = False
+            with patch.dict(self.flask_app.config, self.app_config):
+                res = self.app.get(url, follow_redirects=True)
+                assert res.status_code == 200, res.status_code
