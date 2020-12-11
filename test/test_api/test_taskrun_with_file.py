@@ -313,3 +313,51 @@ class TestTaskrunWithSensitiveFile(TestAPI):
             }
             expected = 'https://{host}/{bucket}/{project_id}/{task_id}/{user_id}/{filename}'.format(**args)
             assert url == expected, url
+
+    @with_context
+    @patch('pybossa.cloud_store_api.s3.boto.s3.key.Key.set_contents_from_file')
+    @patch('pybossa.api.task_run.s3_upload_from_string', wraps=s3_upload_from_string)
+    @patch('pybossa.view.fileproxy.get_encryption_key')
+    def test_taskrun_with_encrypted_payload(self, encr_key, upload_from_string, set_content):
+        with patch.dict(self.flask_app.config, self.patch_config):
+            project = ProjectFactory.create()
+            encryption_key = 'testkey'
+            encr_key.return_value = encryption_key
+            aes = AESWithGCM(encryption_key)
+            content = 'some data'
+            encrypted_content = aes.encrypt(content)
+            task = TaskFactory.create(project=project, info={
+                'private_json__encrypted_payload': encrypted_content
+            })
+            self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
+
+            taskrun_data = {
+                'another_field': 42
+            }
+            data = dict(
+                project_id=project.id,
+                task_id=task.id,
+                info=taskrun_data)
+            datajson = json.dumps(data)
+            url = '/api/taskrun?api_key=%s' % project.owner.api_key
+
+            success = self.app.post(url, data=datajson)
+
+            assert success.status_code == 200, success.data
+            set_content.assert_called()
+            res = json.loads(success.data)
+            assert len(res['info']) == 2
+            encrypted_response = res['info']['private_json__encrypted_response']
+            decrypted_content = aes.decrypt(encrypted_response)
+            assert decrypted_content == json.dumps(taskrun_data), "private_json__encrypted_response decrypted data mismatch"
+            url = res['info']['pyb_answer_url']
+            args = {
+                'host': self.host,
+                'bucket': self.bucket,
+                'project_id': project.id,
+                'task_id': task.id,
+                'user_id': project.owner.id,
+                'filename': 'pyb_answer.json'
+            }
+            expected = 'https://{host}/{bucket}/{project_id}/{task_id}/{user_id}/{filename}'.format(**args)
+            assert url == expected, url
