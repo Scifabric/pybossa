@@ -596,6 +596,15 @@ class TestEncryptedPayload(web.Helper):
             res = self.app.get(url, follow_redirects=True)
             assert res.status_code == 500, res.status_code
 
+        bad_project_id = 9999
+        url = '/fileproxy/encrypted/taskpayload/%s/%s?api_key=%s&task-signature=%s' \
+            % (bad_project_id, task.id, admin.api_key, signature)
+
+        with patch.dict(self.flask_app.config, self.app_config):
+            res = self.app.get(url, follow_redirects=True)
+            assert res.status_code == 400, res.status_code
+
+
     @with_context
     @patch('pybossa.view.fileproxy.requests.get')
     def test_proxy_regular_user_has_lock(self, http_get):

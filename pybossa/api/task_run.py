@@ -48,6 +48,8 @@ from pybossa.cloud_store_api.s3 import upload_json_data
 from pybossa.model.performance_stats import StatType, PerformanceStats
 from pybossa.stats.gold import ConfusionMatrix, RightWrongCount
 from pybossa.task_creator_helper import get_gold_answers
+from pybossa.view.fileproxy import encrypt_task_response_data
+
 
 class TaskRunAPI(APIBase):
 
@@ -70,14 +72,23 @@ class TaskRunAPI(APIBase):
         project_id = data['project_id']
         self.check_can_post(project_id, task_id)
         preprocess_task_run(project_id, task_id, data)
-        info = data['info']
-        path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
         if with_encryption:
-            data['info'] = {
-                'pyb_answer_url': upload_json_data(json_data=info, upload_path=path,
-                    file_name='pyb_answer.json', encryption=with_encryption,
-                    conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir)
-            }
+            info = data['info']
+            path = "{0}/{1}/{2}".format(project_id, task_id, current_user.id)
+
+            # for tasks with private_json_encrypted_payload, generate
+            # encrypted response payload under private_json__encrypted_response
+            encrypted_response = encrypt_task_response_data(task_id, project_id, info)
+            data['info'] = {}
+            pyb_answer_url = upload_json_data(json_data=info, upload_path=path,
+                file_name='pyb_answer.json', encryption=with_encryption,
+                conn_name='S3_TASKRUN', upload_root_dir=upload_root_dir
+            )
+            if pyb_answer_url:
+                data['info']['pyb_answer_url'] = pyb_answer_url
+            if encrypted_response:
+                data['info']['private_json__encrypted_response'] = encrypted_response
+
 
     def check_can_post(self, project_id, task_id):
         if not can_post(project_id, task_id, get_user_id_or_ip()):
