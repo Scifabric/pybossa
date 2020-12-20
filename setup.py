@@ -123,6 +123,7 @@ requirements = [
     "soupsieve==1.6.1",
     "speaklater==1.3",
     "SQLAlchemy>=1.3.0",
+    "sqlalchemy-json==0.4.0",
     "stevedore>=1.30.0",
     "termstyle==0.1.11",
     "text-unidecode==1.2",
@@ -141,10 +142,10 @@ requirements = [
 ]
 
 setup(
-    name = 'pybossa',
-    version = __version__,
-    packages = find_packages(),
-    install_requires = requirements,
+    name='pybossa',
+    version=__version__,
+    packages=find_packages(),
+    install_requires=requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
     # Keep in mind that dependency_links are not used when installing with requirements.txt
     # and need to be added redundant to requirements.txt in this case!

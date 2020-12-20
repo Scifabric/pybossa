@@ -20,7 +20,7 @@ from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger, Date
 from sqlalchemy.schema import Column
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy_json import mutable_json_type
 from flask_login import UserMixin
 from flask import current_app
 
@@ -64,24 +64,21 @@ class User(db.Model, DomainObject, UserMixin):
     confirmation_email_sent = Column(Boolean, default=False)
     subscribed = Column(Boolean, default=False)
     consent = Column(Boolean, default=False)
-    info = Column(MutableDict.as_mutable(JSONB), default=dict())
+    info = Column(mutable_json_type(dbtype=JSONB, nested=True), default=dict())
     user_pref = Column(JSONB)
     notified_at = Column(Date, default=None)
 
-    ## Relationships
+    # Relationships
     task_runs = relationship(TaskRun, backref='user')
     projects = relationship(Project, backref='owner')
     blogposts = relationship(Blogpost, backref='owner')
-
 
     def get_id(self):
         '''id for login system. equates to name'''
         return self.name
 
-
     def set_password(self, password):
         self.passwd_hash = signer.generate_password_hash(password)
-
 
     def check_password(self, password):
         # OAuth users do not have a password
