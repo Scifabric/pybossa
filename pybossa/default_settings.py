@@ -168,3 +168,6 @@ SPAM = []
 USER_INACTIVE_NOTIFICATION = 5
 # Inactive users months to delete users
 USER_INACTIVE_DELETE = 6
+
+# Inactive users SQL query to select
+INACTIVE_USERS_SQL_QUERY = """SELECT user_id FROM task_run WHERE user_id IS NOT NULL AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW() - '12 month'::INTERVAL AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') < NOW() - '3 month'::INTERVAL GROUP BY user_id ORDER BY user_id;"""
