@@ -287,7 +287,7 @@ CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
 # TTL for ZIP files of personal data
 TTL_ZIP_SEC_FILES = 3
 
-# Instruct PYBOSSA to generate HTTP or HTTPS 
+# Instruct PYBOSSA to generate HTTP or HTTPS
 PREFERRED_URL_SCHEME='https'
 
 # Instruct PYBOSSA to generate absolute paths or not for avatars
@@ -297,3 +297,6 @@ AVATAR_ABSOLUTE = True
 USER_INACTIVE_NOTIFICATION = 5
 # Inactive users months to delete users
 USER_INACTIVE_DELETE = 6
+
+# Inactive users email SQL query
+INACTIVE_USERS_SQL_QUERY = """SELECT user_id FROM task_run WHERE user_id IS NOT NULL AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW() - '12 month'::INTERVAL AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') < NOW() - '3 month'::INTERVAL GROUP BY user_id ORDER BY user_id;"""

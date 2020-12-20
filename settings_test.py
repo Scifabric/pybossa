@@ -1,6 +1,6 @@
 # -*- coding: utf8 -*-
-SERVER_NAME='localhost'
-PREFERRED_URL_SCHEME='https'
+SERVER_NAME = 'localhost'
+PREFERRED_URL_SCHEME = 'https'
 # THEME='pybossa-default-theme'
 CRYPTOPAN_KEY = '32-char-str-for-AES-key-and-pad.'
 SECRET = 'foobar'
@@ -8,16 +8,16 @@ SECRET_KEY = 'my-session-secret'
 SQLALCHEMY_DATABASE_TEST_URI = 'postgresql://rtester:rtester@localhost/pybossa_test'
 GOOGLE_CLIENT_ID = 'id'
 GOOGLE_CLIENT_SECRET = 'secret'
-TWITTER_CONSUMER_KEY='key'
-TWITTER_CONSUMER_SECRET='secret'
-FACEBOOK_APP_ID='id'
-FACEBOOK_APP_SECRET='secret'
+TWITTER_CONSUMER_KEY = 'key'
+TWITTER_CONSUMER_SECRET = 'secret'
+FACEBOOK_APP_ID = 'id'
+FACEBOOK_APP_SECRET = 'secret'
 TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
 ITSDANGEROUSKEY = 'its-dangerous-key'
 REDIS_SOCKET_TIMEOUT = 1.0
 LOGO = 'logo.png'
-PORT=5001
+PORT = 5001
 MAIL_SERVER = 'localhost'
 MAIL_USERNAME = None
 MAIL_PASSWORD = None
@@ -25,7 +25,8 @@ MAIL_PORT = 25
 MAIL_FAIL_SILENTLY = False
 MAIL_DEFAULT_SENDER = 'PYBOSSA Support <info@pybossa.com>'
 ADMINS = ['admin@broken.com']
-ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
+ANNOUNCEMENT = {'admin': 'Root Message',
+                'user': 'User Message', 'owner': 'Owner Message'}
 LOCALES = [('en', 'English'), ('es', u'Español'),
            ('it', 'Italiano'), ('fr', u'Français'),
            ('ja', u'日本語'), ('el', u'ελληνικά')]
@@ -67,16 +68,18 @@ FLASK_PROFILER = {
     "storage": {
         "engine": "sqlite"
     },
-    "basicAuth":{
+    "basicAuth": {
         "enabled": True,
         "username": "admin",
         "password": "admin"
     },
     "ignore": [
-	    "^/static/.*"
-	]
+        "^/static/.*"
+    ]
 }
 AVATAR_ABSOLUTE = True
 SPAM = ['fake.com']
 USER_INACTIVE_NOTIFICATION = 5
 USER_INACTIVE_DELETE = 6
+# Inactive users SQL query to select
+INACTIVE_USERS_SQL_QUERY = """SELECT user_id FROM task_run WHERE user_id IS NOT NULL AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW() - '12 month'::INTERVAL AND to_date(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') < NOW() - '3 month'::INTERVAL GROUP BY user_id ORDER BY user_id;"""
