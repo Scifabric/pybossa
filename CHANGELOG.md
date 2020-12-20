@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/Scifabric/pybossa/compare/v3.2.2...v3.3.0) (2020-12-20)
+
+
+### Features
+
+* **json:** use sqlalchemy_json lib. ([#2004](https://github.com/Scifabric/pybossa/issues/2004)) ([cb9febc](https://github.com/Scifabric/pybossa/commit/cb9febc36e92cc62745173d12e46139704e7a417))
+
+
+### Bug Fixes
+
+* move inactive users query to settings file. ([#2005](https://github.com/Scifabric/pybossa/issues/2005)) ([7cf0f49](https://github.com/Scifabric/pybossa/commit/7cf0f49874d9d48dd29d5022f98bb5941f05a414))
+
 ### [3.2.2](https://github.com/Scifabric/pybossa/compare/v3.2.1...v3.2.2) (2020-11-15)
 
 
