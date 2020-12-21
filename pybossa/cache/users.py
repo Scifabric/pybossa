@@ -383,7 +383,7 @@ def get_users_for_report():
             u.info->'metadata'->'timezone' AS timezone,
             u.info->'metadata'->'user_type' AS type_of_user,
             u.info->'metadata'->'review' AS additional_comments,
-            count(t.id) AS completed_tasks,
+            count(t.id) AS completed_task_runs,
             min(finish_time) AS first_submission_date,
             max(finish_time) AS last_submission_date,
             coalesce(
@@ -402,9 +402,9 @@ def get_users_for_report():
                     additional_comments=row.additional_comments,
                     type_of_user=row.type_of_user, first_submission_date=row.first_submission_date,
                     last_submission_date=row.last_submission_date,
-                    completed_tasks=row.completed_tasks, avg_time_per_task=str(round(row.avg_time_per_task.total_seconds() / 60, 2)),
+                    completed_task_runs=row.completed_task_runs, avg_time_per_task=str(round(row.avg_time_per_task.total_seconds() / 60, 2)),
                     total_projects_contributed=n_projects_contributed(row.u_id),
-                    percentage_tasks_completed=round(float(row.completed_tasks) * 100 / n_total_tasks(), 2) if n_total_tasks() else 0,
+                    percentage_tasks_completed=round(float(row.completed_task_runs) * 100 / n_total_tasks(), 2) if n_total_tasks() else 0,
                     consent=row.consent, restrict=row.restrict)
                     for row in results]
     return users_report

@@ -1442,7 +1442,7 @@ def export_all_users(fmt, email_addr):
                              'created', 'admin', 'subadmin', 'enabled', 'languages',
                              'locations', 'work_hours_from', 'work_hours_to',
                              'timezone', 'type_of_user', 'additional_comments',
-                             'total_projects_contributed', 'completed_tasks',
+                             'total_projects_contributed', 'completed_task_runs',
                              'percentage_tasks_completed', 'first_submission_date',
                              'last_submission_date', 'avg_time_per_task', 'consent',
                              'restrict')
