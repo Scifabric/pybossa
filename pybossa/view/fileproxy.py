@@ -37,6 +37,7 @@ from pybossa.cloud_store_api.s3 import get_content_and_key_from_s3
 
 blueprint = Blueprint('fileproxy', __name__)
 
+SIGNATURE_MAX_SIZE = 128
 
 def no_cache(view_func):
     @wraps(view_func)
@@ -92,6 +93,10 @@ def encrypted_file(store, bucket, project_id, path):
     if not signature:
         current_app.logger.exception('Project id {} no signature {}'.format(project_id, path))
         raise Forbidden('No signature')
+    size_signature = len(signature)
+    if size_signature > SIGNATURE_MAX_SIZE:
+        current_app.logger.exception('Project id {}, path {} invalid signature length {}.'.format(project_id, path, size_signature))
+        raise Forbidden('Invalid signature')
 
     project = get_project_data(project_id)
     timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
@@ -182,6 +187,10 @@ def hdfs_file(project_id, cluster, path):
     signature = request.args.get('task-signature')
     if not signature:
         raise Forbidden('No signature')
+    size_signature = len(signature)
+    if size_signature > SIGNATURE_MAX_SIZE:
+        current_app.logger.exception('Project id {}, cluster {} path {} invalid signature length {}.'.format(project_id, cluster, path, size_signature))
+        raise Forbidden('Invalid signature')
 
     project = get_project_data(project_id)
     timeout = project['info'].get('timeout', ContributionsGuard.STAMP_TTL)
@@ -247,6 +256,11 @@ def encrypted_task_payload(project_id, task_id):
     if not signature:
         current_app.logger.exception('Project id {}, task id {} has no signature.'.format(project_id, task_id))
         raise Forbidden('No signature')
+
+    size_signature = len(signature)
+    if size_signature > SIGNATURE_MAX_SIZE:
+        current_app.logger.exception('Project id {}, task id {} invalid signature length {}.'.format(project_id, task_id, size_signature))
+        raise Forbidden('Invalid signature')
 
     project = get_project_data(project_id)
     if not project:
