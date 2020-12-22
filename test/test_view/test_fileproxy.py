@@ -51,6 +51,22 @@ class TestFileproxy(web.Helper):
         assert res.status_code == 403, res.status_code
 
     @with_context
+    def test_proxy_invalid_signature(self):
+        """invalid signature beyond max length (128)"""
+        import string
+        import random
+
+        project = ProjectFactory.create()
+        owner = project.owner
+
+        task_id = 2020127
+        signature = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(129))
+        url = '/fileproxy/encrypted/s3/test/%s/file.pdf?api_key=%s&task-signature=%s' \
+            % (project.id, owner.api_key, signature)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status == '403 FORBIDDEN', res.status_code
+
+    @with_context
     def test_proxy_no_task(self):
         project = ProjectFactory.create()
         owner = project.owner
@@ -293,6 +309,23 @@ class TestHDFSproxy(web.Helper):
             assert res.status_code == 403, res.status_code
 
     @with_context
+    def test_proxy_invalid_signature(self):
+        """invalid signature beyond max length (128)"""
+        import string
+        import random
+
+        project = ProjectFactory.create()
+        owner = project.owner
+
+        task_id = 2020127
+        signature = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(129))
+        url = '/fileproxy/hdfs/test/%s/file.pdf?api_key=%s&task-signature=%s' \
+            % (project.id, owner.api_key, signature)
+        with patch.dict(self.flask_app.config, self.app_config):            
+            res = self.app.get(url, follow_redirects=True)
+            assert res.status == '403 FORBIDDEN', res.status_code
+
+    @with_context
     def test_proxy_no_task(self):
         project = ProjectFactory.create()
         owner = project.owner
@@ -464,6 +497,22 @@ class TestEncryptedPayload(web.Helper):
              % (project.id, task_id, owner.api_key)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
+
+    @with_context
+    def test_proxy_invalid_signature(self):
+        """invalid signature beyond max length (128)"""
+        import string
+        import random
+
+        project = ProjectFactory.create()
+        owner = project.owner
+
+        task_id = 2020127
+        signature = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(129))
+        url = '/fileproxy/encrypted/taskpayload/%s/%s?api_key=%s&task-signature=%s' \
+             % (project.id, task_id, owner.api_key, signature)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status == '403 FORBIDDEN', res.status_code
 
     @with_context
     def test_proxy_no_task(self):
