@@ -81,12 +81,14 @@ def get_contributor_answer(data, path, answer_field_config):
         match = [str(record[k]) == str(v) for k, v in key_value_pair.items()]
         return all(match)
 
-    if not answer_field_config or not path:
+    if not path:
         return None
-    paths = path.split('.')
-    if answer_field_config.get('type') == 'categorical_nested':
-        key_values = answer_field_config.get('config', {}).get('keyValues', [])
 
+    paths = path.split('.')
+    if not answer_field_config or answer_field_config.get('type') in ['categorical', 'freetext']:
+        return get_value_by_path(data, paths)
+    elif answer_field_config.get('type') == 'categorical_nested':
+        key_values = answer_field_config.get('config', {}).get('keyValues', [])
         field_name = paths[0]
         key = paths[-1]
         values = paths[1 : -1]
@@ -95,8 +97,6 @@ def get_contributor_answer(data, path, answer_field_config):
         field_data = data.get(field_name, [])
         target_field_data = [d for d in field_data if match_nested_value(d)]
         return target_field_data[0][key] if target_field_data else None
-    elif answer_field_config.get('type') in ['categorical', 'freetext']:
-        return get_value_by_path(data, paths)
     else:
         return None
 

@@ -196,6 +196,38 @@ class TestConsensusExporter(Test):
 
     @with_context
     @patch('pybossa.exporter.consensus_exporter.get_user_info')
+    def test_format_consensus_empty_answer_field_config(self, user_info):
+        user_info.return_value = {'name': 'joe'}
+        consensus = {
+            "context.name": {
+                "answer_field_config": None,
+                "contributorsMetConsensus": [1],
+                "percentage": 100.0,
+                "contributorsConsensusPercentage": [{
+                    "percentage": 100.0,
+                    "user_id": 1
+                }],
+                "value": "hello"
+            },
+        }
+        task_run = {"joe": {'context': {'name': 'hello'}}}
+        rows = [dict(task_id=1,
+                    project_id=1,
+                    task_run__id=10,
+                    task_run__user_id=2,
+                    task_run__info=task_run,
+                    consensus={'consensus':consensus} )]
+
+        expect = [{
+            "contributor_name": "joe",
+            "answer_percentage": 100.0,
+            "contributor_answer": "hello"
+        }]
+        res = format_consensus(rows)
+        assert res[0]['consensus__context.name__contributorsConsensusPercentage'] == expect
+
+    @with_context
+    @patch('pybossa.exporter.consensus_exporter.get_user_info')
     def test_format_consensus_invalid_type(self, user_info):
         user_info.return_value = {'name': 'joe'}
         consensus = {
