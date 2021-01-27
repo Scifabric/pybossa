@@ -3114,13 +3114,15 @@ def sync_project(short_name):
                             'target="_blank">{}</a></strong>')
         flash(enable_msg.format(msg, synced_url, 'Enable Here'),
               'error')
-    except Exception:
+    except Exception as exception_type:
         current_app.logger.exception(
             'An error occurred while syncing {}'
             .format(project.short_name))
+        current_app.logger.info(
+            'exception type is {}'
+            .format(str(exception_type)))
         msg = gettext('An unexpected error occurred while trying to sync your project')
         flash(msg, 'error')
-
     return redirect_content_type(
         url_for('.publish', short_name=short_name))
 
