@@ -109,7 +109,7 @@ class User(db.Model, DomainObject, UserMixin):
 
     def get_quiz_for_project(self, project):
         # This user's quiz info for all projects
-        user_quizzes = self.info.get('quiz', {})
+        user_quizzes = self.info.get('quiz', {}) if self.info else {}
         # This user's quiz info for project_id
         project_key = str(project.id)
         user_project_quiz = user_quizzes.get(project_key)
@@ -127,7 +127,8 @@ class User(db.Model, DomainObject, UserMixin):
         user_project_quiz_config = user_project_quiz['config']
         # You have to assign to the property in order for SQLAlchemy to detect the change.
         # Just doing setdefault() will cause the changes to get lost.
-        self.info['quiz'] = user_quizzes
+        if self.info:
+            self.info['quiz'] = user_quizzes
         return user_project_quiz
 
     def add_quiz_right_answer(self, project):

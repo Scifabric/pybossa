@@ -707,7 +707,7 @@ def delete(short_name):
                         owner=owner_sanitized,
                         n_tasks=ps.n_tasks,
                         overall_progress=ps.overall_progress,
-                        last_activity=ps.last_activity,
+                        last_activity=get_last_activity(ps),
                         pro_features=pro,
                         csrf=generate_csrf())
         return handle_content_type(response)
@@ -1781,7 +1781,7 @@ def delete_tasks(short_name):
                         n_volunteers=ps.n_volunteers,
                         n_completed_tasks=ps.n_completed_tasks,
                         overall_progress=ps.overall_progress,
-                        last_activity=ps.last_activity,
+                        last_activity=get_last_activity(ps),
                         title=title,
                         pro_features=pro,
                         csrf=generate_csrf())
@@ -3685,3 +3685,9 @@ def contact(short_name):
     }
 
     return handle_content_type(response)
+
+def get_last_activity(project):
+    last_submission_task_date = latest_submission_task_date(project.id)
+    last_submission_task_date = last_submission_task_date[0:10] if last_submission_task_date else 'None'
+
+    return project.last_activity if project.last_activity != '0' and project.last_activity != 'None' else last_submission_task_date
