@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.4.0](https://github.com/Scifabric/pybossa/compare/v3.3.0...v3.4.0) (2021-01-31)
+
+
+### Features
+
+* **sentinel:** disable sentinel configuration ([#2007](https://github.com/Scifabric/pybossa/issues/2007)) ([27e1450](https://github.com/Scifabric/pybossa/commit/27e1450151d79b6b215fbf23eef47d3c65b9f085))
+
+
+### Bug Fixes
+
+* add REDIS_URL so rq-dashboard is configured ([#1990](https://github.com/Scifabric/pybossa/issues/1990)) ([029f73e](https://github.com/Scifabric/pybossa/commit/029f73ebf3907a89b1d20448a41c1ebc5ff6935f))
+
 ## [3.3.0](https://github.com/Scifabric/pybossa/compare/v3.2.2...v3.3.0) (2020-12-20)
 
 
