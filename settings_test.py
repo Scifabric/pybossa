@@ -34,6 +34,8 @@ ENFORCE_PRIVACY = False
 REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_KEYPREFIX = 'pybossa_cache'
+# For RQ-DASHBOARD
+REDIS_URL = 'redis://localhost:6379'
 WTF_CSRF_ENABLED = False
 WTF_CSRF_SSL_STRICT = False
 TESTING = True
