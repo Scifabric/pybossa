@@ -3121,7 +3121,7 @@ def sync_project(short_name):
         current_app.logger.info(
             'exception type is {}'
             .format(str(exception_type)))
-        msg = gettext('An unexpected error occurred while trying to sync your project')
+        msg = gettext('Error: Ensure your production API key is used, your production account is sub-admin and enabled, and the target project is enabled for project syncing.')
         flash(msg, 'error')
     return redirect_content_type(
         url_for('.publish', short_name=short_name))
