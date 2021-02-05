@@ -195,3 +195,26 @@ class TestProjectSyncer(Test):
         res = self.app.put("/api/project/{}".format(project.id), headers=headers, data=json.dumps(payload))
         assert res.status_code == 200, 'build_payload output should result in valid api query'
         assert res.json["info"]["sync"] == payload["info"]["sync"]
+
+    @with_context
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.get_target')
+    @patch('pybossa.syncer.category_syncer.CategorySyncer.get_target', return_value={'id': 1})
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer.cache_target')
+    @patch('pybossa.syncer.project_syncer.ProjectSyncer._sync')
+    @patch('pybossa.syncer.requests')
+    def test_sync_update_existing(self, fake_requests, mock_update, mock_cache, mock_cat, mock_get):
+        project_syncer = ProjectSyncer(self.target_url, self.target_key)
+        user = UserFactory.create(admin=True, email_addr=u'user@test.com')
+        project_syncer.syncer = user
+        res = Response()
+        res._ok=False
+        res.status_code=403
+        res._content = ""
+        mock_get.return_value = create_target()
+        mock_update.return_value = res
+        project = ProjectFactory.create()
+        project_syncer.sync(project)
+        project_syncer.get_target.assert_called_once()
+        project_syncer.cache_target.assert_called_once()
+        project_syncer._sync.assert_called_once()
+        mock_cat.assert_called_once()
