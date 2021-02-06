@@ -37,7 +37,6 @@ requirements = [
     "Flask-Login==0.4.1",
     "Flask-Mail==0.9.1",
     "Flask-Misaka==0.3.0",
-    "Flask-OAuthlib==0.9.1",
     "Flask-Plugins==1.6.1",
     "flask-profiler==1.6",
     "Flask-SimpleLDAP==1.1.2",
