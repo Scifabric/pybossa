@@ -46,7 +46,7 @@ requirements = [
     "flatten-json==0.1.6",
     "google-api-python-client==1.5.5",
     "html2text==2014.7.3",
-    "httplib2==0.18.0",
+    "httplib2==0.19.0",
     "humanize==0.5.1",
     "idna==2.8",
     "iiif-prezi>=0.2.9",
