@@ -3082,7 +3082,6 @@ def sync_project(short_name):
                          body=body)
             mail_queue.enqueue(send_mail, email)
         elif res.status_code == 415:
-            current_app.logger.info('response code: {}'.format(str(res.status_code)))
             current_app.logger.error(
                 'A request error occurred while syncing {}: {}'
                 .format(project.short_name, str(res.__dict__)))
@@ -3103,9 +3102,7 @@ def sync_project(short_name):
             'Exception SyncUnauthorized: An error occurred while syncing {}'
             .format(project.short_name))
         if err.sync_type == 'ProjectSyncer':
-            msg = gettext('The API key entered is not authorized to '
-                          'perform this action. Please ensure you '
-                          'have entered the appropriate API key.')
+            msg = gettext('Project sync failed. Ensure your production account is sub-admin.')
             flash(msg, 'error')
         elif err.sync_type == 'CategorySyncer':
             msg = gettext('You are not authorized to create a new '

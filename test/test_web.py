@@ -8189,9 +8189,7 @@ class TestWeb(web.Helper):
                                  follow_redirects=True)
         data = json.loads(res.data)
 
-        expected_flash = ('The API key entered is not authorized to '
-                          'perform this action. Please ensure you '
-                          'have entered the appropriate API key.')
+        expected_flash = ('Project sync failed. Ensure your production account is sub-admin.')
         next_url = '/project/{}/publish'.format(project.short_name)
 
         assert data['flash'] == expected_flash, data
