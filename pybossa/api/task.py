@@ -70,7 +70,7 @@ class TaskAPI(APIBase):
             if not gold_task and (n_taskruns >= new.n_answers):
                 new.state = 'completed'
         new.calibration = int(gold_task)
-        new.exported = gold_task
+        new.exported = gold_task or new.exported
         current_app.logger.info("Updating task %d, old state: %s, new state: %s, "
                                 "old exported: %s, new exported: %s",
                                 new.id, old.state, new.state,
