@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/Scifabric/pybossa/compare/v3.4.0...v4.0.0) (2021-02-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop support for Flask-Oauth (twitter, facebook and google) (#2010)
+
+* drop support for Flask-Oauth (twitter, facebook and google) ([#2010](https://github.com/Scifabric/pybossa/issues/2010)) ([3df2bc8](https://github.com/Scifabric/pybossa/commit/3df2bc818e21e6e51f82f5ea34fbbbfe7a8fc6fd))
+
 ## [3.4.0](https://github.com/Scifabric/pybossa/compare/v3.3.0...v3.4.0) (2021-01-31)
 
 
