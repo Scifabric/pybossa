@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import uuid
 import sys
 import optparse
 import inspect
@@ -710,7 +711,7 @@ def update_project_stats():
 
     for project in projects:
         print("Working on project: %s" % project.short_name)
-        sql_query = """INSERT INTO project_stats 
+        sql_query = """INSERT INTO project_stats
                        (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
                        n_completed_tasks, overall_progress, average_time,
                        n_blogposts, last_activity, info)
@@ -757,7 +758,7 @@ def update_project_stats():
 
     for project in projects:
         print("Working on project: %s" % project.short_name)
-        sql_query = """INSERT INTO project_stats 
+        sql_query = """INSERT INTO project_stats
                        (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
                        n_completed_tasks, overall_progress, average_time,
                        n_blogposts, last_activity, info)
@@ -775,6 +776,21 @@ def anonymize_ips():
         print("From %s to %s" % (tr.user_ip, anonymizer.ip(tr.user_ip)))
         tr.user_ip = anonymizer.ip(tr.user_ip)
         task_repo.update(tr)
+
+
+def migrate_social_accounts():
+    """Migrate social accounts to regular ones."""
+    with app.app_context():
+        networks = ['twitter', 'facebook', 'google']
+        for network in networks:
+            users = db.session.query(User).filter(f"{network}_user_id" != None).all()
+            print(f"Migrating {network}'s users")
+            for user in users:
+                setattr(user, f'{network}_user_id', None)
+                password = uuid.uuid4()
+                user.set_password(str(password))
+                db.session.merge(user)
+                db.session.commit()
 
 
 def clean_project(project_id, skip_tasks=False):
@@ -800,7 +816,7 @@ def clean_project(project_id, skip_tasks=False):
     db.engine.execute(sql)
     sql = 'delete from project_stats where project_id=%s' % project_id
     db.engine.execute(sql)
-    sql = """INSERT INTO project_stats 
+    sql = """INSERT INTO project_stats
              (project_id, n_tasks, n_task_runs, n_results, n_volunteers,
              n_completed_tasks, overall_progress, average_time,
              n_blogposts, last_activity, info)

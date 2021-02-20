@@ -46,9 +46,6 @@ class TestLDAP(Test):
             res = self.app_get_json(url)
             data = json.loads(res.data)
             assert data['form']['csrf'] is not None, data
-            assert data['auth']['twitter'] is False, data
-            assert data['auth']['facebook'] is False, data
-            assert data['auth']['google'] is False, data
 
     @with_context
     @patch('pybossa.view.account.ldap')
@@ -93,40 +90,3 @@ class TestLDAP(Test):
             data = json.loads(res.data)
             assert data['next'] == '/', data
             assert create_mock.called is False
-
-    @with_context
-    def test_twitter_login(self):
-        """Test Twitter login is disabled."""
-        url = '/twitter/'
-        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
-            res = self.app.get(url)
-            assert res.status_code == 404, res.status_code
-
-    @with_context
-    @patch('pybossa.view.twitter.url_for')
-    @patch('pybossa.view.twitter.twitter.oauth')
-    def test_twitter_no_login(self, mock_twitter, url_for_mock):
-        """Test Twitter no_login arg allows using Twitter importer."""
-        url = '/twitter/?no_login=1'
-        mock_twitter.authorize.return_value = 'OK'
-        url_for_mock.return_value = 'url'
-        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
-            res = self.app.get(url)
-            assert res.data == b'OK'
-            assert mock_twitter.authorize.called_with('url')
-
-    @with_context
-    def test_facebook_login(self):
-        """Test Facebook login is disabled."""
-        url = '/facebook/'
-        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
-            res = self.app.get(url)
-            assert res.status_code == 404, res.status_code
-
-    @with_context
-    def test_google_login(self):
-        """Test Google login is disabled."""
-        url = '/google/'
-        with patch.dict(self.flask_app.config, {'LDAP_HOST': '127.0.0.1'}):
-            res = self.app.get(url)
-            assert res.status_code == 404, res.status_code

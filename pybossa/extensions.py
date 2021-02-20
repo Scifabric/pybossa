@@ -23,9 +23,6 @@ The objects are:
     * signer: for signing emails, cookies, etc.
     * mail: for sending emails,
     * login_manager: to handle account sigin/signout
-    * facebook: for Facebook signin
-    * twitter: for Twitter signin
-    * google: for Google signin
     * misaka: for app.long_description markdown support,
     * babel: for i18n support,
     * uploader: for file uploads support,
@@ -36,11 +33,29 @@ The objects are:
     * cors: the Flask-Cors library object
 
 """
-__all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
-           'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
+from pybossa.anonymizer import Anonymizer
+import flask_profiler
+from flask_simpleldap import LDAP
+from flask_cors import CORS
+from speaklater import _LazyString
+from flask.json import JSONEncoder as BaseEncoder
+from flask_assets import Environment
+from flask_plugins import PluginManager
+from .importers import Importer
+from .newsletter import Newsletter
+from flask_wtf.csrf import CSRFProtect
+from flask_babel import Babel
+from flask_misaka import Misaka
+from flask_debugtoolbar import DebugToolbarExtension
+from flask_login import LoginManager
+from flask_mail import Mail
+from pybossa.signer import Signer
+from flask_sqlalchemy import SQLAlchemy
+__all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager',
+           'misaka', 'babel', 'uploader', 'debug_toolbar',
            'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
            'task_repo', 'announcement_repo', 'blog_repo', 'auditlog_repo', 'webhook_repo',
-           'result_repo', 'newsletter', 'importer', 'flickr',
+           'result_repo', 'newsletter', 'importer',
            'plugin_manager', 'assets', 'JSONEncoder', 'cors', 'ldap',
            'flask_profiler', 'anonymizer']
 
@@ -49,7 +64,6 @@ from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
 
 # DB
-from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 db.slave_session = db.session
 
@@ -64,40 +78,21 @@ webhook_repo = None
 result_repo = None
 
 # Signer
-from pybossa.signer import Signer
 signer = Signer()
 
 # Mail
-from flask_mail import Mail
 mail = Mail()
 
 # Login Manager
-from flask_login import LoginManager
 login_manager = LoginManager()
 
 # Debug Toolbar
-from flask_debugtoolbar import DebugToolbarExtension
 debug_toolbar = DebugToolbarExtension()
 
-# OAuth providers
-from pybossa.oauth_providers import Facebook
-facebook = Facebook()
-
-from pybossa.oauth_providers import Twitter
-twitter = Twitter()
-
-from pybossa.oauth_providers import Google
-google = Google()
-
-from pybossa.oauth_providers import Flickr
-flickr = Flickr()
-
 # Markdown support
-from flask_misaka import Misaka
 misaka = Misaka()
 
 # Babel
-from flask_babel import Babel
 babel = Babel()
 
 # Uploader
@@ -108,7 +103,6 @@ json_exporter = None
 csv_exporter = None
 
 # CSRF protection
-from flask_wtf.csrf import CSRFProtect
 csrf = CSRFProtect()
 
 # Timeouts
@@ -118,44 +112,36 @@ timeouts = dict()
 ratelimits = dict()
 
 # Newsletter
-from .newsletter import Newsletter
 newsletter = Newsletter()
 
 # Importer
-from .importers import Importer
 importer = Importer()
 
-from flask_plugins import PluginManager
 plugin_manager = PluginManager()
 
-from flask_assets import Environment
 assets = Environment()
 
-from flask.json import JSONEncoder as BaseEncoder
-from speaklater import _LazyString
 
-class JSONEncoder(BaseEncoder): # pragma: no cover
+class JSONEncoder(BaseEncoder):  # pragma: no cover
     """JSON Encoder to deal with Babel lazy strings."""
+
     def default(self, o):
         if isinstance(o, _LazyString):
             return str(o)
 
         return BaseEncoder.default(self, o)
 
+
 # CORS
-from flask_cors import CORS
 cors = CORS()
 
 # Strong password
 enable_strong_password = None
 
 # LDAP
-from flask_simpleldap import LDAP
 ldap = LDAP()
 
 # Flask Profiler
-import flask_profiler
 
 # IP anonymizer
-from pybossa.anonymizer import Anonymizer
 anonymizer = Anonymizer()

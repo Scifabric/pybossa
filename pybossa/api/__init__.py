@@ -53,7 +53,6 @@ from .blogpost import BlogpostAPI
 from .category import CategoryAPI
 from .favorites import FavoritesAPI
 from .user import UserAPI
-from .token import TokenAPI
 from .result import ResultAPI
 from .project_stats import ProjectStatsAPI
 from .helpingmaterial import HelpingMaterialAPI
@@ -114,7 +113,6 @@ register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
              pk='oid', pk_type='int')
 register_api(FavoritesAPI, 'api_favorites', '/favorites',
              pk='oid', pk_type='int')
-register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify

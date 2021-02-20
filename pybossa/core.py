@@ -279,7 +279,7 @@ def setup_babel(app):
         from flask import request
         locales = [l[0] for l in app.config.get('LOCALES')]
         if current_user.is_authenticated:
-           lang = current_user.locale
+            lang = current_user.locale
         else:
             lang = request.cookies.get('language')
         if (lang is None or lang == '' or
@@ -326,7 +326,7 @@ def setup_blueprints(app):
 
     # from rq_dashboard import RQDashboard
     import rq_dashboard
-    #app.config.from_object(rq_dashboard.default_settings)
+    # app.config.from_object(rq_dashboard.default_settings)
     rq_dashboard.blueprint.before_request(is_admin)
     app.register_blueprint(rq_dashboard.blueprint, url_prefix="/admin/rq",
                            redis_conn=sentinel.master)
@@ -342,12 +342,7 @@ def is_admin():
 
 def setup_external_services(app):
     """Setup external services."""
-    setup_twitter_login(app)
-    setup_facebook_login(app)
-    setup_google_login(app)
-    setup_flickr_importer(app)
     setup_dropbox_importer(app)
-    setup_twitter_importer(app)
     setup_youtube_importer(app)
 
 
@@ -364,58 +359,6 @@ def setup_twitter_login(app):
         print(inst)
         print("Twitter signin disabled")
         log_message = 'Twitter signin disabled: %s' % str(inst)
-        app.logger.info(log_message)
-
-
-def setup_facebook_login(app):
-    try:  # pragma: no cover
-        if (app.config['FACEBOOK_APP_ID']
-                and app.config['FACEBOOK_APP_SECRET']
-                and app.config.get('LDAP_HOST') is None):
-            facebook.init_app(app)
-            from pybossa.view.facebook import blueprint as facebook_bp
-            app.register_blueprint(facebook_bp, url_prefix='/facebook')
-    except Exception as inst:  # pragma: no cover
-        print(type(inst))
-        print(inst.args)
-        print(inst)
-        print("Facebook signin disabled")
-        log_message = 'Facebook signin disabled: %s' % str(inst)
-        app.logger.info(log_message)
-
-
-def setup_google_login(app):
-    try:  # pragma: no cover
-        if (app.config['GOOGLE_CLIENT_ID']
-                and app.config['GOOGLE_CLIENT_SECRET']
-                and app.config.get('LDAP_HOST') is None):
-            google.init_app(app)
-            from pybossa.view.google import blueprint as google_bp
-            app.register_blueprint(google_bp, url_prefix='/google')
-    except Exception as inst:  # pragma: no cover
-        print(type(inst))
-        print(inst.args)
-        print(inst)
-        print("Google signin disabled")
-        log_message = 'Google signin disabled: %s' % str(inst)
-        app.logger.info(log_message)
-
-
-def setup_flickr_importer(app):
-    try:  # pragma: no cover
-        if (app.config['FLICKR_API_KEY']
-                and app.config['FLICKR_SHARED_SECRET']):
-            flickr.init_app(app)
-            from pybossa.view.flickr import blueprint as flickr_bp
-            app.register_blueprint(flickr_bp, url_prefix='/flickr')
-            importer_params = {'api_key': app.config['FLICKR_API_KEY']}
-            importer.register_flickr_importer(importer_params)
-    except Exception as inst:  # pragma: no cover
-        print(type(inst))
-        print(inst.args)
-        print(inst)
-        print("Flickr importer not available")
-        log_message = 'Flickr importer not available: %s' % str(inst)
         app.logger.info(log_message)
 
 
@@ -482,6 +425,7 @@ def setup_error_handlers(app):
     """Setup error handlers."""
 
     from flask_wtf.csrf import CSRFError
+
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         response = dict(template='400.html', code=400,
@@ -556,7 +500,7 @@ def setup_hooks(app):
     def _global_template_context():
         notify_admin = False
         if (current_user and current_user.is_authenticated
-            and current_user.admin):
+                and current_user.admin):
             key = NEWS_FEED_KEY + str(current_user.id)
             if sentinel.slave.get(key):
                 notify_admin = True
