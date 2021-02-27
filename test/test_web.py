@@ -3445,18 +3445,6 @@ class TestWeb(web.Helper):
         mock.assert_called_with(delete_account, user.id)
 
     @with_context
-    def test_42_password_link(self):
-        """Test WEB visibility of password change link"""
-        self.register()
-        res = self.app.get('/account/johndoe/update')
-        assert "Change your Password" in str(res.data)
-        user = User.query.get(1)
-        db.session.add(user)
-        db.session.commit()
-        res = self.app.get('/account/johndoe/update')
-        assert "Change your Password" not in str(res.data), res.data
-
-    @with_context
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
         res = self.app.get('account/signin', follow_redirects=True)
