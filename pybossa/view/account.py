@@ -158,8 +158,6 @@ def signin():
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     if current_user.is_anonymous:
-        # If Twitter is enabled in config, show the Twitter Sign in button
-        if (isLdap is False):
         response = dict(template='account/signin.html',
                         title="Sign in",
                         form=form,
