@@ -3445,19 +3445,6 @@ class TestWeb(web.Helper):
         mock.assert_called_with(delete_account, user.id)
 
     @with_context
-    def test_42_password_link(self):
-        """Test WEB visibility of password change link"""
-        self.register()
-        res = self.app.get('/account/johndoe/update')
-        assert "Change your Password" in str(res.data)
-        user = User.query.get(1)
-        user.twitter_user_id = 1234
-        db.session.add(user)
-        db.session.commit()
-        res = self.app.get('/account/johndoe/update')
-        assert "Change your Password" not in str(res.data), res.data
-
-    @with_context
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
         res = self.app.get('account/signin', follow_redirects=True)
@@ -3635,12 +3622,7 @@ class TestWeb(web.Helper):
         self.register(name='facebook')
         user = User.query.get(1)
         jane = User.query.get(2)
-        jane.twitter_user_id = 10
-        google = User.query.get(3)
-        google.google_user_id = 103
-        facebook = User.query.get(4)
-        facebook.facebook_user_id = 104
-        db.session.add_all([jane, google, facebook])
+        db.session.add_all([jane])
         db.session.commit()
 
         data = {'password': user.passwd_hash, 'user': user.name}
@@ -3671,48 +3653,6 @@ class TestWeb(web.Helper):
                             headers={'X-CSRFToken': csrf})
 
         resdata = json.loads(res.data)
-
-        enqueue_call = queue.enqueue.call_args_list[1]
-        assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Twitter account to ' in enqueue_call[0][1]['body']
-        assert 'your Twitter account to ' in enqueue_call[0][1]['html']
-        err_msg = "There should be a flash message"
-        assert resdata.get('flash'), err_msg
-        assert "sent you an email" in resdata.get('flash'), err_msg
-
-        data = {'password': google.passwd_hash, 'user': google.name}
-        csrf = self.get_csrf('/account/forgot-password')
-        res = self.app.post('/account/forgot-password',
-                            data=json.dumps({'email_addr': 'google@example.com'}),
-                            follow_redirects=False,
-                            content_type="application/json",
-                            headers={'X-CSRFToken': csrf})
-
-        resdata = json.loads(res.data)
-
-        enqueue_call = queue.enqueue.call_args_list[2]
-        assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Google account to ' in enqueue_call[0][1]['body']
-        assert 'your Google account to ' in enqueue_call[0][1]['html']
-        err_msg = "There should be a flash message"
-        assert resdata.get('flash'), err_msg
-        assert "sent you an email" in resdata.get('flash'), err_msg
-
-        data = {'password': facebook.passwd_hash, 'user': facebook.name}
-        csrf = self.get_csrf('/account/forgot-password')
-        res = self.app.post('/account/forgot-password',
-                            data=json.dumps({'email_addr': 'facebook@example.com'}),
-                            follow_redirects=False,
-                            content_type="application/json",
-                            headers={'X-CSRFToken': csrf})
-
-        enqueue_call = queue.enqueue.call_args_list[3]
-        assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Facebook account to ' in enqueue_call[0][1]['body']
-        assert 'your Facebook account to ' in enqueue_call[0][1]['html']
-        err_msg = "There should be a flash message"
-        assert resdata.get('flash'), err_msg
-        assert "sent you an email" in resdata.get('flash'), err_msg
 
         # Test with not valid form
         csrf = self.get_csrf('/account/forgot-password')
@@ -3763,16 +3703,9 @@ class TestWeb(web.Helper):
 
         self.register()
         self.register(name='janedoe')
-        self.register(name='google')
-        self.register(name='facebook')
         user = User.query.get(1)
         jane = User.query.get(2)
-        jane.twitter_user_id = 10
-        google = User.query.get(3)
-        google.google_user_id = 103
-        facebook = User.query.get(4)
-        facebook.facebook_user_id = 104
-        db.session.add_all([jane, google, facebook])
+        db.session.add_all([jane])
         db.session.commit()
 
         data = {'password': user.passwd_hash, 'user': user.name}
@@ -3791,26 +3724,8 @@ class TestWeb(web.Helper):
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Twitter account to ' in enqueue_call[0][1]['body']
-        assert 'your Twitter account to ' in enqueue_call[0][1]['html']
-
-        data = {'password': google.passwd_hash, 'user': google.name}
-        self.app.post('/account/forgot-password',
-                      data={'email_addr': 'google@example.com'},
-                      follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[2]
-        assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Google account to ' in enqueue_call[0][1]['body']
-        assert 'your Google account to ' in enqueue_call[0][1]['html']
-
-        data = {'password': facebook.passwd_hash, 'user': facebook.name}
-        self.app.post('/account/forgot-password',
-                      data={'email_addr': 'facebook@example.com'},
-                      follow_redirects=True)
-        enqueue_call = queue.enqueue.call_args_list[3]
-        assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Facebook account to ' in enqueue_call[0][1]['body']
-        assert 'your Facebook account to ' in enqueue_call[0][1]['html']
+        assert 'Click here to recover your account' in enqueue_call[0][1]['body']
+        assert 'To recover your password' in enqueue_call[0][1]['html']
 
         # Test with not valid form
         res = self.app.post('/account/forgot-password',

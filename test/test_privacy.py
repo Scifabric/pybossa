@@ -232,16 +232,9 @@ class TestPrivacyWebPublic(web_helper.Helper):
         assert 'confirmation_email_sent' not in data['user'], err_msg
         err_msg = 'email_addr should not be public'
         assert 'email_addr' not in data['user'], err_msg
-        err_msg = 'google_user_id should not be public'
-        assert 'google_user_id' not in data['user'], err_msg
-        err_msg = 'facebook_user_id should not be public'
-        assert 'facebook_user_id' not in data['user'], err_msg
-        err_msg = 'twitter_user_id should not be public'
-        assert 'twitter_user_id' not in data['user'], err_msg
         err_msg = 'valid_email should not be public'
         assert 'valid_email' not in data['user'], err_msg
         # public projects data
-        print(data)
         project = data['projects'][0]
         err_msg = 'info should be public'
         assert 'info' in project, err_msg

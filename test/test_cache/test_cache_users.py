@@ -71,7 +71,6 @@ class TestUsersCache(Test):
         """Test CACHE USERS get_user_summary all the fields in the dict"""
         UserFactory.create(name='user')
         fields = ('id', 'name', 'fullname', 'created', 'api_key',
-                  'twitter_user_id', 'google_user_id', 'facebook_user_id',
                   'info', 'admin', 'email_addr', 'n_answers', 'rank', 'score',
                   'total')
         user = cached_users.get_user_summary('user')
@@ -84,8 +83,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS public_get_user_summary all the fields in the dict"""
         UserFactory.create(name='user')
         public_fields = ('name', 'info', 'fullname', 'created', 'rank', 'score')
-        private_fields = ('id', 'api_key', 'twitter_user_id', 'google_user_id',
-                          'facebook_user_id', 'admin', 'email_addr', 'total')
+        private_fields = ('id', 'api_key', 'admin', 'email_addr', 'total')
         user = cached_users.public_get_user_summary('user')
 
         for field in public_fields:
