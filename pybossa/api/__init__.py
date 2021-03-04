@@ -397,12 +397,9 @@ def task_progress(project_id=None, short_name=None):
 
     # create sql query from filter fields received on request.args
     for key in filter_fields.keys():
-        print("searching key " + key)
         if key in task_fields:
-            print(key + " is in " + str(task_fields))
             sql_text += " AND {0}=:{1}".format(key, key)
         elif key in task_info_fields:
-            print(key + " is in " + str(task_info_fields))
             sql_text += " AND info ->> '{0}'=:{1}".format(key, key)
         else:
             raise Exception("invalid key: the field that you are filtering by does not exist")
