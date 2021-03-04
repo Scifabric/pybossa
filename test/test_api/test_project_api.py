@@ -1155,11 +1155,14 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_task_progress_anonymous(self):
+    def test_task_progress(self):
         """Test API taskprogress as anonymous works"""
         user = UserFactory.create()
         project = ProjectFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, project=project)
+        headers = [('Authorization', users[0].api_key)]
+        res = self.app.get('/api/project?all=1&category_id=%s' % category.id, headers=headers)
+
         taskruns = []
         for task in tasks:
             taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
@@ -1174,6 +1177,11 @@ class TestProjectAPI(TestAPI):
         data = json.loads(res.data)
         error_msg = "A valid project must be used"
         assert res.status_code == 404, error_msg
+
+        # check query with constraints added to filter tasks
+        res = self.app.get('/api/project/1/taskprogress?state=complete', follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.data
 
 
     @with_context
