@@ -1158,32 +1158,25 @@ class TestProjectAPI(TestAPI):
     def test_task_progress(self):
         """Test API taskprogress as anonymous works"""
         from pybossa import data_access
-        user = UserFactory.create(info=dict(data_access=['L1']))
+        user = UserFactory.create(admin=True)
         project = ProjectFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, project=project)
         headers = [('Authorization', user.api_key)]
         category = CategoryFactory.create()
-        res = self.app.get('/api/project?all=1&category_id=%s' % category.id, headers=headers)
 
         taskruns = []
         for task in tasks:
             taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
 
         # check basic query without constraints to filter tasks  
-        res = self.app.get('/api/project/1/taskprogress', follow_redirects=True)
-        data = json.loads(res.data)
-        assert res.status_code == 200, res.data
+        res = self.app.get('/api/project?all=1&category_id=%s' % category.id, headers=headers, follow_redirects=True)
+        assert res.status_code == 200
 
         # check 404 response when the project doesn't exist   
-        res = self.app.get('/api/project//taskprogress', follow_redirects=True)
-        data = json.loads(res.data)
+        res = self.app.get('/api/project//taskprogress', follow_redirects=True, headers=headers)
         error_msg = "A valid project must be used"
         assert res.status_code == 404, error_msg
 
-        # check query with constraints added to filter tasks
-        res = self.app.get('/api/project/1/taskprogress?state=complete', follow_redirects=True)
-        data = json.loads(res.data)
-        assert res.status_code == 200, res.data
 
 
     @with_context
