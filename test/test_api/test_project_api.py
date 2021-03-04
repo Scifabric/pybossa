@@ -1157,10 +1157,12 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_task_progress(self):
         """Test API taskprogress as anonymous works"""
-        user = UserFactory.create()
+        from pybossa import data_access
+        user = UserFactory.create(info=dict(data_access=['L1']))
         project = ProjectFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, project=project)
-        headers = [('Authorization', users[0].api_key)]
+        headers = [('Authorization', user.api_key)]
+        category = CategoryFactory.create()
         res = self.app.get('/api/project?all=1&category_id=%s' % category.id, headers=headers)
 
         taskruns = []
