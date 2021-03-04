@@ -355,6 +355,70 @@ def user_progress(project_id=None, short_name=None):
     else:  # pragma: no cover
         return abort(404)
 
+@jsonpify
+@blueprint.route('/app/<short_name>/taskprogress')
+@blueprint.route('/project/<short_name>/taskprogress')
+@blueprint.route('/app/<int:project_id>/taskprogress')
+@blueprint.route('/project/<int:project_id>/taskprogress')
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
+def task_progress(project_id=None, short_name=None):
+    """API endpoint for task progress.
+
+    Returns a JSON object continaing the number of tasks which meet the user defined filter constraints
+    """
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    from pybossa.cache.task_browse_helpers import is_valid_searchable_column, get_searchable_columns
+    if current_user.is_anonymous:
+        return abort(401)
+    if not (project_id or short_name):
+        return abort(404)
+    if short_name:
+        project = project_repo.get_by_shortname(short_name)
+    elif project_id:
+        project = project_repo.get(project_id)
+
+    filter_fields = request.args
+
+    if not project:
+        return abort(404)
+
+    sql_text = "SELECT COUNT(*) FROM task WHERE project_id=" + str(project.id)
+
+    task_info_fields = get_searchable_columns(project.id)
+    task_fields = [
+        "id",
+        "state",
+        "n_answers",
+        "created",
+        "calibration",
+    ]
+
+    # create sql query from filter fields received on request.args
+    for key in filter_fields.keys():
+        print("searching key " + key)
+        if key in task_fields:
+            print(key + " is in " + str(task_fields))
+            sql_text += " AND {0}=:{1}".format(key, key)
+        elif key in task_info_fields:
+            print(key + " is in " + str(task_info_fields))
+            sql_text += " AND info ->> '{0}'=:{1}".format(key, key)
+        else:
+            raise Exception("invalid key: the field that you are filtering by does not exist")
+
+    # conclude sql_text
+    sql_text += ';'
+    sql_query = text(sql_text)
+    results = db.slave_session.execute(sql_query, filter_fields)
+    timeout = current_app.config.get('TIMEOUT')
+
+    # results are stored as a sqlalchemy resultProxy
+    num_tasks = results.first()[0]
+    task_count_dict = dict(task_count=num_tasks)
+
+    return Response(json.dumps(task_count_dict), mimetype="application/json")
+    
 
 @jsonpify
 @blueprint.route('/auth/project/<short_name>/token')
