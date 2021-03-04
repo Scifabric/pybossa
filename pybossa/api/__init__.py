@@ -80,6 +80,10 @@ from pybossa.task_creator_helper import set_gold_answers
 from pybossa.auth.task import TaskAuth
 from pybossa.service_validators import ServiceValidators
 import requests
+from sqlalchemy.sql import text
+from pybossa.model.user import User
+from pybossa.core import db
+from pybossa.cache.task_browse_helpers import is_valid_searchable_column, get_searchable_columns
 
 
 blueprint = Blueprint('api', __name__)
@@ -366,10 +370,6 @@ def task_progress(project_id=None, short_name=None):
 
     Returns a JSON object continaing the number of tasks which meet the user defined filter constraints
     """
-    from sqlalchemy.sql import text
-    from pybossa.model.user import User
-    from pybossa.core import db
-    from pybossa.cache.task_browse_helpers import is_valid_searchable_column, get_searchable_columns
     if current_user.is_anonymous:
         return abort(401)
     if not (project_id or short_name):
