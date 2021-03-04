@@ -1155,6 +1155,28 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
+    def test_task_progress_anonymous(self):
+        """Test API taskprogress as anonymous works"""
+        user = UserFactory.create()
+        project = ProjectFactory.create(owner=user)
+        tasks = TaskFactory.create_batch(2, project=project)
+        taskruns = []
+        for task in tasks:
+            taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
+
+        # check basic query without constraints to filter tasks  
+        res = self.app.get('/api/project/1/taskprogress', follow_redirects=True)
+        data = json.loads(res.data)
+        assert res.status_code == 200, res.data
+
+        # check 404 response when the project doesn't exist   
+        res = self.app.get('/api/project//taskprogress', follow_redirects=True)
+        data = json.loads(res.data)
+        error_msg = "A valid project must be used"
+        assert res.status_code == 404, error_msg
+
+
+    @with_context
     def test_delete_project_cascade(self):
         """Test API delete project deletes associated tasks and taskruns"""
         project = ProjectFactory.create()
