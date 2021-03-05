@@ -81,10 +81,16 @@ from pybossa.auth.task import TaskAuth
 from pybossa.service_validators import ServiceValidators
 import requests
 from sqlalchemy.sql import text
-from pybossa.model.user import User
 from pybossa.core import db
-from pybossa.cache.task_browse_helpers import is_valid_searchable_column, get_searchable_columns
+from pybossa.cache.task_browse_helpers import get_searchable_columns
 
+task_fields = [
+    "id",
+    "state",
+    "n_answers",
+    "created",
+    "calibration",
+]
 
 blueprint = Blueprint('api', __name__)
 
@@ -387,13 +393,6 @@ def task_progress(project_id=None, short_name=None):
     sql_text = "SELECT COUNT(*) FROM task WHERE project_id=" + str(project.id)
 
     task_info_fields = get_searchable_columns(project.id)
-    task_fields = [
-        "id",
-        "state",
-        "n_answers",
-        "created",
-        "calibration",
-    ]
 
     # create sql query from filter fields received on request.args
     for key in filter_fields.keys():
