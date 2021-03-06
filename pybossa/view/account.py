@@ -373,7 +373,6 @@ def newsletter_subscribe():
         elif request.args.get('subscribe') == 'False':
             return redirect_content_type(next_url)
         else:
-            print("hola", next_url)
             response = dict(template='account/newsletter.html',
                             title=gettext("Subscribe to our Newsletter"),
                             next=next_url)
