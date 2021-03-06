@@ -21,7 +21,7 @@ from mock import patch
 from nose.tools import assert_raises
 from pybossa.importers import BulkImportException
 from pybossa.importers.epicollect import BulkTaskEpiCollectPlusImport
-from default import FakeResponse, with_context
+from default import FakeResponse, with_request_context
 
 
 @patch('pybossa.importers.epicollect.requests.get')
@@ -31,7 +31,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
                   'epicollect_form': 'fakeform'}
     importer = BulkTaskEpiCollectPlusImport(**epicollect)
 
-    @with_context
+    @with_request_context
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = FakeResponse(text='Forbidden', status_code=403,
                                          headers={'content-type': 'text/json'},
@@ -46,7 +46,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         except BulkImportException as e:
             assert e.message == msg, e
 
-    @with_context
+    @with_request_context
     def test_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = FakeResponse(text='Forbidden', status_code=403,
                                          headers={'content-type': 'text/json'},
@@ -61,7 +61,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         except BulkImportException as e:
             assert e.message == msg, e
 
-    @with_context
+    @with_request_context
     def test_count_tasks_raises_exception_if_not_json(self, request):
         html_request = FakeResponse(text='Not an application/json',
                                     status_code=200,
@@ -76,7 +76,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         except BulkImportException as e:
             assert e.message == msg, e
 
-    @with_context
+    @with_request_context
     def test_tasks_raises_exception_if_not_json(self, request):
         html_request = FakeResponse(text='Not an application/json',
                                     status_code=200,
@@ -91,7 +91,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
         except BulkImportException as e:
             assert e.message == msg, e
 
-    @with_context
+    @with_request_context
     def test_count_tasks_returns_number_of_tasks_in_project(self, request):
         data = [dict(DeviceID=23), dict(DeviceID=24)]
         response = FakeResponse(text=json.dumps(data), status_code=200,
@@ -103,7 +103,7 @@ class TestBulkTaskEpiCollectPlusImport(object):
 
         assert number_of_tasks is 2, number_of_tasks
 
-    @with_context
+    @with_request_context
     def test_tasks_returns_tasks_in_project(self, request):
         data = [dict(DeviceID=23), dict(DeviceID=24)]
         response = FakeResponse(text=json.dumps(data), status_code=200,
