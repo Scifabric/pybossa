@@ -1123,6 +1123,7 @@ class TestWeb(web.Helper):
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
         newsletter.ask_user_to_subscribe.return_value = True
+        url_for.return_value = 'next_url'
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
             self.register()
             user = db.session.query(User).get(1)
@@ -1146,6 +1147,7 @@ class TestWeb(web.Helper):
     def test_newsletter_json(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home with JSON."""
         newsletter.ask_user_to_subscribe.return_value = True
+        url_for.return_value = 'next_url'
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'key'}):
             self.register()
             user = db.session.query(User).get(1)

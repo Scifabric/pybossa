@@ -20,7 +20,7 @@ from wtforms import ValidationError
 from nose.tools import raises, assert_raises
 from flask import current_app
 
-from default import Test, db, with_context
+from default import Test, db, with_context, with_request_context
 from pybossa.forms.forms import (RegisterForm, LoginForm, EMAIL_MAX_LENGTH,
     USER_NAME_MAX_LENGTH, USER_FULLNAME_MAX_LENGTH, BulkTaskLocalCSVImportForm,
     RegisterFormWithUserPrefMetadata, UserPrefMetadataForm)
@@ -134,7 +134,7 @@ class TestRegisterForm(Test):
 
         assert form.validate()
 
-    @with_context
+    @with_request_context
     def test_register_form_unique_name(self):
         form = RegisterForm(**self.fill_in_data)
         user = UserFactory.create(name='mylion')
@@ -142,7 +142,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert "The user name is already taken" in form.errors['name'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_name_length(self):
         self.fill_in_data['name'] = 'a'
         form = RegisterForm(**self.fill_in_data)
@@ -151,7 +151,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert error_message in form.errors['name'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_name_allowed_chars(self):
         self.fill_in_data['name'] = '$#&amp;\/|'
         form = RegisterForm(**self.fill_in_data)
@@ -159,7 +159,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert "$#&\\/| and space symbols are forbidden" in form.errors['name'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_name_reserved_name(self):
         self.fill_in_data['name'] = 'signin'
 
@@ -168,7 +168,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert 'This name is used by the system.' in form.errors['name'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_form_unique_email(self):
         form = RegisterForm(**self.fill_in_data)
         user = UserFactory.create(email_addr='tyrion@casterly.rock')
@@ -176,7 +176,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert "Email is already taken" in form.errors['email_addr'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_email_length(self):
         self.fill_in_data['email_addr'] = ''
         form = RegisterForm(**self.fill_in_data)
@@ -193,7 +193,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert "Invalid email address." in form.errors['email_addr'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_fullname_length(self):
         self.fill_in_data['fullname'] = 'a'
         form = RegisterForm(**self.fill_in_data)
@@ -202,7 +202,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert error_message in form.errors['fullname'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_password_required(self):
         self.fill_in_data['password'] = ''
         form = RegisterForm(**self.fill_in_data)
@@ -210,7 +210,7 @@ class TestRegisterForm(Test):
         assert not form.validate()
         assert "Password cannot be empty" in form.errors['password'], form.errors
 
-    @with_context
+    @with_request_context
     def test_register_password_missmatch(self):
         self.fill_in_data['confirm'] = 'badpasswd'
         form = RegisterForm(**self.fill_in_data)
@@ -309,14 +309,14 @@ class TestRegisterFormWithUserPrefMetadata(Test):
                                     timezones=[("", ""), ("ACT", "Australia Central Time")],
                                     user_types=[("Researcher", "Researcher"), ("Analyst", "Analyst")])
 
-    @with_context
+    @with_request_context
     def test_register_form_with_upref_mdata_contains_fields(self):
         form = RegisterFormWithUserPrefMetadata()
 
         for field in self.fields:
             assert form.__contains__(field), 'Field %s is not in form' %field
 
-    @with_context
+    @with_request_context
     def test_register_form_with_upref_mdata_validates_with_valid_fields(self):
         import pybossa.core
         pybossa.core.upref_mdata_choices = self.upref_mdata_valid_choices

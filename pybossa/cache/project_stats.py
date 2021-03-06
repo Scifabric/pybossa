@@ -16,18 +16,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PYBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 """Cache module for project stats."""
-from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES
 import pybossa.cache.projects as cached_projects
 from pybossa.model.project_stats import ProjectStats
-from flask_babel import gettext
 
 import operator
 import time
 import datetime
-import os
 
 
 session = db.slave_session
@@ -396,13 +393,14 @@ def stats_hours(project_id, period='2 week'):
 @memoize(timeout=ONE_DAY)
 def stats_format_dates(project_id, dates, dates_anon, dates_auth):
     """Format dates stats into a JSON format."""
-    dayNewStats = dict(label=gettext("Anon + Auth"), values=[])
-    dayCompletedTasks = dict(label=gettext("Completed Tasks"),
+    dayNewStats = dict(label="Anon + Auth", values=[])
+    dayCompletedTasks = dict(label="Completed Tasks",
                              disabled="True", values=[])
-    dayNewAnonStats = dict(label=gettext("Anonymous"), values=[])
-    dayNewAuthStats = dict(label=gettext("Authenticated"), values=[])
+    dayNewAnonStats = dict(label="Anonymous", values=[])
+    dayNewAuthStats = dict(label="Authenticated", values=[])
 
-    answer_dates = sorted(list(set(list(dates_anon.keys()) + list(dates_auth.keys()))))
+    answer_dates = sorted(
+        list(set(list(dates_anon.keys()) + list(dates_auth.keys()))))
     total = 0
 
     for d in sorted(dates.keys()):
@@ -435,10 +433,10 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
 def stats_format_hours(project_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format."""
-    hourNewStats = dict(label=gettext("Anon + Auth"),
+    hourNewStats = dict(label="Anon + Auth",
                         disabled="True", values=[], max=0)
-    hourNewAnonStats = dict(label=gettext("Anonymous"), values=[], max=0)
-    hourNewAuthStats = dict(label=gettext("Authenticated"),
+    hourNewAnonStats = dict(label="Anonymous", values=[], max=0)
+    hourNewAuthStats = dict(label="Authenticated",
                             values=[], max=0)
 
     hourNewStats['max'] = max_hours
@@ -457,7 +455,8 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
         if h in list(hours_anon.keys()):
             if (hours_anon[h] != 0):
                 tmph = (hours_anon[h] * 5) / max_hours
-                hourNewAnonStats['values'].append([int(h), hours_anon[h], tmph])
+                hourNewAnonStats['values'].append(
+                    [int(h), hours_anon[h], tmph])
             else:
                 hourNewAnonStats['values'].append([int(h), hours_anon[h], 0])
 
@@ -465,7 +464,8 @@ def stats_format_hours(project_id, hours, hours_anon, hours_auth,
         if h in list(hours_auth.keys()):
             if (hours_auth[h] != 0):
                 tmph = (hours_auth[h] * 5) / max_hours
-                hourNewAuthStats['values'].append([int(h), hours_auth[h], tmph])
+                hourNewAuthStats['values'].append(
+                    [int(h), hours_auth[h], tmph])
             else:
                 hourNewAuthStats['values'].append([int(h), hours_auth[h], 0])
     return hourNewStats, hourNewAnonStats, hourNewAuthStats
@@ -496,7 +496,7 @@ def stats_format_users(project_id, users, anon_users, auth_users):
         top5_anon.append(dict(ip=u[0], tasks=u[1]))
 
     for u in auth_users:
-        sql = text('''SELECT name, fullname, restrict from "user" 
+        sql = text('''SELECT name, fullname, restrict from "user"
                    where id=:id and restrict=false;''')
         results = session.execute(sql, dict(id=u[0]))
         fullname = None
@@ -510,7 +510,7 @@ def stats_format_users(project_id, users, anon_users, auth_users):
             top5_auth.append(dict(name=name,
                                   fullname=fullname,
                                   tasks=u[1],
-                             restrict=restrict))
+                                  restrict=restrict))
 
     userAnonStats['top5'] = top5_anon[0:5]
     userAuthStats['top5'] = top5_auth
@@ -525,7 +525,6 @@ def update_stats(project_id, period='2 week'):
         max_hours_anon, max_hours_auth = stats_hours(project_id, period)
     users, anon_users, auth_users = stats_users(project_id, period)
     dates, dates_anon, dates_auth = stats_dates(project_id, period)
-
 
     sum(dates.values())
 

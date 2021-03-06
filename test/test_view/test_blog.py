@@ -29,7 +29,6 @@ blog_repo = BlogRepository(db)
 user_repo = UserRepository(db)
 
 
-
 class TestBlogpostView(web.Helper):
 
     @with_context
@@ -46,7 +45,6 @@ class TestBlogpostView(web.Helper):
         blogpost_3 = BlogpostFactory.create(owner=user, project=project,
                                             title='titlethree',
                                             published=False)
-
 
         url = "/project/%s/blog" % project.short_name
 
@@ -112,8 +110,6 @@ class TestBlogpostView(web.Helper):
             assert blogpost['title'] in ['titleone', 'titletwo', 'titlethree']
         self.signout()
 
-
-
     @with_context
     def test_blogpost_get_all_errors(self):
         """test blogpost get all raises error if the project does not exist"""
@@ -121,7 +117,6 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
-
 
     @with_context
     def test_json_blogpost_get_all_errors(self):
@@ -132,8 +127,6 @@ class TestBlogpostView(web.Helper):
         data = json.loads(res.data)
         assert res.status_code == 404, res.status_code
         assert data['code'] == 404
-
-
 
     @with_context
     def test_blogpost_get_one(self):
@@ -180,7 +173,6 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         assert 'title' in str(res.data)
 
-
     @with_context
     def test_blogpost_get_one_errors(self):
         """Test blogposts GET non existing posts raises errors"""
@@ -204,7 +196,6 @@ class TestBlogpostView(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-
     from pybossa.view.projects import redirect
 
     @with_context
@@ -220,7 +211,7 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
 
         res = self.app.post(url,
-                            data={'title':'blogpost title', 'body':'body'},
+                            data={'title': 'blogpost title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
         mock_redirect.assert_called_with('/project/%E2%9C%93project1/blog')
@@ -230,7 +221,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost.project_id == project.id, blogpost.project.id
         assert blogpost.user_id == user.id, blogpost.user_id
         assert blogpost.published is False, blogpost.published
-
 
     @with_context
     def test_blogpost_create_by_anonymous(self):
@@ -243,14 +233,13 @@ class TestBlogpostView(web.Helper):
         assert "Please sign in to access this page" in str(res.data), res
 
         res = self.app.post(url,
-                            data={'title':'blogpost title', 'body':'body'},
+                            data={'title': 'blogpost title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert "Please sign in to access this page" in str(res.data)
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost == None, blogpost
-
 
     @with_context
     def test_blogpost_create_by_non_owner(self):
@@ -266,10 +255,9 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 403, res.status_code
 
         res = self.app.post(url,
-                            data={'title':'blogpost title', 'body':'body'},
+                            data={'title': 'blogpost title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 403, res.status_code
-
 
     @with_context
     def test_blogpost_create_errors(self):
@@ -280,10 +268,9 @@ class TestBlogpostView(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-        res = self.app.post(url, data={'title':'blogpost title', 'body':'body'},
+        res = self.app.post(url, data={'title': 'blogpost title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
-
 
     @with_context
     @patch('pybossa.view.projects.redirect', wraps=redirect)
@@ -300,8 +287,8 @@ class TestBlogpostView(web.Helper):
 
         res = self.app.post(url,
                             data={'id': blogpost.id,
-                                  'title':'blogpost title',
-                                  'body':'new body',
+                                  'title': 'blogpost title',
+                                  'body': 'new body',
                                   'published': True},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -311,7 +298,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'blogpost title', blogpost.title
         assert blogpost.body == 'new body', blogpost.body
         assert blogpost.published, blogpost.published
-
 
     @with_context
     def test_blogpost_update_by_anonymous(self):
@@ -325,9 +311,9 @@ class TestBlogpostView(web.Helper):
         assert "Please sign in to access this page" in str(res.data), res.data
 
         res = self.app.post(url,
-                            data={'id':blogpost.id,
-                                  'title':'new title',
-                                  'body':'new body'},
+                            data={'id': blogpost.id,
+                                  'title': 'new title',
+                                  'body': 'new body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert "Please sign in to access this page" in str(res.data)
@@ -335,14 +321,14 @@ class TestBlogpostView(web.Helper):
         blogpost = blog_repo.get_by()
         assert blogpost.title == 'title', blogpost.title
 
-
     @with_context
     def test_blogpost_update_by_non_owner(self):
         """Test blogpost update by non owner of the project is forbidden"""
         self.register()
         user = user_repo.get(1)
         project = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(project=project, title='title', body='body')
+        blogpost = BlogpostFactory.create(
+            project=project, title='title', body='body')
         url = "/project/%s/new-blogpost" % project.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
@@ -352,13 +338,12 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 403, res.status_code
 
         res = self.app.post(url,
-                            data={'title':'new title', 'body':'body'},
+                            data={'title': 'new title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
         blogpost = blog_repo.get_by()
         assert blogpost.title == 'title', blogpost.title
-
 
     @with_context
     def test_blogpost_update_errors(self):
@@ -371,22 +356,21 @@ class TestBlogpostView(web.Helper):
 
         # To a non-existing project
         url = "/project/non-existing-project/%s/update" % blogpost.id
-        res = self.app.post(url, data={'title':'new title', 'body':'body'},
+        res = self.app.post(url, data={'title': 'new title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
         url = "/project/%s/999999/update" % project1.short_name
-        res = self.app.post(url, data={'title':'new title', 'body':'body'},
+        res = self.app.post(url, data={'title': 'new title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with a project in the URL it does not belong to
         url = "/project/%s/%s/update" % (project2.short_name, blogpost.id)
-        res = self.app.post(url, data={'title':'new title', 'body':'body'},
+        res = self.app.post(url, data={'title': 'new title', 'body': 'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
-
 
     @with_context
     @patch('pybossa.view.projects.redirect', wraps=redirect)
@@ -406,8 +390,6 @@ class TestBlogpostView(web.Helper):
         blogpost = blog_repo.get_by(title='title')
         assert blogpost is None, blogpost
 
-
-
     @with_context
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
@@ -421,7 +403,6 @@ class TestBlogpostView(web.Helper):
 
         blogpost = blog_repo.get_by()
         assert blogpost is not None
-
 
     @with_context
     def test_blogpost_delete_by_non_owner(self):
@@ -440,7 +421,6 @@ class TestBlogpostView(web.Helper):
 
         blogpost = blog_repo.get_by()
         assert blogpost is not None
-
 
     @with_context
     def test_blogpost_delete_errors(self):
