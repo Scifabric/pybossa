@@ -94,6 +94,5 @@ class TestExportUsers(web.Helper):
         data = res.data
         assert restricted.name not in str(data.decode('utf-8'))
         import pandas as pd
-        # df = pd.DataFrame.from_csv(io.StringIO(data.decode('utf-8')))
         df = pd.read_csv(io.StringIO(data.decode('utf-8')))
         assert df.shape[0] == 3, df.shape[0]
