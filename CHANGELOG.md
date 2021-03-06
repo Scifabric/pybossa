@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.0.1](https://github.com/Scifabric/pybossa/compare/v4.0.0...v4.0.1) (2021-03-06)
+
+
+### Bug Fixes
+
+* remove duplicated method. ([#2020](https://github.com/Scifabric/pybossa/issues/2020)) ([e658e23](https://github.com/Scifabric/pybossa/commit/e658e23a171c1ac3cc355067dd21c2f06fdf3e0a)), closes [#1888](https://github.com/Scifabric/pybossa/issues/1888)
+* remove social columns. ([#2019](https://github.com/Scifabric/pybossa/issues/2019)) ([d1ad47b](https://github.com/Scifabric/pybossa/commit/d1ad47b97e53fb902946bec2ebbd795b823f69b1)), closes [#2017](https://github.com/Scifabric/pybossa/issues/2017)
+
 ## [4.0.0](https://github.com/Scifabric/pybossa/compare/v3.4.0...v4.0.0) (2021-02-20)
 
 
