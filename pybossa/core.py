@@ -20,7 +20,7 @@ import os
 import logging
 import humanize
 from flask import Flask, url_for, request, render_template, \
-    flash, _app_ctx_stack, abort, redirect
+    flash, _app_ctx_stack, abort, redirect, request
 from flask_login import current_user
 from flask_babel import gettext
 from flask_assets import Bundle
@@ -276,9 +276,8 @@ def setup_babel(app):
 
     @babel.localeselector
     def _get_locale():
-        from flask import request
         locales = [l[0] for l in app.config.get('LOCALES')]
-        if current_user.is_authenticated:
+        if current_user and current_user.is_authenticated:
             lang = current_user.locale
         else:
             lang = request.cookies.get('language')

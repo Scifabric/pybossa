@@ -47,6 +47,13 @@ def with_context(f):
             return f(*args, **kwargs)
     return decorated_function
 
+def with_request_context(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        with flask_app.test_request_context('/'):
+            return f(*args, **kwargs)
+    return decorated_function
+
 
 def with_context_settings(**kwargs):
     def decorator(f):

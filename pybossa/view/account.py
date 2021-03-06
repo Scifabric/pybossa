@@ -159,7 +159,6 @@ def signin():
         flash(gettext('Please correct the errors'), 'error')
     if current_user.is_anonymous:
         # If Twitter is enabled in config, show the Twitter Sign in button
-        if (isLdap is False):
         response = dict(template='account/signin.html',
                         title="Sign in",
                         form=form,
@@ -375,6 +374,7 @@ def newsletter_subscribe():
         elif request.args.get('subscribe') == 'False':
             return redirect_content_type(next_url)
         else:
+            print("hola", next_url)
             response = dict(template='account/newsletter.html',
                             title=gettext("Subscribe to our Newsletter"),
                             next=next_url)
