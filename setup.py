@@ -102,7 +102,7 @@ requirements = [
     "python-ldap==3.1.0",
     "python-novaclient>=2.27.0",
     "pytz==2018.7",
-    "PyYAML==5.1",
+    "PyYAML==5.4",
     "rackspace-auth-openstack==1.3",
     "rackspace-novaclient>=2.1",
     "raven==6.10.0",
