@@ -95,7 +95,7 @@ requirements = [
     "PyLD==1.0.4",
     "pyldap==3.0.0.post1",
     "pyOpenSSL==18.0.0",
-    "pyparsing==2.3.0",
+    "pyparsing==2.4.2",
     "python-dateutil==2.7.5",
     "python-editor==1.0.3",
     "python-keystoneclient==3.18.0",
