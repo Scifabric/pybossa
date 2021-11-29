@@ -99,7 +99,7 @@ requirements = [
     "python-dateutil==2.7.5",
     "python-editor==1.0.3",
     "python-keystoneclient==3.18.0",
-    "python-ldap==3.1.0",
+    "python-ldap==3.4.0",
     "python-novaclient>=2.27.0",
     "pytz==2018.7",
     "PyYAML==5.1",
