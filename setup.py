@@ -91,7 +91,7 @@ requirements = [
     "pycountry",
     "pycparser==2.19",
     "pycryptodome==3.7.2",
-    "PyJWT==1.7.1",
+    "PyJWT==2.4.0",
     "PyLD==1.0.4",
     "pyldap==3.0.0.post1",
     "pyOpenSSL==18.0.0",
