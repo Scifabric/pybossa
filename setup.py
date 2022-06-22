@@ -71,7 +71,7 @@ requirements = [
     "netifaces==0.10.9",
     "nose==1.3.7",
     "nose-cov==1.6",
-    "numpy==1.20.1",
+    "numpy==1.22.0",
     "oauth2client==4.1.3",
     "oauthlib==2.1.0",
     "os-service-types==1.4.0",
