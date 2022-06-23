@@ -561,11 +561,11 @@ def setup_hooks(app):
             plugins=plugins,
             ldap_enabled=ldap_enabled)
 
-    @csrf.error_handler
-    def csrf_error_handler(reason):
-        response = dict(template='400.html', code=400,
-                        description=reason)
-        return handle_content_type(response)
+    # @csrf.error_handler
+    # def csrf_error_handler(reason):
+    #     response = dict(template='400.html', code=400,
+    #                     description=reason)
+    #     return handle_content_type(response)
 
 
 def setup_jinja2_filters(app):

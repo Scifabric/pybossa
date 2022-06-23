@@ -42,15 +42,24 @@ class ProjectRepository(Repository):
     def get_all(self):
         return self.db.session.query(Project).all()
 
-    def filter_by(self, limit=None, offset=0, yielded=False, last_id=None,
-                  fulltextsearch=None, desc=False, **filters):
-        if filters.get('owner_id'):
-            filters['owner_id'] = filters.get('owner_id')
-        return self._filter_by(Project, limit, offset, yielded, last_id,
-                               fulltextsearch, desc, **filters)
+    def filter_by(
+        self,
+        limit=None,
+        offset=0,
+        yielded=False,
+        last_id=None,
+        fulltextsearch=None,
+        desc=False,
+        **filters
+    ):
+        if filters.get("owner_id"):
+            filters["owner_id"] = filters.get("owner_id")
+        return self._filter_by(
+            Project, limit, offset, yielded, last_id, fulltextsearch, desc, **filters
+        )
 
     def save(self, project):
-        self._validate_can_be('saved', project)
+        self._validate_can_be("saved", project)
         self._empty_strings_to_none(project)
         self._creator_is_owner(project)
         try:
@@ -61,10 +70,10 @@ class ProjectRepository(Repository):
             raise DBIntegrityError(e)
 
     def update(self, project):
-        self._validate_can_be('updated', project)
-        self._empty_strings_to_none(project)
-        self._creator_is_owner(project)
         try:
+            self._validate_can_be("updated", project)
+            self._empty_strings_to_none(project)
+            self._creator_is_owner(project)
             self.db.session.merge(project)
             self.db.session.commit()
         except IntegrityError as e:
@@ -72,13 +81,14 @@ class ProjectRepository(Repository):
             raise DBIntegrityError(e)
 
     def delete(self, project):
-        self._validate_can_be('deleted', project)
-        project = self.db.session.query(Project).filter(Project.id==project.id).first()
+        self._validate_can_be("deleted", project)
+        project = (
+            self.db.session.query(Project).filter(Project.id == project.id).first()
+        )
         self.db.session.delete(project)
         self.db.session.commit()
         cached_projects.clean(project.id)
         self._delete_zip_files_from_store(project)
-
 
     # Methods for Category objects
     def get_category(self, id=None):
@@ -92,17 +102,33 @@ class ProjectRepository(Repository):
     def get_all_categories(self):
         return self.db.session.query(Category).all()
 
-    def filter_categories_by(self, limit=None, offset=0, yielded=False,
-                             last_id=None, fulltextsearch=None,
-                             orderby='id',
-                             desc=False, **filters):
-        if filters.get('owner_id'):
-            del filters['owner_id']
-        return self._filter_by(Category, limit, offset, yielded, last_id,
-                               fulltextsearch, desc, orderby, **filters)
+    def filter_categories_by(
+        self,
+        limit=None,
+        offset=0,
+        yielded=False,
+        last_id=None,
+        fulltextsearch=None,
+        orderby="id",
+        desc=False,
+        **filters
+    ):
+        if filters.get("owner_id"):
+            del filters["owner_id"]
+        return self._filter_by(
+            Category,
+            limit,
+            offset,
+            yielded,
+            last_id,
+            fulltextsearch,
+            desc,
+            orderby,
+            **filters
+        )
 
     def save_category(self, category):
-        self._validate_can_be('saved as a Category', category, klass=Category)
+        self._validate_can_be("saved as a Category", category, klass=Category)
         try:
             self.db.session.add(category)
             self.db.session.commit()
@@ -111,7 +137,7 @@ class ProjectRepository(Repository):
             raise DBIntegrityError(e)
 
     def update_category(self, new_category, caller="web"):
-        self._validate_can_be('updated as a Category', new_category, klass=Category)
+        self._validate_can_be("updated as a Category", new_category, klass=Category)
         try:
             self.db.session.merge(new_category)
             self.db.session.commit()
@@ -120,16 +146,16 @@ class ProjectRepository(Repository):
             raise DBIntegrityError(e)
 
     def delete_category(self, category):
-        self._validate_can_be('deleted as a Category', category, klass=Category)
-        self.db.session.query(Category).filter(Category.id==category.id).delete()
+        self._validate_can_be("deleted as a Category", category, klass=Category)
+        self.db.session.query(Category).filter(Category.id == category.id).delete()
         self.db.session.commit()
 
     def _empty_strings_to_none(self, project):
-        if project.name == '':
+        if project.name == "":
             project.name = None
-        if project.short_name == '':
+        if project.short_name == "":
             project.short_name = None
-        if project.description == '':
+        if project.description == "":
             project.description = None
 
     def _creator_is_owner(self, project):
@@ -141,18 +167,19 @@ class ProjectRepository(Repository):
     def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):
             name = element.__class__.__name__
-            msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
+            msg = "%s cannot be %s by %s" % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
 
     def _delete_zip_files_from_store(self, project):
         from pybossa.core import json_exporter, csv_exporter
+
         global uploader
         if uploader is None:
             from pybossa.core import uploader
-        json_tasks_filename = json_exporter.download_name(project, 'task')
-        csv_tasks_filename = csv_exporter.download_name(project, 'task')
-        json_taskruns_filename = json_exporter.download_name(project, 'task_run')
-        csv_taskruns_filename = csv_exporter.download_name(project, 'task_run')
+        json_tasks_filename = json_exporter.download_name(project, "task")
+        csv_tasks_filename = csv_exporter.download_name(project, "task")
+        json_taskruns_filename = json_exporter.download_name(project, "task_run")
+        csv_taskruns_filename = csv_exporter.download_name(project, "task_run")
         container = "user_%s" % project.owner_id
         uploader.delete_file(json_tasks_filename, container)
         uploader.delete_file(csv_tasks_filename, container)
