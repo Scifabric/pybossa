@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open('pybossa/version.txt') as f:
+with open("pybossa/version.txt") as f:
     version = f.readline()
 __version__ = version.rstrip()
 
@@ -14,7 +14,7 @@ requirements = [
     "certifi==2018.11.29",
     "cffi>=1.11.5",
     "chardet==3.0.4",
-    "Click==7.0",
+    "Click>=7.0",
     "colorama==0.4.1",
     "cov-core==1.15.0",
     "coverage==4.5.2",
@@ -52,7 +52,7 @@ requirements = [
     "infinity==1.4",
     "intervals==0.8.1",
     "iso8601==0.1.12",
-    "itsdangerous==1.1.0",
+    "itsdangerous>=1.1.0",
     "jeepney==0.4",
     "Jinja2>=2.10.1",
     "jsmin==2.2.2",
@@ -62,7 +62,7 @@ requirements = [
     "lxml==4.6.2",
     "Mako==1.0.7",
     "Markdown==2.6.11",
-    "MarkupSafe==1.1.0",
+    "MarkupSafe>=1.1.0",
     "misaka==2.1.1",
     "mock==2.0.0",
     "msgpack==0.6.0",
@@ -95,7 +95,7 @@ requirements = [
     "PyLD==1.0.4",
     "pyldap==3.0.0.post1",
     "pyOpenSSL==18.0.0",
-    "pyparsing==2.3.0",
+    "pyparsing>=2.3.0",
     "python-dateutil==2.7.5",
     "python-editor==1.0.3",
     "python-keystoneclient==3.18.0",
@@ -137,11 +137,11 @@ requirements = [
     "WTForms>=1.0.5",
     "WTForms-Components>=0.10.3",
     "yacryptopan==1.0.0",
-    "email_validator==1.1.1"
+    "email_validator==1.1.1",
 ]
 
 setup(
-    name='pybossa',
+    name="pybossa",
     version=__version__,
     packages=find_packages(),
     install_requires=requirements,
@@ -153,23 +153,23 @@ setup(
     #     'git+git@github.com:Scifabric/pybossa.git@b8ab2ef199e82ca417d470bbed916c7b8dbda4d4#egg=pybossa'
     # ]
     # metadata for upload to PyPI
-    author='Scifabric LTD',
-    author_email='info@scifabric.com',
-    description='Open Source CrowdSourcing framework',
-    long_description='''PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.''',
-    license='AGPLv3',
-    url='http://pybossa.com',
-    download_url='https://github.com/Scifabric/pybossa',
+    author="Scifabric LTD",
+    author_email="info@scifabric.com",
+    description="Open Source CrowdSourcing framework",
+    long_description="""PYBOSSA is the ultimate crowdsourcing framework to analyze or enrich data that can't be processed by machines alone.""",
+    license="AGPLv3",
+    url="http://pybossa.com",
+    download_url="https://github.com/Scifabric/pybossa",
     include_package_data=True,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Affero v3',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: GNU Affero v3",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    entry_points='''
-    '''
+    entry_points="""
+    """,
 )
