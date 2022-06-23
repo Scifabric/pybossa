@@ -119,7 +119,6 @@ requirements = [
     "pycryptodome==3.7.2",
     "pydocstyle==5.0.2",
     "pyflakes==2.2.0",
-    "PyGObject==3.42.0",
     "pyhcl==0.4.4",
     "PyJWT==1.7.1",
     "PyLD==1.0.4",
