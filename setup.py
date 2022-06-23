@@ -8,7 +8,7 @@ requirements = [
     "alembic==0.9.10",
     "arrow==0.12.1",
     "asn1crypto==0.24.0",
-    "Babel==2.6.0",
+    "Babel==2.9.1",
     "beautifulsoup4==4.7.0",
     "blinker==1.4",
     "certifi==2018.11.29",
