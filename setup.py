@@ -54,7 +54,7 @@ requirements = [
     "iso8601==0.1.12",
     "itsdangerous==1.1.0",
     "jeepney==0.4",
-    "Jinja2==2.11.2",
+    "Jinja2==2.11.3",
     "jsmin==2.2.2",
     "keyring==17.1.1",
     "keystoneauth1==3.11.2",
