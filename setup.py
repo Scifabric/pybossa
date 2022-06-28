@@ -6,7 +6,7 @@ __version__ = version.rstrip()
 
 requirements = [
     "alembic==0.9.10",
-    "arrow==0.12.1",
+    "arrow==0.15.1",
     "asn1crypto==0.24.0",
     "Babel==2.6.0",
     "beautifulsoup4==4.7.0",
