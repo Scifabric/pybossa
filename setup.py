@@ -60,7 +60,7 @@ requirements = [
     "keystoneauth1==3.11.2",
     "libsass==0.16.1",
     "lxml==4.6.2",
-    "Mako==1.0.7",
+    "Mako==1.2.2",
     "Markdown==2.6.11",
     "MarkupSafe==1.1.0",
     "misaka==2.1.1",
