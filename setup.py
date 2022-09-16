@@ -78,7 +78,7 @@ requirements = [
     "oslo.config==6.7.0",
     "oslo.i18n==3.23.0",
     "oslo.serialization==2.28.1",
-    "oslo.utils==3.39.0",
+    "oslo.utils==4.10.1",
     "otpauth==1.0.1",
     "pandas==1.2.3",
     "pbr>=1.10.0",
