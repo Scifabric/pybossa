@@ -11,7 +11,7 @@ requirements = [
     "Babel==2.6.0",
     "beautifulsoup4==4.7.0",
     "blinker==1.4",
-    "certifi==2018.11.29",
+    "certifi==2022.12.7",
     "cffi>=1.11.5",
     "chardet==3.0.4",
     "Click==8.0.3",
