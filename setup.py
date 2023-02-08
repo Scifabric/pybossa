@@ -19,7 +19,7 @@ requirements = [
     "cov-core==1.15.0",
     "coverage==4.5.2",
     "croniter==0.3.28",
-    "cryptography==3.3.2",
+    "cryptography==39.0.1",
     "cssselect==1.0.3",
     "debtcollector==1.20.0",
     "decorator==4.3.0",
